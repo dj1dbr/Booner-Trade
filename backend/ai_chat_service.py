@@ -74,8 +74,8 @@ Du kannst:
     return context
 
 
-async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5"):
-    """Get or create AI chat instance based on provider"""
+async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", session_id="default-session"):
+    """Get or create AI chat instance with session context"""
     global _chat_instance
     
     try:
