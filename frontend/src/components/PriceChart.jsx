@@ -19,8 +19,6 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
     lastItem: data?.[data.length - 1]
   });
   
-  console.log('Formatted Chart Data Sample:', formattedChartData?.slice(0, 3));
-  
   // Update chart data when props change
   useEffect(() => {
     if (data && data.length > 0) {
