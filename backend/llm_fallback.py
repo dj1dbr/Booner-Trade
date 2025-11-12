@@ -1,0 +1,183 @@
+"""
+LLM Fallback Module für lokale Mac-Entwicklung
+Ersetzt emergentintegrations wenn nicht verfügbar
+"""
+import os
+import logging
+from typing import Optional
+
+logger = logging.getLogger(__name__)
+
+# Check if emergentintegrations is available
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage as EmergentUserMessage
+    EMERGENT_AVAILABLE = True
+    logger.info("✅ emergentintegrations verfügbar")
+except ImportError:
+    EMERGENT_AVAILABLE = False
+    logger.warning("⚠️ emergentintegrations nicht verfügbar - verwende Fallback")
+
+
+class UserMessage:
+    """Fallback UserMessage class"""
+    def __init__(self, text: str):
+        self.text = text
+
+
+class FallbackLlmChat:
+    """
+    Fallback LLM Chat für lokale Entwicklung ohne emergentintegrations
+    Unterstützt: OpenAI, Anthropic, Google direkt
+    """
+    
+    def __init__(self, api_key: str, session_id: str = "default", system_message: str = ""):
+        self.api_key = api_key
+        self.session_id = session_id
+        self.system_message = system_message
+        self.provider = None
+        self.model = None
+        self.conversation_history = []
+        
+        if system_message:
+            self.conversation_history.append({
+                "role": "system",
+                "content": system_message
+            })
+    
+    def with_model(self, provider: str, model: str):
+        """Set the model provider and name"""
+        self.provider = provider
+        self.model = model
+        logger.info(f"Fallback LLM configured: {provider}/{model}")
+        return self
+    
+    async def send_message(self, user_message):
+        """Send message to LLM - provider-agnostic"""
+        
+        # Extract text from UserMessage object
+        if hasattr(user_message, 'text'):
+            message_text = user_message.text
+        else:
+            message_text = str(user_message)
+        
+        # Add to conversation history
+        self.conversation_history.append({
+            "role": "user",
+            "content": message_text
+        })
+        
+        try:
+            # Route to correct provider
+            if self.provider == "openai":
+                response = await self._call_openai(message_text)
+            elif self.provider in ["anthropic", "claude"]:
+                response = await self._call_anthropic(message_text)
+            elif self.provider in ["google", "gemini"]:
+                response = await self._call_google(message_text)
+            else:
+                response = f"Unbekannter Provider: {self.provider}"
+            
+            # Add response to history
+            self.conversation_history.append({
+                "role": "assistant",
+                "content": response
+            })
+            
+            return response
+            
+        except Exception as e:
+            logger.error(f"Fallback LLM error: {e}")
+            return f"Fehler bei LLM-Anfrage: {str(e)}"
+    
+    async def _call_openai(self, message: str) -> str:
+        """Call OpenAI API directly"""
+        try:
+            import openai
+            
+            client = openai.AsyncOpenAI(api_key=self.api_key)
+            
+            response = await client.chat.completions.create(
+                model=self.model or "gpt-4",
+                messages=self.conversation_history,
+                max_tokens=1000,
+                temperature=0.7
+            )
+            
+            return response.choices[0].message.content
+            
+        except ImportError:
+            return "OpenAI SDK nicht installiert. Installieren Sie: pip install openai"
+        except Exception as e:
+            logger.error(f"OpenAI API error: {e}")
+            raise
+    
+    async def _call_anthropic(self, message: str) -> str:
+        """Call Anthropic (Claude) API directly"""
+        try:
+            import anthropic
+            
+            client = anthropic.AsyncAnthropic(api_key=self.api_key)
+            
+            # Anthropic uses different format - separate system message
+            messages = [m for m in self.conversation_history if m["role"] != "system"]
+            system = next((m["content"] for m in self.conversation_history if m["role"] == "system"), "")
+            
+            response = await client.messages.create(
+                model=self.model or "claude-3-5-sonnet-20241022",
+                max_tokens=1000,
+                system=system,
+                messages=messages
+            )
+            
+            return response.content[0].text
+            
+        except ImportError:
+            return "Anthropic SDK nicht installiert. Installieren Sie: pip install anthropic"
+        except Exception as e:
+            logger.error(f"Anthropic API error: {e}")
+            raise
+    
+    async def _call_google(self, message: str) -> str:
+        """Call Google Gemini API directly"""
+        try:
+            import google.generativeai as genai
+            
+            genai.configure(api_key=self.api_key)
+            
+            model = genai.GenerativeModel(
+                model_name=self.model or "gemini-1.5-pro",
+                system_instruction=self.system_message
+            )
+            
+            # Create chat with history
+            chat = model.start_chat(history=[])
+            
+            response = await chat.send_message_async(message)
+            
+            return response.text
+            
+        except ImportError:
+            return "Google SDK nicht installiert. Installieren Sie: pip install google-generativeai"
+        except Exception as e:
+            logger.error(f"Google API error: {e}")
+            raise
+
+
+def get_llm_chat(api_key: str, session_id: str = "default", system_message: str = "") -> object:
+    """
+    Get LLM Chat instance - uses emergentintegrations if available, otherwise fallback
+    """
+    if EMERGENT_AVAILABLE:
+        from emergentintegrations.llm.chat import LlmChat
+        return LlmChat(api_key=api_key, session_id=session_id, system_message=system_message)
+    else:
+        return FallbackLlmChat(api_key=api_key, session_id=session_id, system_message=system_message)
+
+
+def get_user_message(text: str) -> object:
+    """Get UserMessage instance - uses emergentintegrations if available, otherwise fallback"""
+    if EMERGENT_AVAILABLE:
+        from emergentintegrations.llm.chat import UserMessage as EmergentUserMessage
+        return EmergentUserMessage(text=text)
+    else:
+        return UserMessage(text=text)
