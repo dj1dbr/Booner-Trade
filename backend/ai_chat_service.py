@@ -191,6 +191,64 @@ Antworte auf Deutsch, präzise und ehrlich."""
         raise
 
 
+async def handle_trading_actions(user_message: str, ai_response: str, db, settings: dict, latest_market_data: dict) -> str:
+    """
+    Parse user message and AI response for trading actions
+    Simple keyword-based detection for MVP
+    """
+    from ai_trading_functions import FUNCTION_MAP
+    
+    user_lower = user_message.lower()
+    
+    try:
+        # Close all positions
+        if any(keyword in user_lower for keyword in ['schließe alle', 'close all', 'alle positionen schließen']):
+            result = await FUNCTION_MAP['close_all_trades'](db)
+            return result.get('message', 'Aktion ausgeführt')
+        
+        # Close specific symbol
+        for symbol in ['gold', 'silver', 'wti', 'brent', 'platin', 'palladium']:
+            if f'schließe {symbol}' in user_lower or f'close {symbol}' in user_lower:
+                symbol_map = {
+                    'gold': 'GOLD', 'silver': 'SILVER', 
+                    'wti': 'WTI_CRUDE', 'brent': 'BRENT_CRUDE',
+                    'platin': 'PLATINUM', 'palladium': 'PALLADIUM'
+                }
+                result = await FUNCTION_MAP['close_trades_by_symbol'](db, symbol_map.get(symbol, symbol.upper()))
+                return result.get('message', 'Aktion ausgeführt')
+        
+        # Show positions
+        if any(keyword in user_lower for keyword in ['zeige positionen', 'show positions', 'offene trades']):
+            result = await FUNCTION_MAP['get_open_positions'](db)
+            return result.get('message', 'Aktion ausgeführt')
+        
+        # Buy/Sell detection
+        for direction in ['buy', 'kaufe', 'long', 'sell', 'verkaufe', 'short']:
+            if direction in user_lower:
+                # Extract symbol
+                for symbol_key, symbol_value in {
+                    'gold': 'GOLD', 'silver': 'SILVER', 'silber': 'SILVER',
+                    'wti': 'WTI_CRUDE', 'öl': 'WTI_CRUDE', 'oil': 'WTI_CRUDE',
+                    'brent': 'BRENT_CRUDE', 'platin': 'PLATINUM', 'platinum': 'PLATINUM',
+                    'palladium': 'PALLADIUM', 'kupfer': 'COPPER', 'copper': 'COPPER'
+                }.items():
+                    if symbol_key in user_lower:
+                        trade_direction = 'BUY' if direction in ['buy', 'kaufe', 'long'] else 'SELL'
+                        result = await FUNCTION_MAP['execute_trade'](
+                            db=db,
+                            settings=settings,
+                            symbol=symbol_value,
+                            direction=trade_direction
+                        )
+                        return result.get('message', 'Trade ausgeführt')
+        
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error in trading actions: {e}")
+        return None
+
+
 async def send_chat_message(message: str, settings: dict, latest_market_data: dict, open_trades: list, ai_provider: str = "openai", model: str = None, session_id: str = "default-session", db=None):
     """Send a message to the AI and get response with session context and function calling"""
     try:
