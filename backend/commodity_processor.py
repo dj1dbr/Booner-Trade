@@ -287,8 +287,8 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
     
     Args:
         commodity_id: Commodity identifier (e.g., 'GOLD', 'WTI_CRUDE')
-        timeframe: Interval - '1m', '5m', '15m', '30m', '1h', '4h', '1d', '1wk', '1mo'
-        period: Data period - '1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max'
+        timeframe: Interval - '1m', '5m', '15m', '30m', '1h', '2h', '4h', '1d', '1wk', '1mo'
+        period: Data period - '2h', '1d', '5d', '1wk', '2wk', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max'
     
     Returns:
         pandas DataFrame with OHLCV data and indicators
