@@ -110,8 +110,13 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5"):
             return OllamaChat()
         
         else:
-            # Use Emergentintegrations for GPT-5/Claude
-            from emergentintegrations.llm.chat import LlmChat, UserMessage
+            # Use Emergentintegrations for GPT-5/Claude (with fallback)
+            try:
+                from emergentintegrations.llm.chat import LlmChat, UserMessage
+            except ImportError:
+                from llm_fallback import get_llm_chat, get_user_message
+                LlmChat = get_llm_chat
+                UserMessage = get_user_message
             
             api_key = os.getenv('EMERGENT_LLM_KEY')
             if not api_key:
