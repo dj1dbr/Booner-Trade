@@ -1089,6 +1089,40 @@ async def get_simple_ohlcv(commodity: str, timeframe: str = "5m", period: str = 
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.post("/whisper/transcribe")
+async def whisper_transcribe_endpoint(file: UploadFile):
+    """
+    Whisper Speech-to-Text endpoint
+    Upload audio file → Get transcription
+    Supports: mp3, wav, m4a, webm, ogg
+    """
+    try:
+        from whisper_service import transcribe_audio_bytes
+        
+        # Read audio file
+        audio_bytes = await file.read()
+        
+        # Transcribe
+        result = await transcribe_audio_bytes(
+            audio_bytes=audio_bytes,
+            filename=file.filename,
+            language="de"  # German
+        )
+        
+        if result.get("success"):
+            return {
+                "success": True,
+                "text": result.get("text", ""),
+                "language": result.get("language", "de")
+            }
+        else:
+            raise HTTPException(status_code=500, detail=result.get("error", "Transkription fehlgeschlagen"))
+    
+    except Exception as e:
+        logger.error(f"Whisper endpoint error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.post("/ai-chat")
 async def ai_chat_endpoint(
     message: str,
