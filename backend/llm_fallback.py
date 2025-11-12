@@ -94,6 +94,25 @@ class FallbackLlmChat:
         try:
             import openai
             
+            # Check if this is an Emergent key (won't work with OpenAI SDK)
+            if self.api_key and self.api_key.startswith("sk-emergent-"):
+                return (
+                    "⚠️ MAC-NUTZER: Der Emergent LLM Key funktioniert nur in der Emergent Cloud.\n\n"
+                    "Für lokale Mac-Nutzung haben Sie 3 Optionen:\n\n"
+                    "1. **OLLAMA (EMPFOHLEN - Kostenlos & Lokal)**\n"
+                    "   brew install ollama\n"
+                    "   ollama serve\n"
+                    "   ollama pull llama3\n"
+                    "   → In Settings: Provider='Ollama', Model='llama3'\n\n"
+                    "2. **OpenAI API Key**\n"
+                    "   → Ersetzen Sie EMERGENT_LLM_KEY mit echtem OpenAI-Key\n"
+                    "   → https://platform.openai.com/api-keys\n\n"
+                    "3. **Anthropic Claude API Key**\n"
+                    "   → pip install anthropic\n"
+                    "   → In Settings: Provider='Anthropic'\n\n"
+                    "Details: /app/MAC_INSTALLATION.md"
+                )
+            
             client = openai.AsyncOpenAI(api_key=self.api_key)
             
             response = await client.chat.completions.create(
@@ -109,6 +128,15 @@ class FallbackLlmChat:
             return "OpenAI SDK nicht installiert. Installieren Sie: pip install openai"
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
+            # Return user-friendly error
+            error_str = str(e)
+            if "invalid_api_key" in error_str or "401" in error_str:
+                return (
+                    "⚠️ Ungültiger API-Key!\n\n"
+                    "Der Emergent LLM Key funktioniert nur in der Cloud.\n"
+                    "Für Mac: Nutzen Sie Ollama (kostenlos) oder einen echten OpenAI-Key.\n\n"
+                    "Details: /app/MAC_INSTALLATION.md"
+                )
             raise
     
     async def _call_anthropic(self, message: str) -> str:
