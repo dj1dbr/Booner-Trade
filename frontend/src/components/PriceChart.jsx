@@ -160,6 +160,7 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
         {/* SMA und EMA Linien entfernt - nur Preis wird angezeigt */}
       </AreaChart>
     </ResponsiveContainer>
+    </div>
   );
 };
 
