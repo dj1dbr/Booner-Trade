@@ -317,8 +317,18 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
             try:
                 # Map period to number of candles
                 period_to_limit = {
-                    '1d': 24, '5d': 120, '1mo': 720, '3mo': 2160,
-                    '6mo': 4320, '1y': 8760, '2y': 17520, '5y': 43800, 'max': 1000
+                    '2h': 120,      # 2 hours with 1m candles
+                    '1d': 24,       # 1 day with 1h candles
+                    '5d': 120,      # 5 days
+                    '1wk': 168,     # 1 week
+                    '2wk': 336,     # 2 weeks
+                    '1mo': 720,     # 1 month
+                    '3mo': 2160,    # 3 months
+                    '6mo': 4320,    # 6 months
+                    '1y': 8760,     # 1 year
+                    '2y': 17520,    # 2 years
+                    '5y': 43800,    # 5 years
+                    'max': 1000     # Max available
                 }
                 limit = period_to_limit.get(period, 720)
                 
