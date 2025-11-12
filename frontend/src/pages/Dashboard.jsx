@@ -1515,10 +1515,15 @@ const Dashboard = () => {
                     <select
                       value={chartTimeframe}
                       onChange={(e) => setChartTimeframe(e.target.value)}
-                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
+                      className="px-3 py-2 bg-slate-900 border border-slate-600 rounded text-sm text-white hover:border-cyan-500 focus:outline-none focus:border-cyan-500"
+                      title="Intervall"
                     >
+                      <option value="1m">1min</option>
+                      <option value="5m">5min</option>
                       <option value="15m">15min</option>
+                      <option value="30m">30min</option>
                       <option value="1h">1h</option>
+                      <option value="2h">2h</option>
                       <option value="4h">4h</option>
                       <option value="1d">1d</option>
                       <option value="1wk">1wk</option>
@@ -1526,10 +1531,13 @@ const Dashboard = () => {
                     <select
                       value={chartPeriod}
                       onChange={(e) => setChartPeriod(e.target.value)}
-                      className="px-2 py-1 bg-slate-900 border border-slate-600 rounded text-xs text-white"
+                      className="px-3 py-2 bg-slate-900 border border-slate-600 rounded text-sm text-white hover:border-cyan-500 focus:outline-none focus:border-cyan-500"
+                      title="Zeitraum"
                     >
+                      <option value="2h">2 Stunden</option>
                       <option value="1d">1 Tag</option>
-                      <option value="5d">1 Woche</option>
+                      <option value="5d">5 Tage</option>
+                      <option value="1wk">1 Woche</option>
                       <option value="2wk">2 Wochen</option>
                       <option value="1mo">1 Monat</option>
                       <option value="3mo">3 Monate</option>
