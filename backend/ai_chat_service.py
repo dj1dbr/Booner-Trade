@@ -237,6 +237,14 @@ async def send_chat_message(message: str, settings: dict, latest_market_data: di
                 response = str(response_obj)
         
         logger.info(f"✅ AI Response generated (length: {len(response)})")
+        
+        # Function calling: Check if user wants to execute trades (only if auto-trading active and db available)
+        if auto_trading_active and db:
+            action_result = await handle_trading_actions(message, response, db, settings, latest_market_data)
+            if action_result:
+                # Append action result to response
+                response = f"{response}\n\n{action_result}"
+        
         return {
             "success": True,
             "response": response,
