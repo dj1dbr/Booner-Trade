@@ -6,6 +6,12 @@ Diese Anleitung hilft Ihnen, die Trading-App auf Ihrem Mac zu installieren und z
 
 Die App nutzt normalerweise `emergentintegrations` für LLM-Integration. Diese Bibliothek ist jedoch **nur in der Emergent Cloud verfügbar** und nicht für lokale Macs.
 
+**Wichtig:** Der `EMERGENT_LLM_KEY` (sk-emergent-...) funktioniert **NUR** mit der `emergentintegrations` Bibliothek in der Cloud. Auf dem Mac brauchen Sie:
+- ✅ Ollama (kostenlos, lokal) **← EMPFOHLEN**
+- ✅ Echten OpenAI API-Key
+- ✅ Anthropic Claude API-Key
+- ✅ Google Gemini API-Key
+
 ### ✅ Lösung: Automatischer Fallback
 
 Wir haben einen **automatischen Fallback** implementiert, der die Standard-SDKs verwendet:
@@ -14,9 +20,10 @@ Wir haben einen **automatischen Fallback** implementiert, der die Standard-SDKs 
 emergentintegrations nicht verfügbar
     ↓
 Automatischer Fallback zu:
-    • OpenAI SDK
-    • Anthropic SDK  
-    • Google Generative AI SDK
+    • OpenAI SDK (braucht echten OpenAI-Key!)
+    • Anthropic SDK (braucht Claude-Key!)
+    • Google Generative AI SDK (braucht Gemini-Key!)
+    • Ollama (LOKAL - kein Key nötig!) ⭐
 ```
 
 ## Installation
