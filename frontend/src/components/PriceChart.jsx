@@ -98,14 +98,24 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
     
     return {
       time: formatTime(item.timestamp),
-      price: price,
-      high: item.high,
-      low: item.low,
-      open: item.open,
-      sma: item.sma_20,
-      ema: item.ema_20
+      price: Number(price) || 0,
+      high: Number(item.high) || 0,
+      low: Number(item.low) || 0,
+      open: Number(item.open) || 0,
+      sma: item.sma_20 ? Number(item.sma_20) : null,
+      ema: item.ema_20 ? Number(item.ema_20) : null
     };
   });
+
+  // Calculate Y-axis domain for better scaling
+  const allPrices = formattedChartData.map(d => d.price).filter(p => p > 0);
+  const minPrice = Math.min(...allPrices);
+  const maxPrice = Math.max(...allPrices);
+  const padding = (maxPrice - minPrice) * 0.05; // 5% padding
+  const yDomain = [
+    Math.floor(minPrice - padding),
+    Math.ceil(maxPrice + padding)
+  ];
 
   return (
     <div className="relative">
