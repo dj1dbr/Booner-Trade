@@ -117,6 +117,13 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
     Math.ceil(maxPrice + padding)
   ];
 
+  console.log('Chart Debug:', {
+    dataPoints: formattedChartData.length,
+    sample: formattedChartData.slice(0, 2),
+    yDomain,
+    priceRange: { min: minPrice, max: maxPrice }
+  });
+
   return (
     <div className="relative">
       {enableLiveTicker && livePrice && (
