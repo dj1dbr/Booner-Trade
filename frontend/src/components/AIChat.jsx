@@ -10,7 +10,10 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [isOpen, setIsOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [recognition, setRecognition] = useState(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [audioChunks, setAudioChunks] = useState([]);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
