@@ -57,6 +57,25 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
     }
   }, [aiProvider]);
 
+  // Voice recognition handlers
+  const startListening = () => {
+    if (recognition && !isListening) {
+      try {
+        recognition.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+      }
+    }
+  };
+
+  const stopListening = () => {
+    if (recognition && isListening) {
+      recognition.stop();
+      setIsListening(false);
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
