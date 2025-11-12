@@ -209,10 +209,29 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                placeholder="Frage die KI..."
+                placeholder="Frage die KI... oder 🎤"
                 className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
               />
+              
+              {/* Microphone Button (Web Speech API) */}
+              {recognition && (
+                <button
+                  onClick={isListening ? stopListening : startListening}
+                  disabled={loading}
+                  className={`${
+                    isListening 
+                      ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                      : 'bg-purple-600 hover:bg-purple-700'
+                  } text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={isListening ? 'Aufnahme stoppen' : 'Spracheingabe (Browser)'}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  </svg>
+                </button>
+              )}
+              
               <button
                 onClick={sendMessage}
                 disabled={loading || !input.trim()}
