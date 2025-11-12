@@ -908,12 +908,17 @@ const Dashboard = () => {
                   type="checkbox"
                   checked={settings?.active_platforms?.includes('BITPANDA') || false}
                   onChange={async (e) => {
+                    if (!settings) {
+                      toast.error('Settings noch nicht geladen');
+                      return;
+                    }
                     const newPlatforms = e.target.checked
-                      ? [...(settings?.active_platforms || []), 'BITPANDA']
-                      : (settings?.active_platforms || []).filter(p => p !== 'BITPANDA');
+                      ? [...(settings.active_platforms || []), 'BITPANDA']
+                      : (settings.active_platforms || []).filter(p => p !== 'BITPANDA');
                     await handleUpdateSettings({ ...settings, active_platforms: newPlatforms });
                   }}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                  disabled={!settings}
                 />
                 <h3 className="text-sm font-bold text-green-400">🟢 Bitpanda</h3>
                 {bitpandaConnected && settings?.active_platforms?.includes('BITPANDA') && (
