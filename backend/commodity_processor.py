@@ -343,11 +343,11 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
         # Timeframe mapping
         interval_map = {
             '1m': '1m', '5m': '5m', '15m': '15m', '30m': '30m',
-            '1h': '1h', '4h': '4h', '1d': '1d', '1wk': '1wk', '1mo': '1mo'
+            '1h': '1h', '2h': '2h', '4h': '4h', '1d': '1d', '1wk': '1wk', '1mo': '1mo'
         }
         
-        # Period validation
-        valid_periods = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max']
+        # Period validation (includes 2h, 1wk, 2wk)
+        valid_periods = ['2h', '1d', '5d', '1wk', '2wk', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max']
         if period not in valid_periods:
             period = '1mo'
         
