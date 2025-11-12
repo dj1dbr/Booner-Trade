@@ -856,26 +856,26 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-slate-400">Portfolio-Risiko:</span>
                       <span className={
-                        (totalExposure / (mt5Account?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
+                        (icmarketsExposure / (mt5Account?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
                           ? 'text-red-400 font-semibold'
                           : 'text-green-400'
                       }>
-                        {((totalExposure / (mt5Account?.balance || 1)) * 100).toFixed(1)}% / {settings?.max_portfolio_risk_percent || 20}%
+                        {((icmarketsExposure / (mt5Account?.balance || 1)) * 100).toFixed(1)}% / {settings?.max_portfolio_risk_percent || 20}%
                       </span>
                     </div>
                     <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div
                         className={`h-full transition-all ${
-                          (totalExposure / (mt5Account?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
+                          (icmarketsExposure / (mt5Account?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
                             ? 'bg-red-500'
                             : 'bg-green-500'
                         }`}
-                        style={{ width: `${Math.min(((totalExposure / (mt5Account?.balance || 1)) * 100 / (settings?.max_portfolio_risk_percent || 20)) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(((icmarketsExposure / (mt5Account?.balance || 1)) * 100 / (settings?.max_portfolio_risk_percent || 20)) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
                   <div className="text-xs text-slate-400">
-                    Offene Positionen: €{totalExposure.toFixed(2)}
+                    Offene Positionen: €{icmarketsExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && (t.platform === 'MT5_ICMARKETS' || (t.mode === 'MT5' && !t.platform))).length})
                   </div>
                 </>
               )}
