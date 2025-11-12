@@ -380,12 +380,32 @@ const Dashboard = () => {
       const allTrades = [...dbTrades, ...mt5Positions];
       setTrades(allTrades);
       
-      // Calculate exposure after loading trades
+      // Calculate exposure PER PLATFORM after loading trades
       const openTrades = allTrades.filter(t => t.status === 'OPEN');
-      const exposure = openTrades.reduce((sum, trade) => {
+      
+      // Total exposure (all platforms)
+      const totalExp = openTrades.reduce((sum, trade) => {
         return sum + (trade.entry_price * trade.quantity);
       }, 0);
-      setTotalExposure(exposure);
+      setTotalExposure(totalExp);
+      
+      // Libertex exposure
+      const libertexExp = openTrades
+        .filter(t => t.platform === 'MT5_LIBERTEX' || t.mode === 'MT5_LIBERTEX')
+        .reduce((sum, trade) => sum + (trade.entry_price * trade.quantity), 0);
+      setLibertexExposure(libertexExp);
+      
+      // ICMarkets exposure
+      const icExp = openTrades
+        .filter(t => t.platform === 'MT5_ICMARKETS' || (t.mode === 'MT5' && !t.platform))
+        .reduce((sum, trade) => sum + (trade.entry_price * trade.quantity), 0);
+      setIcmarketsExposure(icExp);
+      
+      // Bitpanda exposure
+      const bitpandaExp = openTrades
+        .filter(t => t.platform === 'BITPANDA' || t.mode === 'BITPANDA')
+        .reduce((sum, trade) => sum + (trade.entry_price * trade.quantity), 0);
+      setBitpandaExposure(bitpandaExp);
     } catch (error) {
       console.error('Error fetching trades:', error);
     }
