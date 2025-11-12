@@ -136,7 +136,7 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", se
             
             chat = LlmChat(
                 api_key=api_key,
-                session_id="trading-chat-session",
+                session_id=session_id,  # Use dynamic session_id from parameter
                 system_message=system_message
             ).with_model(provider, model_name)
             
