@@ -1550,26 +1550,10 @@ const Dashboard = () => {
                     
                     <span className="text-xs text-slate-400">Zeitraum:</span>
                     <select
-                      value={chartTimeframe}
-                      onChange={(e) => setChartTimeframe(e.target.value)}
-                      className="px-3 py-2 bg-slate-900 border border-slate-600 rounded text-sm text-white hover:border-cyan-500 focus:outline-none focus:border-cyan-500"
-                      title="Intervall"
-                    >
-                      <option value="1m">1min</option>
-                      <option value="5m">5min</option>
-                      <option value="15m">15min</option>
-                      <option value="30m">30min</option>
-                      <option value="1h">1h</option>
-                      <option value="2h">2h</option>
-                      <option value="4h">4h</option>
-                      <option value="1d">1d</option>
-                      <option value="1wk">1wk</option>
-                    </select>
-                    <select
                       value={chartPeriod}
                       onChange={(e) => setChartPeriod(e.target.value)}
                       className="px-3 py-2 bg-slate-900 border border-slate-600 rounded text-sm text-white hover:border-cyan-500 focus:outline-none focus:border-cyan-500"
-                      title="Zeitraum"
+                      title="Gesamt-Zeitraum"
                     >
                       <option value="2h">2 Stunden</option>
                       <option value="1d">1 Tag</option>
