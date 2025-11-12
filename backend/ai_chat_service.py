@@ -191,8 +191,8 @@ Antworte auf Deutsch, präzise und ehrlich."""
         raise
 
 
-async def send_chat_message(message: str, settings: dict, latest_market_data: dict, open_trades: list, ai_provider: str = "openai", model: str = None, session_id: str = "default-session"):
-    """Send a message to the AI and get response with session context"""
+async def send_chat_message(message: str, settings: dict, latest_market_data: dict, open_trades: list, ai_provider: str = "openai", model: str = None, session_id: str = "default-session", db=None):
+    """Send a message to the AI and get response with session context and function calling"""
     try:
         # Get AI chat instance with session_id
         chat = await get_ai_chat_instance(settings, ai_provider, model, session_id)
@@ -200,6 +200,9 @@ async def send_chat_message(message: str, settings: dict, latest_market_data: di
         # Only add trading context for non-confirmation messages
         # Short messages like "Ja", "OK", "Nein" are likely confirmations
         is_confirmation = message.strip().lower() in ['ja', 'ok', 'okay', 'yes', 'nein', 'no', 'nope']
+        
+        # Check if auto-trading is active for function calling
+        auto_trading_active = settings.get('auto_trading', False)
         
         if is_confirmation:
             # For confirmations, send message as-is without context
