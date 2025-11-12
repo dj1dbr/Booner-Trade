@@ -97,28 +97,39 @@ In den Einstellungen können Sie wählen:
 4. **Google Gemini** - Direkter Gemini Zugriff
 5. **Ollama** - Lokal auf Ihrem Mac (100% kostenlos!)
 
-### Empfehlung für Mac: Ollama
+### ⭐ Empfehlung für Mac: Ollama
 
-Ollama ist die beste Option für lokale Entwicklung:
+Ollama ist die **beste Option** für lokale Entwicklung:
 
 ```bash
-# Ollama installieren
+# 1. Ollama installieren
 brew install ollama
 
-# Ollama starten
+# 2. Ollama starten (eigenes Terminal)
 ollama serve
 
-# Modell herunterladen
+# 3. Modell herunterladen
 ollama pull llama3
 
-# In der App: Provider = "Ollama", Model = "llama3"
+# 4. In der Trading-App Settings:
+#    KI Provider: "Ollama"
+#    KI Modell: "llama3"
+#    API-Key: (leer lassen oder beliebiger Text)
 ```
 
 **Vorteile:**
-- ✅ Komplett kostenlos
-- ✅ Keine API-Keys nötig
-- ✅ Läuft lokal auf Ihrem Mac
-- ✅ Datenschutz (keine Cloud)
+- ✅ **Komplett kostenlos** (keine API-Kosten!)
+- ✅ **Keine API-Keys nötig** (läuft lokal)
+- ✅ **Datenschutz** (keine Daten in Cloud)
+- ✅ **Schnell genug** für Trading-Analysen
+- ✅ **Kein Emergent LLM Key Problem**
+
+**Verfügbare Modelle:**
+```bash
+ollama pull llama3         # Empfohlen (7-70B)
+ollama pull mistral        # Alternative
+ollama pull codellama      # Für Code-Analysen
+```
 
 ## Technische Details
 
