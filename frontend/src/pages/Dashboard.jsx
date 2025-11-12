@@ -551,24 +551,27 @@ const Dashboard = () => {
 
   const handleUpdateSettings = async (newSettings) => {
     try {
-      await axios.post(`${API}/settings`, newSettings);
-      setSettings(newSettings);
-      setGpt5Active(newSettings.use_ai_analysis && newSettings.auto_trading);
+      console.log('Saving settings:', newSettings);
+      const response = await axios.post(`${API}/settings`, newSettings);
+      console.log('Settings saved:', response.data);
+      setSettings(response.data); // Use server response
+      setGpt5Active(response.data.use_ai_analysis && response.data.auto_trading);
       toast.success('Einstellungen gespeichert');
       setSettingsOpen(false);
       
-      // Reload balance based on platform
-      if (newSettings.mode === 'MT5') {
-        await fetchMT5Account();
-      } else if (newSettings.mode === 'BITPANDA') {
+      // Reload balance based on active platforms
+      if (response.data.active_platforms?.includes('MT5_LIBERTEX')) {
+        await fetchMT5LibertexAccount();
+      }
+      if (response.data.active_platforms?.includes('MT5_ICMARKETS')) {
+        await fetchMT5ICMarketsAccount();
+      }
+      if (response.data.active_platforms?.includes('BITPANDA')) {
         await fetchBitpandaAccount();
-      } else {
-        // Paper trading - calculate from stats
-        await fetchStats();
-        updateBalance();
       }
     } catch (error) {
-      toast.error('Fehler beim Speichern');
+      console.error('Settings save error:', error);
+      toast.error(`Fehler beim Speichern: ${error.response?.data?.detail || error.message}`);
     }
   };
   
