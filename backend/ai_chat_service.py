@@ -154,9 +154,17 @@ async def send_chat_message(message: str, settings: dict, latest_market_data: di
         # Get AI chat instance with session_id
         chat = await get_ai_chat_instance(settings, ai_provider, model, session_id)
         
-        # Add trading context to the message
-        context = get_trading_context(settings, latest_market_data, open_trades)
-        full_message = f"{context}\n\nBENUTZER FRAGE: {message}"
+        # Only add trading context for non-confirmation messages
+        # Short messages like "Ja", "OK", "Nein" are likely confirmations
+        is_confirmation = message.strip().lower() in ['ja', 'ok', 'okay', 'yes', 'nein', 'no', 'nope']
+        
+        if is_confirmation:
+            # For confirmations, send message as-is without context
+            full_message = message
+        else:
+            # Add trading context for new questions
+            context = get_trading_context(settings, latest_market_data, open_trades)
+            full_message = f"{context}\n\nBENUTZER FRAGE: {message}"
         
         # Send message based on provider type
         if ai_provider == "ollama":
