@@ -282,7 +282,7 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
               {recognition && (
                 <button
                   onClick={isListening ? stopListening : startListening}
-                  disabled={loading}
+                  disabled={loading || isRecording}
                   className={`${
                     isListening 
                       ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
@@ -295,6 +295,22 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
                   </svg>
                 </button>
               )}
+              
+              {/* Whisper Button (Local Recording) */}
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={loading || isListening}
+                className={`${
+                  isRecording 
+                    ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                    : 'bg-orange-600 hover:bg-orange-700'
+                } text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
+                title={isRecording ? 'Aufnahme stoppen & transkribieren' : 'Whisper Aufnahme (Lokal)'}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                </svg>
+              </button>
               
               <button
                 onClick={sendMessage}
