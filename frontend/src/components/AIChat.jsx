@@ -47,6 +47,7 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
       const response = await axios.post(`${API}/api/ai-chat`, null, {
         params: {
           message: input,
+          session_id: sessionId,
           ai_provider: aiProvider || 'openai',
           model: aiModel || 'gpt-5'
         },
