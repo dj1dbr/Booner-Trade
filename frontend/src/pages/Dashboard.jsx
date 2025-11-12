@@ -1540,7 +1540,13 @@ const Dashboard = () => {
                 </div>
                 {chartModalData.length > 0 ? (
                   <div className="h-96">
-                    <PriceChart data={chartModalData} commodityName={selectedCommodity.name} isOHLCV={true} />
+                    <PriceChart 
+                      data={chartModalData} 
+                      commodityName={selectedCommodity.name} 
+                      commodityId={selectedCommodity.id}
+                      isOHLCV={true} 
+                      enableLiveTicker={true}
+                    />
                   </div>
                 ) : (
                   <div className="h-96 flex items-center justify-center text-slate-400">
