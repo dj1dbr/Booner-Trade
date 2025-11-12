@@ -28,6 +28,33 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
       content: `👋 Hallo! Ich bin deine Trading-KI (${aiProvider === 'ollama' ? 'Ollama' : 'GPT-5'}). Frag mich alles über deine Trades, Marktdaten oder Trading-Strategien!`,
       timestamp: new Date()
     }]);
+    
+    // Initialize Web Speech API
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.lang = 'de-DE'; // German
+      
+      recognitionInstance.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+      
+      setRecognition(recognitionInstance);
+    }
   }, [aiProvider]);
 
   const sendMessage = async () => {
