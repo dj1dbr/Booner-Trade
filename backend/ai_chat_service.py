@@ -148,11 +148,11 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5"):
         raise
 
 
-async def send_chat_message(message: str, settings: dict, latest_market_data: dict, open_trades: list, ai_provider: str = "openai", model: str = None):
-    """Send a message to the AI and get response"""
+async def send_chat_message(message: str, settings: dict, latest_market_data: dict, open_trades: list, ai_provider: str = "openai", model: str = None, session_id: str = "default-session"):
+    """Send a message to the AI and get response with session context"""
     try:
-        # Get AI chat instance
-        chat = await get_ai_chat_instance(settings, ai_provider, model)
+        # Get AI chat instance with session_id
+        chat = await get_ai_chat_instance(settings, ai_provider, model, session_id)
         
         # Add trading context to the message
         context = get_trading_context(settings, latest_market_data, open_trades)
