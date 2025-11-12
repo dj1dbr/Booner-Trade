@@ -1,13 +1,73 @@
+import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import axios from 'axios';
 
-const PriceChart = ({ data, commodityName = 'Commodity', isOHLCV = false }) => {
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
+const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isOHLCV = false, enableLiveTicker = false }) => {
+  const [chartData, setChartData] = useState(data || []);
+  const [livePrice, setLivePrice] = useState(null);
+  
   // Debug: Log data to console
   console.log(`PriceChart für ${commodityName}:`, {
     dataPoints: data?.length,
     isOHLCV,
+    enableLiveTicker,
+    commodityId,
     firstItem: data?.[0],
     lastItem: data?.[data.length - 1]
   });
+  
+  // Update chart data when props change
+  useEffect(() => {
+    if (data && data.length > 0) {
+      setChartData(data);
+    }
+  }, [data]);
+  
+  // Live ticker - update last data point with live price every 5 seconds
+  useEffect(() => {
+    if (!enableLiveTicker || !commodityId) return;
+    
+    const fetchLivePrice = async () => {
+      try {
+        const response = await axios.get(`${API}/market/live-ticks`);
+        const livePrices = response.data.live_prices || {};
+        
+        if (livePrices[commodityId]) {
+          const tick = livePrices[commodityId];
+          setLivePrice(tick.price);
+          
+          // Update last candle with live price
+          if (chartData.length > 0) {
+            const updatedData = [...chartData];
+            const lastCandle = updatedData[updatedData.length - 1];
+            
+            // Update close price and high/low if needed
+            lastCandle.close = tick.price;
+            lastCandle.price = tick.price;
+            
+            // Update high/low
+            if (tick.price > lastCandle.high) lastCandle.high = tick.price;
+            if (tick.price < lastCandle.low) lastCandle.low = tick.price;
+            
+            setChartData(updatedData);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching live tick:', error);
+      }
+    };
+    
+    // Initial fetch
+    fetchLivePrice();
+    
+    // Set up interval for live updates
+    const interval = setInterval(fetchLivePrice, 5000); // Update every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, [enableLiveTicker, commodityId, chartData.length]);
 
   if (!data || data.length === 0) {
     return (
