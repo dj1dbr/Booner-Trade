@@ -92,7 +92,7 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
     }
   };
 
-  const chartData = data.map(item => {
+  const formattedChartData = chartData.map(item => {
     // Handle both old format (item.price) and new OHLCV format (item.close)
     const price = isOHLCV ? item.close : (item.price || item.close);
     
