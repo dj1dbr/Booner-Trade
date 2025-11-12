@@ -786,14 +786,27 @@ const Dashboard = () => {
                   <div>
                     <div className="flex items-center justify-between text-xs mb-1">
                       <span className="text-slate-400">Portfolio-Risiko:</span>
-                      <span className="text-green-400">0.0% / 20%</span>
+                      <span className={
+                        (libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
+                          ? 'text-red-400 font-semibold'
+                          : 'text-green-400'
+                      }>
+                        {((libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100).toFixed(1)}% / {settings?.max_portfolio_risk_percent || 20}%
+                      </span>
                     </div>
                     <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: '0%' }} />
+                      <div
+                        className={`h-full transition-all ${
+                          (libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
+                            ? 'bg-red-500'
+                            : 'bg-green-500'
+                        }`}
+                        style={{ width: `${Math.min(((libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100 / (settings?.max_portfolio_risk_percent || 20)) * 100, 100)}%` }}
+                      />
                     </div>
                   </div>
                   <div className="text-xs text-slate-400">
-                    Offene Positionen: €0.00
+                    Offene Positionen: €{libertexExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && (t.platform === 'MT5_LIBERTEX' || t.mode === 'MT5_LIBERTEX')).length})
                   </div>
                 </>
               )}
