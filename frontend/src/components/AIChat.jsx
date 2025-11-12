@@ -60,7 +60,7 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
     }
   }, [aiProvider]);
 
-  // Voice recognition handlers
+  // Voice recognition handlers (Web Speech API)
   const startListening = () => {
     if (recognition && !isListening) {
       try {
@@ -76,6 +76,67 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
     if (recognition && isListening) {
       recognition.stop();
       setIsListening(false);
+    }
+  };
+
+  // Whisper recording handlers (Local Mac)
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        await transcribeWithWhisper(audioBlob);
+        
+        // Stop all tracks
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      setAudioChunks([]);
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Mikrofon-Zugriff verweigert');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeWithWhisper = async (audioBlob) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.webm');
+
+      const response = await axios.post(`${API}/api/whisper/transcribe`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30000
+      });
+
+      if (response.data && response.data.success) {
+        setInput(response.data.text);
+      } else {
+        alert('Whisper Transkription fehlgeschlagen');
+      }
+    } catch (error) {
+      console.error('Whisper transcription error:', error);
+      alert('Whisper ist nicht verfügbar. Installieren Sie: pip install openai-whisper');
     }
   };
 
