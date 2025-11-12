@@ -387,16 +387,14 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
         # Filter data if we requested 2h but got 1d (for intraday intervals)
         if period == '2h' and yf_period == '1d':
             # Filter to last 2 hours of data
-            from datetime import datetime, timedelta
-            cutoff_time = datetime.now() - timedelta(hours=2)
+            cutoff_time = now - timedelta(hours=2)
             hist = hist[hist.index >= cutoff_time]
             logger.info(f"Filtered to last 2 hours: {len(hist)} candles")
         
         # Filter data if we requested 2wk but got 1mo
         if period == '2wk' and yf_period == '1mo':
             # Filter to last 2 weeks of data
-            from datetime import datetime, timedelta
-            cutoff_time = datetime.now() - timedelta(weeks=2)
+            cutoff_time = now - timedelta(weeks=2)
             hist = hist[hist.index >= cutoff_time]
             logger.info(f"Filtered to last 2 weeks: {len(hist)} candles")
         
