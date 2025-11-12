@@ -1174,10 +1174,10 @@ async def get_ohlcv_data(
     
     Parameters:
     - commodity: Commodity ID (GOLD, WTI_CRUDE, etc.)
-    - timeframe: Chart interval (1m, 5m, 15m, 30m, 1h, 4h, 1d, 1wk, 1mo)
-    - period: Data period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, max)
+    - timeframe: Chart interval (1m, 5m, 15m, 30m, 1h, 2h, 4h, 1d, 1wk, 1mo)
+    - period: Data period (2h, 1d, 5d, 1wk, 2wk, 1mo, 3mo, 6mo, 1y, 2y, 5y, max)
     
-    Example: /api/market/ohlcv/GOLD?timeframe=1h&period=1mo
+    Example: /api/market/ohlcv/GOLD?timeframe=1m&period=2h
     """
     try:
         from commodity_processor import fetch_historical_ohlcv_async
