@@ -158,6 +158,7 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
             color: '#e4e8f0'
           }}
           labelStyle={{ color: '#94a3b8' }}
+          formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Preis']}
         />
         {/* Legend entfernt - nur Preis wird angezeigt */}
         <Area 
