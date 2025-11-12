@@ -1111,7 +1111,7 @@ async def ai_chat_endpoint(
         # Get open trades
         open_trades = await db.trades.find({"status": "OPEN"}).to_list(100)
         
-        # Send message to AI with session_id
+        # Send message to AI with session_id and db for function calling
         result = await send_chat_message(
             message=message,
             settings=settings,
@@ -1119,7 +1119,8 @@ async def ai_chat_endpoint(
             open_trades=open_trades,
             ai_provider=ai_provider,
             model=model,
-            session_id=session_id
+            session_id=session_id,
+            db=db  # Pass db for function calling
         )
         
         return result
