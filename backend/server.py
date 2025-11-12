@@ -17,7 +17,11 @@ from ta.momentum import RSIIndicator
 from apscheduler.schedulers.background import BackgroundScheduler
 import asyncio
 from threading import Thread
-from emergentintegrations.llm.chat import LlmChat, UserMessage
+# Use fallback module for emergentintegrations (Mac compatibility)
+try:
+    from emergentintegrations.llm.chat import LlmChat, UserMessage
+except ImportError:
+    from llm_fallback import get_llm_chat as LlmChat, get_user_message as UserMessage
 from commodity_processor import COMMODITIES, fetch_commodity_data, calculate_indicators, generate_signal, calculate_position_size
 from trailing_stop import update_trailing_stops, check_stop_loss_triggers
 from ai_position_manager import manage_open_positions
