@@ -108,8 +108,18 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
   });
 
   return (
-    <ResponsiveContainer width="100%" height={400}>
-      <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+    <div className="relative">
+      {enableLiveTicker && livePrice && (
+        <div className="absolute top-2 right-2 z-10 bg-emerald-900/90 border border-emerald-500/50 px-3 py-1 rounded-lg flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-xs font-semibold text-emerald-300">LIVE: ${livePrice.toFixed(2)}</span>
+        </div>
+      )}
+      <ResponsiveContainer width="100%" height={400}>
+        <AreaChart data={formattedChartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#2dd4bf" stopOpacity={0.3} />
