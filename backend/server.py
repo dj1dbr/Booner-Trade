@@ -1183,7 +1183,7 @@ async def get_ohlcv_data(
         from commodity_processor import fetch_historical_ohlcv_async
         
         # Validate timeframe
-        valid_timeframes = ['1m', '5m', '15m', '30m', '1h', '4h', '1d', '1wk', '1mo']
+        valid_timeframes = ['1m', '5m', '15m', '30m', '1h', '2h', '4h', '1d', '1wk', '1mo']
         if timeframe not in valid_timeframes:
             raise HTTPException(
                 status_code=400,
@@ -1191,7 +1191,7 @@ async def get_ohlcv_data(
             )
         
         # Validate period  
-        valid_periods = ['1d', '5d', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max']
+        valid_periods = ['2h', '1d', '5d', '1wk', '2wk', '1mo', '3mo', '6mo', '1y', '2y', '5y', 'max']
         if period not in valid_periods:
             raise HTTPException(
                 status_code=400,
