@@ -1092,12 +1092,14 @@ async def get_simple_ohlcv(commodity: str, timeframe: str = "5m", period: str = 
 @api_router.post("/ai-chat")
 async def ai_chat_endpoint(
     message: str,
+    session_id: str = "default-session",
     ai_provider: str = "openai",
     model: str = None
 ):
     """
     AI Chat endpoint for trading bot
     Supports: GPT-5 (openai), Claude (anthropic), Ollama (local)
+    Uses session_id to maintain conversation context
     """
     try:
         from ai_chat_service import send_chat_message
@@ -1109,14 +1111,15 @@ async def ai_chat_endpoint(
         # Get open trades
         open_trades = await db.trades.find({"status": "OPEN"}).to_list(100)
         
-        # Send message to AI
+        # Send message to AI with session_id
         result = await send_chat_message(
             message=message,
             settings=settings,
             latest_market_data=latest_market_data or {},
             open_trades=open_trades,
             ai_provider=ai_provider,
-            model=model
+            model=model,
+            session_id=session_id
         )
         
         return result
