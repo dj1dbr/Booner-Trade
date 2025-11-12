@@ -363,13 +363,22 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
         
         interval = interval_map.get(timeframe, '1d')
         
+        # yfinance period mapping (yfinance doesn't support '2h', '1wk', '2wk')
+        # For intraday intervals (1m, 5m, 15m, 30m, 1h), use '1d' as minimum period
+        yf_period_map = {
+            '2h': '1d',     # yfinance doesn't support 2h, use 1d (then filter)
+            '1wk': '1wk',   # yfinance supports 1wk
+            '2wk': '1mo',   # yfinance doesn't support 2wk, use 1mo (then filter)
+        }
+        yf_period = yf_period_map.get(period, period)
+        
         # Get historical data with specified timeframe
-        logger.info(f"Fetching {commodity['name']} data: period={period}, interval={interval}")
+        logger.info(f"Fetching {commodity['name']} data: period={period} (yf_period={yf_period}), interval={interval}")
         
         # Add delay to avoid rate limiting
         time.sleep(0.5)
         
-        hist = ticker.history(period=period, interval=interval)
+        hist = ticker.history(period=yf_period, interval=interval)
         
         if hist.empty or len(hist) == 0:
             logger.warning(f"No data received for {commodity['name']}")
