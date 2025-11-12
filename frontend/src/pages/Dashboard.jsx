@@ -834,12 +834,17 @@ const Dashboard = () => {
                   type="checkbox"
                   checked={settings?.active_platforms?.includes('MT5_ICMARKETS') || false}
                   onChange={async (e) => {
+                    if (!settings) {
+                      toast.error('Settings noch nicht geladen');
+                      return;
+                    }
                     const newPlatforms = e.target.checked
-                      ? [...(settings?.active_platforms || []), 'MT5_ICMARKETS']
-                      : (settings?.active_platforms || []).filter(p => p !== 'MT5_ICMARKETS');
+                      ? [...(settings.active_platforms || []), 'MT5_ICMARKETS']
+                      : (settings.active_platforms || []).filter(p => p !== 'MT5_ICMARKETS');
                     await handleUpdateSettings({ ...settings, active_platforms: newPlatforms });
                   }}
-                  className="w-4 h-4 rounded border-gray-300"
+                  className="w-4 h-4 rounded border-gray-300 cursor-pointer"
+                  disabled={!settings}
                 />
                 <h3 className="text-sm font-bold text-purple-400">🟣 MT5 ICMarkets</h3>
                 {settings?.active_platforms?.includes('MT5_ICMARKETS') && (
