@@ -1527,9 +1527,28 @@ const Dashboard = () => {
               <Card className="bg-slate-800/50 border-slate-700 p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold text-cyan-400">
-                    {selectedCommodity.name} - {chartTimeframe} Interval / {chartPeriod} Zeitraum
+                    {selectedCommodity.name} Chart
                   </h3>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3 items-center">
+                    <span className="text-xs text-slate-400">Intervall:</span>
+                    <select
+                      value={chartTimeframe}
+                      onChange={(e) => setChartTimeframe(e.target.value)}
+                      className="px-3 py-2 bg-slate-900 border border-slate-600 rounded text-sm text-white hover:border-cyan-500 focus:outline-none focus:border-cyan-500"
+                      title="Kerzen-Intervall"
+                    >
+                      <option value="1m">1 Minute</option>
+                      <option value="5m">5 Minuten</option>
+                      <option value="15m">15 Minuten</option>
+                      <option value="30m">30 Minuten</option>
+                      <option value="1h">1 Stunde</option>
+                      <option value="2h">2 Stunden</option>
+                      <option value="4h">4 Stunden</option>
+                      <option value="1d">1 Tag</option>
+                      <option value="1wk">1 Woche</option>
+                    </select>
+                    
+                    <span className="text-xs text-slate-400">Zeitraum:</span>
                     <select
                       value={chartTimeframe}
                       onChange={(e) => setChartTimeframe(e.target.value)}
