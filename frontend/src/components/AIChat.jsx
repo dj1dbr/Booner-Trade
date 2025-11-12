@@ -278,49 +278,72 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
                 disabled={loading}
               />
               
-              {/* Microphone Button (Web Speech API) */}
-              {recognition && (
-                <button
-                  onClick={isListening ? stopListening : startListening}
-                  disabled={loading || isRecording}
-                  className={`${
-                    isListening 
-                      ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
-                      : 'bg-purple-600 hover:bg-purple-700'
-                  } text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={isListening ? 'Aufnahme stoppen' : 'Spracheingabe (Browser)'}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-                  </svg>
-                </button>
-              )}
-              
-              {/* Whisper Button (Local Recording) */}
-              <button
-                onClick={isRecording ? stopRecording : startRecording}
-                disabled={loading || isListening}
-                className={`${
-                  isRecording 
-                    ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
-                    : 'bg-orange-600 hover:bg-orange-700'
-                } text-white px-4 py-2 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed`}
-                title={isRecording ? 'Aufnahme stoppen & transkribieren' : 'Whisper Aufnahme (Lokal)'}
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                </svg>
-              </button>
-              
-              <button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-              </button>
+              {/* Button Container with Labels */}
+              <div className="flex items-center gap-2">
+                {/* Web Speech Button (Browser) */}
+                {recognition && (
+                  <div className="flex flex-col items-center">
+                    <button
+                      onClick={isListening ? stopListening : startListening}
+                      disabled={loading || isRecording}
+                      className={`${
+                        isListening 
+                          ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                          : 'bg-purple-600 hover:bg-purple-700'
+                      } text-white p-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed relative group`}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                      </svg>
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                        {isListening ? 'Stoppen' : 'Browser Spracheingabe'}
+                      </div>
+                    </button>
+                    <span className="text-[10px] text-slate-400 mt-1">Browser</span>
+                  </div>
+                )}
+                
+                {/* Whisper Button (Local Mac) */}
+                <div className="flex flex-col items-center">
+                  <button
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={loading || isListening}
+                    className={`${
+                      isRecording 
+                        ? 'bg-red-600 hover:bg-red-700 animate-pulse' 
+                        : 'bg-orange-600 hover:bg-orange-700'
+                    } text-white p-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed relative group`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      {isRecording ? 'Stoppen & Senden' : 'Whisper (Offline)'}
+                    </div>
+                  </button>
+                  <span className="text-[10px] text-slate-400 mt-1">Whisper</span>
+                </div>
+                
+                {/* Send Button */}
+                <div className="flex flex-col items-center">
+                  <button
+                    onClick={sendMessage}
+                    disabled={loading || !input.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed relative group"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                      Nachricht senden
+                    </div>
+                  </button>
+                  <span className="text-[10px] text-slate-400 mt-1">Senden</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
