@@ -163,8 +163,12 @@ async def send_chat_message(message: str, settings: dict, latest_market_data: di
             # Ollama
             response = await chat.send_message(full_message)
         else:
-            # Emergentintegrations - send_message is async
-            from emergentintegrations.llm.chat import UserMessage
+            # Emergentintegrations - send_message is async (with fallback)
+            try:
+                from emergentintegrations.llm.chat import UserMessage
+            except ImportError:
+                from llm_fallback import get_user_message
+                UserMessage = get_user_message
             user_msg = UserMessage(text=full_message)
             
             # send_message returns AssistantMessage - await it!
