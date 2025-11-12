@@ -9,6 +9,8 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [isOpen, setIsOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
