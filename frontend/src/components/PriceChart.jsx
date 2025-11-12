@@ -147,7 +147,8 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
           stroke="#94a3b8" 
           style={{ fontSize: '12px' }}
           tick={{ fill: '#94a3b8' }}
-          domain={['auto', 'auto']}
+          domain={yDomain}
+          tickFormatter={(value) => `$${value.toFixed(0)}`}
         />
         <Tooltip 
           contentStyle={{ 
