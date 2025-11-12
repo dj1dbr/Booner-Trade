@@ -66,16 +66,24 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
       try {
         recognition.start();
         setIsListening(true);
+        console.log('✅ Web Speech Recognition gestartet');
       } catch (error) {
-        console.error('Error starting recognition:', error);
+        console.error('❌ Fehler beim Starten der Spracherkennung:', error);
+        alert('Spracherkennung konnte nicht gestartet werden. Bitte erlauben Sie Mikrofon-Zugriff.');
       }
     }
   };
 
   const stopListening = () => {
     if (recognition && isListening) {
-      recognition.stop();
-      setIsListening(false);
+      try {
+        recognition.stop();
+        setIsListening(false);
+        console.log('⏹️ Web Speech Recognition gestoppt');
+      } catch (error) {
+        console.error('Fehler beim Stoppen:', error);
+        setIsListening(false);
+      }
     }
   };
 
