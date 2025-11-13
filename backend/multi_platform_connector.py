@@ -53,13 +53,18 @@ class MultiPlatformConnector:
         logger.info("MultiPlatformConnector initialized with 3 platforms")
     
     async def connect_platform(self, platform_name: str) -> bool:
-        """Connect to a specific platform"""
+        """Connect to a specific platform (with connection reuse)"""
         try:
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
                 return False
             
             platform = self.platforms[platform_name]
+            
+            # CHECK: Already connected and active?
+            if platform.get('active') and platform.get('connector'):
+                logger.debug(f"ℹ️ {platform_name} already connected, reusing connection")
+                return True
             
             if platform['type'] == 'MT5':
                 # Create MetaAPI connector
