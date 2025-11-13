@@ -573,7 +573,9 @@ async def process_market_data():
                 if market_data:
                     current_prices[commodity_id] = market_data['price']
             
-            await manage_open_positions(db, current_prices, settings)
+            # DEAKTIVIERT: AI Position Manager schließt manuelle Trades ungewollt
+            # await manage_open_positions(db, current_prices, settings)
+            logger.debug("AI Position Manager ist deaktiviert (schließt manuelle Trades)")
         
         logger.info("Market data processing complete for all commodities")
         
