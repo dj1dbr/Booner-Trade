@@ -1186,16 +1186,6 @@ const Dashboard = () => {
                                 {trade.platform || trade.mode || 'MT5'}
                               </Badge>
                             </td>
-                            <td className="px-4 py-3 text-center">
-                              <Badge className={
-                                trade.platform === 'MT5_LIBERTEX' ? 'bg-blue-600' :
-                                trade.platform === 'MT5_ICMARKETS' ? 'bg-purple-600' :
-                                trade.platform === 'BITPANDA' ? 'bg-green-600' :
-                                trade.mode === 'MT5' ? 'bg-blue-600' : 'bg-green-600'
-                              }>
-                                {trade.platform || trade.mode || 'MT5'}
-                              </Badge>
-                            </td>
                             <td className="px-4 py-3 text-center space-x-2">
                               <button
                                 onClick={() => handleCloseTrade(trade)}
