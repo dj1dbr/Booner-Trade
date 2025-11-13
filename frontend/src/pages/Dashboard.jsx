@@ -1446,20 +1446,19 @@ const Dashboard = () => {
                             </div>
                             <Button
                               onClick={async () => {
-                                if (window.confirm(`Position ${trade.ticket || trade.id} schließen?`)) {
-                                  try {
-                                    await axios.post(`${backendUrl}/api/trades/close`, {
-                                      trade_id: trade.id,
-                                      ticket: trade.ticket,
-                                      platform: trade.platform
-                                    });
-                                    alert('✅ Position erfolgreich geschlossen!');
-                                    // Refresh trades
-                                    fetchTrades();
-                                  } catch (error) {
-                                    console.error('Fehler beim Schließen:', error);
-                                    alert('❌ Fehler beim Schließen der Position');
-                                  }
+                                try {
+                                  await axios.post(`${backendUrl}/api/trades/close`, {
+                                    trade_id: trade.id,
+                                    ticket: trade.ticket,
+                                    platform: trade.platform
+                                  });
+                                  toast.success('✅ Position erfolgreich geschlossen!');
+                                  fetchTrades();
+                                  fetchAccountData();
+                                } catch (error) {
+                                  const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Unbekannter Fehler';
+                                  console.error('Fehler beim Schließen:', error.response?.data || error);
+                                  toast.error('❌ Fehler: ' + errorMsg);
                                 }
                               }}
                               size="sm"
