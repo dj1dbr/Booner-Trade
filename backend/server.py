@@ -1500,9 +1500,68 @@ async def execute_trade(trade_type: str, price: float, quantity: float = None, c
         logger.error(f"Error executing manual trade: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/trades/close")
+async def close_trade_v2(request: dict):
+    """Close an open trade - supports both DB trades and MT5 positions"""
+    try:
+        trade_id = request.get('trade_id')
+        ticket = request.get('ticket')
+        platform = request.get('platform')
+        
+        # If we have a ticket, close the MT5 position
+        if ticket and platform:
+            from multi_platform_connector import MultiPlatformConnector
+            connector = MultiPlatformConnector()
+            
+            await connector.connect_platform(platform)
+            platform_info = connector.platforms.get(platform)
+            
+            if platform_info and platform_info.get('connector'):
+                mt5_connector = platform_info['connector']
+                success = await mt5_connector.close_position(str(ticket))
+                
+                if success:
+                    logger.info(f"✅ Closed MT5 position {ticket} on {platform}")
+                    return {
+                        "success": True,
+                        "message": f"Position {ticket} geschlossen",
+                        "ticket": ticket
+                    }
+                else:
+                    raise HTTPException(status_code=500, detail=f"MT5 Order konnte nicht geschlossen werden. Ticket: {ticket}")
+            else:
+                raise HTTPException(status_code=500, detail=f"Platform {platform} not connected")
+        
+        # Otherwise, close DB trade
+        if trade_id:
+            trade = await db.trades.find_one({"id": trade_id})
+            if not trade:
+                raise HTTPException(status_code=404, detail="Trade not found")
+            
+            if trade['status'] == 'CLOSED':
+                raise HTTPException(status_code=400, detail="Trade already closed")
+            
+            await db.trades.update_one(
+                {"id": trade_id},
+                {"$set": {
+                    "status": "CLOSED",
+                    "closed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            return {"success": True, "trade_id": trade_id}
+        
+        raise HTTPException(status_code=400, detail="Missing trade_id or ticket")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error closing trade: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/trades/close/{trade_id}")
 async def close_trade(trade_id: str, exit_price: float):
-    """Close an open trade"""
+    """Close an open trade (legacy endpoint)"""
     try:
         trade = await db.trades.find_one({"id": trade_id})
         if not trade:
