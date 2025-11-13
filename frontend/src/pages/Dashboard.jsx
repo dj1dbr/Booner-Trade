@@ -1115,7 +1115,15 @@ const Dashboard = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {trades.filter(t => t.status === 'OPEN').map((trade) => {
+                          {trades.filter(t => {
+                            // Filter: Nur offene Trades OHNE Error Codes
+                            if (t.status !== 'OPEN') return false;
+                            
+                            // Aussortieren: Trades mit MetaAPI Error Codes
+                            const hasErrorCode = t.commodity?.includes('TRADE_RETCODE') || 
+                                                 t.mt5_ticket?.toString().includes('TRADE_RETCODE');
+                            return !hasErrorCode;
+                          }).map((trade) => {
                         // Map MT5 symbols to commodity IDs
                         const symbolToCommodity = {
                           'XAUUSD': 'GOLD',
