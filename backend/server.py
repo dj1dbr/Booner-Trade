@@ -1710,12 +1710,15 @@ async def get_trades(status: Optional[str] = None):
                 trade['closed_at'] = datetime.fromisoformat(trade['closed_at']).isoformat()
         
         # Filter out error trades and deduplicate by mt5_ticket
+        # WICHTIG: Nur Trades mit gültigem Ticket oder mit echtem P&L behalten
         seen_tickets = set()
         unique_trades = []
         
         for trade in trades:
             ticket = trade.get('mt5_ticket') or trade.get('ticket')
             commodity = trade.get('commodity', '')
+            profit_loss = trade.get('profit_loss')
+            status = trade.get('status')
             
             # Skip trades with MetaAPI error codes
             if ticket and isinstance(ticket, str) and 'TRADE_RETCODE' in ticket:
@@ -1726,9 +1729,15 @@ async def get_trades(status: Optional[str] = None):
                 logger.debug(f"Filtered error trade: commodity={commodity}")
                 continue
             
-            # If trade has no ticket, always include it
+            # If trade has no ticket AND is closed with no P&L - SKIP IT (Fake trade)
             if not ticket:
-                unique_trades.append(trade)
+                # Nur behalten wenn OPEN (Live MT5) oder CLOSED mit echtem P&L
+                if status == 'OPEN':
+                    unique_trades.append(trade)
+                elif status == 'CLOSED' and profit_loss is not None and profit_loss != 0:
+                    unique_trades.append(trade)
+                else:
+                    logger.debug(f"Filtered fake trade without ticket: {commodity}, P&L={profit_loss}")
                 continue
             
             # If ticket not seen yet, include it
@@ -1736,7 +1745,7 @@ async def get_trades(status: Optional[str] = None):
                 unique_trades.append(trade)
                 seen_tickets.add(ticket)
             else:
-                # Duplicate found - keep the one with P&L or more recent
+                # Duplicate found
                 logger.debug(f"Duplicate trade filtered: ticket={ticket}, commodity={commodity}")
         
         logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
