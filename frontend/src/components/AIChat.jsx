@@ -86,6 +86,10 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
       };
       
       setRecognition(recognitionInstance);
+      console.log('✅ Speech Recognition Instance erstellt');
+    } else {
+      console.warn('❌ Web Speech API NICHT verfügbar in diesem Browser!');
+      console.log('Browser:', navigator.userAgent);
     }
   }, [aiProvider]);
 
