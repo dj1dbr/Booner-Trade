@@ -1601,13 +1601,13 @@ async def close_trade(trade_id: str, exit_price: float):
 
 @api_router.get("/trades/list")
 async def get_trades(status: Optional[str] = None):
-    """Get all trades"""
+    """Get all trades - deduplicates DB trades and MT5 positions by ticket number"""
     try:
         query = {}
         if status:
             query['status'] = status.upper()
         
-        # Sort by created_at (new field) or timestamp (legacy)
+        # Get DB trades
         trades = await db.trades.find(query, {"_id": 0}).to_list(1000)
         
         # Sort manually if needed
@@ -1624,7 +1624,29 @@ async def get_trades(status: Optional[str] = None):
             if trade.get('closed_at') and isinstance(trade['closed_at'], str):
                 trade['closed_at'] = datetime.fromisoformat(trade['closed_at']).isoformat()
         
-        return {"trades": trades}
+        # Deduplicate by mt5_ticket to prevent double-showing
+        seen_tickets = set()
+        unique_trades = []
+        
+        for trade in trades:
+            ticket = trade.get('mt5_ticket') or trade.get('ticket')
+            
+            # If trade has no ticket, always include it
+            if not ticket:
+                unique_trades.append(trade)
+                continue
+            
+            # If ticket not seen yet, include it
+            if ticket not in seen_tickets:
+                unique_trades.append(trade)
+                seen_tickets.add(ticket)
+            else:
+                # Duplicate found - log it
+                logger.warning(f"Duplicate trade filtered: ticket={ticket}, commodity={trade.get('commodity')}")
+        
+        logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
+        
+        return {"trades": unique_trades}
     except Exception as e:
         logger.error(f"Error fetching trades: {e}")
         raise HTTPException(status_code=500, detail=str(e))
