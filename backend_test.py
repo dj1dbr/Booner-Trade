@@ -690,13 +690,19 @@ class RohstoffTraderTester:
     
     async def run_all_tests(self):
         """Run all backend tests in sequence"""
-        logger.info("🚀 Starting Rohstoff Trader Backend API Tests - Multi-Platform Edition")
+        logger.info("🚀 Starting Rohstoff Trader Backend API Tests - AI Settings Integration Focus")
         logger.info(f"Testing against: {self.base_url}")
         
         # Basic connectivity tests
         await self.test_api_root()
         
-        # Multi-Platform Tests (NEW - PRIORITY)
+        # AI SETTINGS INTEGRATION TESTS (PRIORITY - As per review request)
+        logger.info("\n=== AI SETTINGS INTEGRATION TESTS ===")
+        await self.test_ai_settings_retrieval()
+        await self.test_ai_chat_with_settings()
+        await self.test_backend_logs_ai_settings()
+        
+        # Multi-Platform Tests (REQUIRED)
         logger.info("\n=== MULTI-PLATFORM TESTS ===")
         await self.test_platforms_status()
         await self.test_mt5_libertex_account()
@@ -704,22 +710,23 @@ class RohstoffTraderTester:
         await self.test_settings_platforms()
         await self.test_commodities_multi_platform_symbols()
         
-        # Legacy MT5 Connection Tests
-        logger.info("\n=== LEGACY MT5 TESTS ===")
-        await self.test_mt5_account_info()
-        await self.test_mt5_status()
-        await self.test_mt5_symbols()
-        await self.test_mt5_positions()
+        # Market Data Tests (REQUIRED)
+        logger.info("\n=== MARKET DATA TESTS ===")
+        await self.test_market_data_endpoint()
+        await self.test_commodities_list()
+        await self.test_market_data_all()
         
         # Settings Tests
         logger.info("\n=== SETTINGS TESTS ===")
         await self.test_settings_get()
         await self.test_settings_update_mt5_mode()
         
-        # Market Data Tests
-        logger.info("\n=== MARKET DATA TESTS ===")
-        await self.test_commodities_list()
-        await self.test_market_data_all()
+        # Legacy MT5 Connection Tests
+        logger.info("\n=== LEGACY MT5 TESTS ===")
+        await self.test_mt5_account_info()
+        await self.test_mt5_status()
+        await self.test_mt5_symbols()
+        await self.test_mt5_positions()
         
         # Manual Trade Execution Tests (MOST IMPORTANT)
         logger.info("\n=== TRADE EXECUTION TESTS ===")
