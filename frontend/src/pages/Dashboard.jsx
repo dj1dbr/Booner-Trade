@@ -2100,15 +2100,18 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             <select
               id="default_platform"
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              value={formData.default_platform || 'MT5_LIBERTEX'}
+              value={formData.default_platform || 'ALL'}
               onChange={(e) => setFormData({ ...formData, default_platform: e.target.value })}
             >
-              <option value="MT5_LIBERTEX">🔷 MT5 Libertex (€50.000)</option>
-              <option value="MT5_ICMARKETS">🔷 MT5 ICMarkets (€2.497)</option>
-              <option value="BITPANDA">🟢 Bitpanda (€10)</option>
+              <option value="ALL">🌐 Alle Plattformen gleichzeitig</option>
+              <option value="MT5_LIBERTEX">🔷 MT5 Libertex (€47.727)</option>
+              <option value="MT5_ICMARKETS">🔷 MT5 ICMarkets (€2.585)</option>
+              <option value="BITPANDA">🟢 Bitpanda (€0 - nur lokal)</option>
             </select>
             <p className="text-xs text-slate-500">
-              Plattform, die für neue manuelle und automatische Trades verwendet wird
+              {formData.default_platform === 'ALL' ? 
+                'Trades werden auf allen aktiven Plattformen platziert' : 
+                'Plattform, die für neue manuelle und automatische Trades verwendet wird'}
             </p>
           </div>
 
