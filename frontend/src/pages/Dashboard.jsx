@@ -488,28 +488,44 @@ const Dashboard = () => {
 
   const handleCloseTrade = async (trade) => {
     try {
-      // Close MT5 position
-      if (trade.mt5_ticket && (trade.platform === 'MT5_LIBERTEX' || trade.platform === 'MT5_ICMARKETS')) {
-        const platform = trade.platform || 'MT5_ICMARKETS';
-        const response = await axios.post(`${API}/trades/close/${trade.mt5_ticket}`, { platform });
-        if (response.data.success) {
-          toast.success('✅ Position geschlossen!');
-          fetchTrades();
-          fetchStats();
-          fetchAccountData();
-        }
+      console.log('Closing trade:', trade);
+      
+      // Prepare request body
+      const requestBody = {
+        trade_id: trade.id,
+        ticket: trade.mt5_ticket || trade.ticket,
+        platform: trade.platform
+      };
+      
+      console.log('Request body:', requestBody);
+      
+      // Use new unified endpoint
+      const response = await axios.post(`${API}/api/trades/close`, requestBody);
+      
+      console.log('Close response:', response.data);
+      
+      if (response.data.success) {
+        toast.success('✅ Position geschlossen!');
+        fetchTrades();
+        fetchStats();
+        fetchAccountData();
       } else {
-        // Close DB trade
-        const response = await axios.post(`${API}/trades/close/${trade.id}`);
-        if (response.data.success) {
-          toast.success('✅ Trade geschlossen!');
-          fetchTrades();
-          fetchStats();
-        }
+        throw new Error(response.data.message || 'Trade konnte nicht geschlossen werden');
       }
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Unbekannter Fehler';
-      console.error('Close trade error:', error.response?.data || error);
+      console.error('Close trade error:', error);
+      console.error('Error response:', error.response);
+      
+      let errorMsg = 'Unbekannter Fehler';
+      
+      if (error.response?.data) {
+        // Backend error
+        errorMsg = error.response.data.detail || error.response.data.message || JSON.stringify(error.response.data);
+      } else if (error.message) {
+        // JavaScript error
+        errorMsg = error.message;
+      }
+      
       toast.error('Fehler beim Schließen: ' + errorMsg);
     }
   };
