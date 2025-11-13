@@ -1599,6 +1599,29 @@ async def close_trade(trade_id: str, exit_price: float):
         logger.error(f"Error closing trade: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/trades/cleanup")
+async def cleanup_trades():
+    """Lösche fehlerhafte Trades und Duplikate permanent aus der Datenbank"""
+    try:
+        from trade_cleanup import cleanup_error_trades, cleanup_duplicate_trades
+        
+        # Cleanup durchführen
+        error_deleted = await cleanup_error_trades(db)
+        duplicate_deleted = await cleanup_duplicate_trades(db)
+        
+        total_deleted = error_deleted + duplicate_deleted
+        
+        return {
+            "success": True,
+            "message": f"✅ {total_deleted} Trades gelöscht",
+            "error_trades_deleted": error_deleted,
+            "duplicate_trades_deleted": duplicate_deleted,
+            "total_deleted": total_deleted
+        }
+    except Exception as e:
+        logger.error(f"Cleanup error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/trades/list")
 async def get_trades(status: Optional[str] = None):
     """Get all trades - deduplicates DB trades and MT5 positions by ticket number"""
