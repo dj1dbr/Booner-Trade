@@ -95,14 +95,34 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
 
   // Voice recognition handlers (Web Speech API)
   const startListening = () => {
-    if (recognition && !isListening) {
-      try {
-        recognition.start();
-        setIsListening(true);
-        console.log('✅ Web Speech Recognition gestartet');
-      } catch (error) {
-        console.error('❌ Fehler beim Starten der Spracherkennung:', error);
-        alert('Spracherkennung konnte nicht gestartet werden. Bitte erlauben Sie Mikrofon-Zugriff.');
+    console.log('🎤 startListening aufgerufen');
+    console.log('Recognition Object:', recognition);
+    console.log('isListening:', isListening);
+    
+    if (!recognition) {
+      alert('❌ Spracherkennung ist nicht verfügbar!\n\nBitte nutzen Sie Chrome oder Safari.\n\nAktueller Browser: ' + navigator.userAgent);
+      return;
+    }
+    
+    if (isListening) {
+      console.log('⚠️ Recognition läuft bereits');
+      return;
+    }
+    
+    try {
+      console.log('🎤 Starte recognition.start()...');
+      recognition.start();
+      setIsListening(true);
+      console.log('✅ Web Speech Recognition gestartet');
+    } catch (error) {
+      console.error('❌ Fehler beim Starten der Spracherkennung:', error);
+      console.error('Error Name:', error.name);
+      console.error('Error Message:', error.message);
+      
+      if (error.name === 'InvalidStateError') {
+        alert('⚠️ Spracherkennung läuft bereits oder wurde nicht richtig gestoppt.\n\nBitte laden Sie die Seite neu.');
+      } else {
+        alert('❌ Spracherkennung konnte nicht gestartet werden.\n\nFehler: ' + error.message + '\n\nBitte erlauben Sie Mikrofon-Zugriff in den Browser-Einstellungen.');
       }
     }
   };
