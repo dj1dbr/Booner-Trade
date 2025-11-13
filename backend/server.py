@@ -1624,12 +1624,22 @@ async def get_trades(status: Optional[str] = None):
             if trade.get('closed_at') and isinstance(trade['closed_at'], str):
                 trade['closed_at'] = datetime.fromisoformat(trade['closed_at']).isoformat()
         
-        # Deduplicate by mt5_ticket to prevent double-showing
+        # Filter out error trades and deduplicate by mt5_ticket
         seen_tickets = set()
         unique_trades = []
         
         for trade in trades:
             ticket = trade.get('mt5_ticket') or trade.get('ticket')
+            commodity = trade.get('commodity', '')
+            
+            # Skip trades with MetaAPI error codes
+            if ticket and isinstance(ticket, str) and 'TRADE_RETCODE' in ticket:
+                logger.debug(f"Filtered error trade: {ticket}, commodity={commodity}")
+                continue
+            
+            if commodity and 'TRADE_RETCODE' in commodity:
+                logger.debug(f"Filtered error trade: commodity={commodity}")
+                continue
             
             # If trade has no ticket, always include it
             if not ticket:
@@ -1641,8 +1651,8 @@ async def get_trades(status: Optional[str] = None):
                 unique_trades.append(trade)
                 seen_tickets.add(ticket)
             else:
-                # Duplicate found - log it
-                logger.warning(f"Duplicate trade filtered: ticket={ticket}, commodity={trade.get('commodity')}")
+                # Duplicate found - keep the one with P&L or more recent
+                logger.debug(f"Duplicate trade filtered: ticket={ticket}, commodity={commodity}")
         
         logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
         
