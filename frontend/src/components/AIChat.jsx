@@ -317,6 +317,22 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
               </div>
             )}
             
+            {/* Debug Info - nur wenn recognition nicht verfügbar */}
+            {!recognition && (
+              <div className="mb-2 p-2 bg-yellow-900/30 border border-yellow-500/50 rounded text-center">
+                <span className="text-yellow-400 text-xs">
+                  ⚠️ Spracherkennung nicht verfügbar. Nutzen Sie Chrome oder Safari.
+                  <br/>
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="mt-1 text-blue-400 underline"
+                  >
+                    Seite neu laden
+                  </button>
+                </span>
+              </div>
+            )}
+            
             <div className="flex space-x-2">
               <input
                 type="text"
