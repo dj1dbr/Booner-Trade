@@ -655,12 +655,10 @@ class RohstoffTraderTester:
         # This test will make an AI chat request and check if backend logs the settings usage
         # We'll look for the specific log message: "AI Chat: Using provider=..., model=..."
         
-        chat_data = {
-            "message": "Kurze Marktanalyse bitte",
-            "session_id": "log-test-session"
-        }
+        # Test AI chat endpoint with query parameters
+        endpoint = "/api/ai-chat?message=Kurze Marktanalyse bitte&session_id=log-test-session"
         
-        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        success, data = await self.make_request("POST", endpoint)
         
         if success:
             # The backend should log: "AI Chat: Using provider=..., model=... (from settings)"
