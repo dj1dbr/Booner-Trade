@@ -1179,20 +1179,23 @@ const Dashboard = () => {
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <Badge className={trade.status === 'OPEN' ? 'bg-yellow-600' : 'bg-gray-600'}>
-                                {trade.status}
+                              <Badge className={
+                                trade.platform === 'MT5_LIBERTEX' ? 'bg-blue-600' :
+                                trade.platform === 'MT5_ICMARKETS' ? 'bg-purple-600' :
+                                trade.platform === 'BITPANDA' ? 'bg-green-600' :
+                                trade.mode === 'MT5' ? 'bg-blue-600' : 'bg-green-600'
+                              }>
+                                {trade.platform || trade.mode || 'MT5'}
                               </Badge>
                             </td>
                             <td className="px-4 py-3 text-center space-x-2">
-                              {trade.status === 'OPEN' && (
-                                <button
-                                  onClick={() => handleCloseTrade(trade)}
-                                  className="text-orange-400 hover:text-orange-300 text-xs font-semibold px-2 py-1 bg-orange-900/20 rounded"
-                                  title="Position schließen"
-                                >
-                                  🔒 Schließen
-                                </button>
-                              )}
+                              <button
+                                onClick={() => handleCloseTrade(trade)}
+                                className="text-orange-400 hover:text-orange-300 text-xs font-semibold px-2 py-1 bg-orange-900/20 rounded"
+                                title="Position schließen"
+                              >
+                                🔒 Schließen
+                              </button>
                               <button
                                 onClick={() => handleDeleteTrade(trade.id, `${commodity?.name || trade.commodity} ${trade.type}`)}
                                 className="text-red-400 hover:text-red-300 text-xs"
@@ -1208,8 +1211,107 @@ const Dashboard = () => {
                   </table>
                 </div>
               )}
-            </Card>
-          </TabsContent>
+            </TabsContent>
+
+            {/* Closed Trades Tab */}
+            <TabsContent value="closed">
+              {trades.filter(t => t.status === 'CLOSED').length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <p>Keine geschlossenen Trades</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-800/50 border-b border-slate-700">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-slate-300">Rohstoff</th>
+                        <th className="px-4 py-3 text-left text-slate-300">Typ</th>
+                        <th className="px-4 py-3 text-right text-slate-300">Einstieg</th>
+                        <th className="px-4 py-3 text-right text-slate-300">Ausstieg</th>
+                        <th className="px-4 py-3 text-right text-slate-300">Menge</th>
+                        <th className="px-4 py-3 text-right text-slate-300">P&L</th>
+                        <th className="px-4 py-3 text-center text-slate-300">Plattform</th>
+                        <th className="px-4 py-3 text-center text-slate-300">Geschlossen</th>
+                        <th className="px-4 py-3 text-center text-slate-300">Aktion</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {trades.filter(t => t.status === 'CLOSED').map((trade) => {
+                        const symbolToCommodity = {
+                          'XAUUSD': 'GOLD',
+                          'XAGUSD': 'SILVER',
+                          'XPTUSD': 'PLATINUM',
+                          'XPDUSD': 'PALLADIUM',
+                          'PL': 'PLATINUM',
+                          'PA': 'PALLADIUM',
+                          'USOILCash': 'WTI_CRUDE',
+                          'CL': 'BRENT_CRUDE',
+                          'NGASCash': 'NATURAL_GAS',
+                          'WHEAT': 'WHEAT',
+                          'CORN': 'CORN',
+                          'SOYBEAN': 'SOYBEANS',
+                          'COFFEE': 'COFFEE',
+                          'SUGAR': 'SUGAR',
+                          'COTTON': 'COTTON',
+                          'COCOA': 'COCOA'
+                        };
+                        
+                        const commodityId = symbolToCommodity[trade.commodity] || trade.commodity;
+                        const commodity = commodities[commodityId];
+                        const pl = trade.profit_loss || 0;
+                        
+                        return (
+                          <tr key={trade.id} className="border-b border-slate-800 hover:bg-slate-800/30">
+                            <td className="px-4 py-3 text-slate-200">
+                              {commodity?.name || trade.commodity}
+                              {trade.mt5_ticket && (
+                                <span className="ml-2 text-xs text-slate-500">#{trade.mt5_ticket}</span>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <Badge className={trade.type === 'BUY' ? 'bg-green-600' : 'bg-red-600'}>
+                                {trade.type}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-right text-slate-200">${trade.entry_price?.toFixed(2)}</td>
+                            <td className="px-4 py-3 text-right text-slate-200">${trade.exit_price?.toFixed(2) || 'N/A'}</td>
+                            <td className="px-4 py-3 text-right text-slate-200">{trade.quantity}</td>
+                            <td className={`px-4 py-3 text-right font-semibold ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {pl >= 0 ? '+' : ''}{pl.toFixed(2)} €
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge className={
+                                trade.platform === 'MT5_LIBERTEX' ? 'bg-blue-600' :
+                                trade.platform === 'MT5_ICMARKETS' ? 'bg-purple-600' :
+                                trade.platform === 'BITPANDA' ? 'bg-green-600' :
+                                trade.mode === 'MT5' ? 'bg-blue-600' : 'bg-green-600'
+                              }>
+                                {trade.platform || trade.mode || 'MT5'}
+                              </Badge>
+                            </td>
+                            <td className="px-4 py-3 text-center text-xs text-slate-400">
+                              {trade.closed_at ? new Date(trade.closed_at).toLocaleDateString('de-DE') : 'N/A'}
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => handleDeleteTrade(trade.id, `${commodity?.name || trade.commodity} ${trade.type}`)}
+                                className="text-red-400 hover:text-red-300 text-xs"
+                                title="Trade löschen"
+                              >
+                                🗑️
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </Card>
+      </TabsContent>
 
           {/* Tab 3: Charts */}
           <TabsContent value="charts">
