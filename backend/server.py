@@ -106,6 +106,25 @@ app = FastAPI()
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
+# Startup event - automatisches Cleanup beim Start
+@app.on_event("startup")
+async def startup_cleanup():
+    """Bereinige fehlerhafte Trades und Duplikate beim Server-Start"""
+    try:
+        logger.info("🚀 Server startet - führe Trade-Cleanup durch...")
+        from trade_cleanup import cleanup_error_trades, cleanup_duplicate_trades
+        
+        error_deleted = await cleanup_error_trades(db)
+        duplicate_deleted = await cleanup_duplicate_trades(db)
+        total_deleted = error_deleted + duplicate_deleted
+        
+        if total_deleted > 0:
+            logger.info(f"✅ Startup-Cleanup: {total_deleted} fehlerhafte/doppelte Trades gelöscht")
+        else:
+            logger.info("✅ Startup-Cleanup: Datenbank ist sauber")
+    except Exception as e:
+        logger.error(f"⚠️ Startup-Cleanup fehlgeschlagen: {e}")
+
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
