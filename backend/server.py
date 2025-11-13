@@ -2475,11 +2475,11 @@ async def startup_event():
     # Fetch initial market data
     await process_market_data()
     
-    # Start Auto-Trading Engine (LIVE TICKER MODE)
-    from auto_trading_engine import get_auto_trading_engine
-    auto_engine = get_auto_trading_engine(db)
-    asyncio.create_task(auto_engine.start())
-    logger.info("🤖 Auto-Trading Engine gestartet (LIVE TICKER - alle 10 Sekunden)")
+    # DEAKTIVIERT: Auto-Trading Engine erstellt Fake-Trades
+    # from auto_trading_engine import get_auto_trading_engine
+    # auto_engine = get_auto_trading_engine(db)
+    # asyncio.create_task(auto_engine.start())
+    logger.info("🔴 Auto-Trading Engine ist DEAKTIVIERT (erstellt Fake-Trades)")
     
     logger.info("API ready - market data available via /api/market/current and /api/market/refresh")
     logger.info("AI analysis enabled for intelligent trading decisions")
