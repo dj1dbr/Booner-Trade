@@ -1311,10 +1311,23 @@ async def get_ohlcv_data(
         logger.error(f"Error fetching OHLCV data: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+class TradeExecuteRequest(BaseModel):
+    """Request Model für /trades/execute"""
+    trade_type: str  # "BUY" or "SELL"
+    price: float
+    quantity: Optional[float] = None
+    commodity: str = "WTI_CRUDE"
+
 @api_router.post("/trades/execute")
-async def execute_trade(trade_type: str, price: float, quantity: float = None, commodity: str = "WTI_CRUDE"):
+async def execute_trade(request: TradeExecuteRequest):
     """Manually execute a trade with automatic position sizing - SENDET AN MT5!"""
     try:
+        trade_type = request.trade_type
+        price = request.price
+        quantity = request.quantity
+        commodity = request.commodity
+        
+        logger.info(f"🔥 Trade Execute Request: {trade_type} {commodity} @ {price}, Quantity: {quantity}")
         settings = await db.trading_settings.find_one({"id": "trading_settings"})
         if not settings:
             settings = TradingSettings().model_dump()
