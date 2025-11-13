@@ -187,7 +187,7 @@ class MultiPlatformConnector:
             return None
     
     async def get_open_positions(self, platform_name: str) -> List[Dict[str, Any]]:
-        """Get open positions for a specific platform"""
+        """Get open positions for a specific platform - with deduplication and error filtering"""
         try:
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
@@ -198,7 +198,38 @@ class MultiPlatformConnector:
             if not platform['active'] or not platform['connector']:
                 return []
             
-            return await platform['connector'].get_positions()
+            positions = await platform['connector'].get_positions()
+            
+            # Deduplicate and filter error positions
+            seen_tickets = set()
+            unique_positions = []
+            
+            for pos in positions:
+                ticket = pos.get('id') or pos.get('positionId') or pos.get('ticket')
+                symbol = pos.get('symbol', '')
+                
+                # Filter out error positions
+                if ticket and 'TRADE_RETCODE' in str(ticket):
+                    logger.debug(f"Filtered error position: {ticket}")
+                    continue
+                
+                if 'TRADE_RETCODE' in symbol:
+                    logger.debug(f"Filtered error position: symbol={symbol}")
+                    continue
+                
+                # Skip duplicates
+                if ticket and ticket in seen_tickets:
+                    logger.debug(f"Filtered duplicate position: {ticket}")
+                    continue
+                
+                unique_positions.append(pos)
+                if ticket:
+                    seen_tickets.add(ticket)
+            
+            if len(positions) != len(unique_positions):
+                logger.info(f"{platform_name}: {len(positions)} positions → {len(unique_positions)} after deduplication")
+            
+            return unique_positions
             
         except Exception as e:
             logger.error(f"Error getting positions for {platform_name}: {e}")
