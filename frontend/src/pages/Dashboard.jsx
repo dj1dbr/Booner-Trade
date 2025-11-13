@@ -476,13 +476,31 @@ const Dashboard = () => {
     }
     
     try {
-      await axios.post(`${API}/trades/execute?trade_type=${type}&price=${market.price}&quantity=1&commodity=${commodityId}`);
-      toast.success(`${type} Order für ${commodities[commodityId]?.name || commodityId} ausgeführt`);
-      fetchTrades();
-      fetchStats();
-      fetchAllMarkets();
+      console.log('Executing trade:', { trade_type: type, price: market.price, commodity: commodityId });
+      
+      const response = await axios.post(`${API}/trades/execute`, {
+        trade_type: type,
+        price: market.price,
+        quantity: null,  // Auto-berechnet
+        commodity: commodityId
+      });
+      
+      console.log('Trade response:', response.data);
+      
+      if (response.data.success) {
+        const ticket = response.data.ticket;
+        toast.success(`✅ ${type} Order für ${commodities[commodityId]?.name || commodityId} ausgeführt! Ticket: #${ticket}`);
+        fetchTrades();
+        fetchStats();
+        fetchAllMarkets();
+        fetchAccountData();
+      } else {
+        throw new Error('Trade nicht erfolgreich');
+      }
     } catch (error) {
-      toast.error('Fehler beim Ausführen der Order');
+      console.error('Trade execution error:', error);
+      const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Unbekannter Fehler';
+      toast.error('Fehler beim Ausführen: ' + errorMsg);
     }
   };
 
