@@ -1688,6 +1688,8 @@ async def get_trades(status: Optional[str] = None):
         
         # Hole GESCHLOSSENE Trades aus DB
         query = {"status": "CLOSED"}
+        logger.info(f"📊 Live MT5 Positionen: {len(live_mt5_positions)}")
+        
         if status and status.upper() == "OPEN":
             # Wenn nur OPEN angefordert, gib nur MT5-Positionen zurück
             trades = live_mt5_positions
