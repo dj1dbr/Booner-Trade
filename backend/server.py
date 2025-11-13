@@ -1123,13 +1123,14 @@ async def whisper_transcribe_endpoint(file: UploadFile):
 async def ai_chat_endpoint(
     message: str,
     session_id: str = "default-session",
-    ai_provider: str = "openai",
+    ai_provider: str = None,
     model: str = None
 ):
     """
     AI Chat endpoint for trading bot
     Supports: GPT-5 (openai), Claude (anthropic), Ollama (local)
     Uses session_id to maintain conversation context
+    Uses ai_provider and model from user settings if not explicitly provided
     """
     try:
         from ai_chat_service import send_chat_message
@@ -1137,6 +1138,13 @@ async def ai_chat_endpoint(
         # Get settings from correct collection
         settings_doc = await db.trading_settings.find_one({"id": "trading_settings"})
         settings = settings_doc if settings_doc else {}
+        
+        # Use settings values if parameters not provided
+        # Priority: URL params > Settings > Defaults
+        final_ai_provider = ai_provider or settings.get('ai_provider', 'emergent')
+        final_model = model or settings.get('ai_model', 'gpt-5')
+        
+        logger.info(f"AI Chat: Using provider={final_ai_provider}, model={final_model} (from {'params' if ai_provider else 'settings'})")
         
         # Get open trades
         open_trades = await db.trades.find({"status": "OPEN"}).to_list(100)
@@ -1147,8 +1155,8 @@ async def ai_chat_endpoint(
             settings=settings,
             latest_market_data=latest_market_data or {},
             open_trades=open_trades,
-            ai_provider=ai_provider,
-            model=model,
+            ai_provider=final_ai_provider,
+            model=final_model,
             session_id=session_id,
             db=db  # Pass db for function calling
         )
