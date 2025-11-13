@@ -296,13 +296,22 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
 
           {/* Input */}
           <div className="p-4 border-t border-slate-700">
+            {/* Status Indicator */}
+            {(isListening || isRecording) && (
+              <div className="mb-2 p-2 bg-red-900/30 border border-red-500/50 rounded text-center">
+                <span className="text-red-400 text-sm font-semibold animate-pulse">
+                  {isListening ? '🎤 Browser hört zu...' : '🎙️ Aufnahme läuft...'}
+                </span>
+              </div>
+            )}
+            
             <div className="flex space-x-2">
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                placeholder="Frage die KI... oder 🎤"
+                placeholder="Frage die KI... oder nutze Mikrofon 🎤"
                 className="flex-1 bg-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 disabled={loading}
               />
