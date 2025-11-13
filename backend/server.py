@@ -1647,9 +1647,13 @@ async def cleanup_trades():
 async def get_trades(status: Optional[str] = None):
     """Get all trades - ONLY real MT5 positions + closed DB trades"""
     try:
+        logger.info("🔍 /trades/list aufgerufen - NEU VERSION 2.0")
+        
         # Get settings
         settings = await db.trading_settings.find_one({"id": "trading_settings"})
         active_platforms = settings.get('active_platforms', []) if settings else []
+        
+        logger.info(f"Active platforms: {active_platforms}")
         
         # Hole echte MT5-Positionen (LIVE)
         live_mt5_positions = []
