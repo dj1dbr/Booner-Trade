@@ -464,4 +464,21 @@ agent_communication:
       - METAAPI_TOKEN=[korrektes JWT Token]
       
       Beide Accounts in London Region deployed und connected!
+  
+  - agent: "main"
+    message: |
+      🔧 KRITISCHER FIX: KI VERWENDET JETZT USER-SETTINGS ✅
+      
+      Problem: KI-Chat hat hart kodierte Standard-Einstellungen verwendet statt die Benutzer-Einstellungen
+      
+      Gelöst (13. Nov. 2025):
+      1. Dashboard.jsx (Zeile 1657-1660): AIChat-Komponente nutzt jetzt `settings?.ai_provider` und `settings?.ai_model`
+      2. server.py (Zeile 1122-1156): Backend /api/ai-chat Endpoint liest jetzt ai_provider und ai_model aus den Settings
+      3. Priorität: URL-Parameter > User-Settings > Default-Werte
+      
+      ✅ ERGEBNIS:
+      - KI respektiert jetzt die Benutzer-Einstellungen (KI Provider, KI Model)
+      - User kann zwischen Emergent LLM Key, OpenAI, Gemini, Anthropic, Ollama wechseln
+      - Settings werden korrekt an Frontend und Backend übergeben
+      - Keine hart kodierten Werte mehr
 
