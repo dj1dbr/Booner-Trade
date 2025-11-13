@@ -118,16 +118,46 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", se
                 LlmChat = get_llm_chat
                 UserMessage = get_user_message
             
-            api_key = os.getenv('EMERGENT_LLM_KEY')
+            # Get API key based on provider
+            # Priority: Settings API Keys > Emergent LLM Key (for emergent provider)
+            api_key = None
+            
+            if ai_provider.lower() == "emergent":
+                # Use Emergent LLM Key (universal key)
+                api_key = os.getenv('EMERGENT_LLM_KEY')
+                if not api_key:
+                    raise Exception("EMERGENT_LLM_KEY not found. Please add balance or switch to another provider.")
+            elif ai_provider.lower() == "openai":
+                # Use OpenAI API key from settings or fallback to emergent
+                api_key = settings.get('openai_api_key') or os.getenv('EMERGENT_LLM_KEY')
+            elif ai_provider.lower() in ["gemini", "google"]:
+                # Use Gemini API key from settings
+                api_key = settings.get('gemini_api_key')
+                if not api_key:
+                    raise Exception("Gemini API Key nicht gefunden! Bitte in Einstellungen eintragen oder zu Emergent wechseln.")
+            elif ai_provider.lower() in ["anthropic", "claude"]:
+                # Use Anthropic API key from settings or fallback to emergent
+                api_key = settings.get('anthropic_api_key') or os.getenv('EMERGENT_LLM_KEY')
+            elif ai_provider.lower() == "ollama":
+                # Ollama doesn't need API key
+                api_key = "ollama-local"
+            else:
+                # Default to Emergent LLM Key
+                api_key = os.getenv('EMERGENT_LLM_KEY')
+            
             if not api_key:
-                raise Exception("EMERGENT_LLM_KEY not found")
+                raise Exception(f"Kein API-Key für Provider '{ai_provider}' gefunden. Bitte in Einstellungen eintragen.")
+            
+            logger.info(f"Using API key for provider: {ai_provider} (from {'settings' if ai_provider != 'emergent' and settings.get(f'{ai_provider}_api_key') else 'environment'})")
             
             # Determine provider and model
             provider_map = {
                 "openai": ("openai", model or "gpt-5"),
                 "anthropic": ("anthropic", model or "claude-4-sonnet-20250514"),
                 "claude": ("anthropic", "claude-4-sonnet-20250514"),
-                "gemini": ("gemini", model or "gemini-2.5-pro")
+                "gemini": ("gemini", model or "gemini-2.5-pro"),
+                "google": ("gemini", model or "gemini-2.5-pro"),
+                "emergent": ("openai", model or "gpt-5")  # Emergent uses OpenAI-compatible format
             }
             
             provider, model_name = provider_map.get(ai_provider.lower(), ("openai", "gpt-5"))
