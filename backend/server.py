@@ -972,19 +972,15 @@ async def get_live_ticks():
         
         live_prices = {}
         
-        # Connect platforms if not already connected
-        await multi_platform.connect_platform('MT5_ICMARKETS')
-        await multi_platform.connect_platform('MT5_LIBERTEX')
-        
-        # Get connector (prefer ICMarkets)
+        # Get connector (prefer ICMarkets) - DON'T reconnect every time!
         connector = None
-        if 'MT5_ICMARKETS' in multi_platform.platforms:
+        if 'MT5_ICMARKETS' in multi_platform.platforms and multi_platform.platforms['MT5_ICMARKETS'].get('active'):
             connector = multi_platform.platforms['MT5_ICMARKETS'].get('connector')
-        elif 'MT5_LIBERTEX' in multi_platform.platforms:
+        elif 'MT5_LIBERTEX' in multi_platform.platforms and multi_platform.platforms['MT5_LIBERTEX'].get('active'):
             connector = multi_platform.platforms['MT5_LIBERTEX'].get('connector')
         
         if not connector:
-            logger.warning("No MetaAPI connector available for live ticks")
+            logger.debug("No MetaAPI connector active for live ticks (normal if not connected)")
             return {"error": "MetaAPI not connected", "live_prices": {}}
         
         # Fetch live ticks for all MT5-available commodities
