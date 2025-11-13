@@ -1234,7 +1234,15 @@ const Dashboard = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {trades.filter(t => t.status === 'CLOSED').map((trade) => {
+                      {trades.filter(t => {
+                        // Filter: Nur geschlossene Trades OHNE Error Codes
+                        if (t.status !== 'CLOSED') return false;
+                        
+                        // Aussortieren: Trades mit MetaAPI Error Codes
+                        const hasErrorCode = t.commodity?.includes('TRADE_RETCODE') || 
+                                             t.mt5_ticket?.toString().includes('TRADE_RETCODE');
+                        return !hasErrorCode;
+                      }).map((trade) => {
                         const symbolToCommodity = {
                           'XAUUSD': 'GOLD',
                           'XAGUSD': 'SILVER',
