@@ -1699,6 +1699,7 @@ async def get_trades(status: Optional[str] = None):
         else:
             # Sonst beide kombinieren
             closed_trades = await db.trades.find(query, {"_id": 0}).to_list(1000)
+            logger.info(f"📊 Geschlossene Trades aus DB: {len(closed_trades)}")
             trades = live_mt5_positions + closed_trades
         
         # Sort manually if needed
