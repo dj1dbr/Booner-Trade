@@ -1,100 +1,187 @@
 <analysis>
-My analysis of the trajectory reveals a multi-stage development process for the Rohstoff Trader application, evolving from initial feature implementation to complex, multi-system debugging. The work began with user-requested UI fixes, such as expanding chart timeframe options and correcting input fields for Stop Loss/Take Profit values in .
+The trajectory details the iterative development of a full-stack trading application. The process began with importing a GitHub repository and understanding the existing codebase, which is a React/FastAPI/MongoDB stack. The user, communicating in German, initially provided a set of new requirements after dismissing the old ones found in a  file.
 
-The project's complexity grew with the introduction of multi-platform support (MT5 Libertex, MT5 ICMarkets, Bitpanda). This led to significant debugging cycles. Key issues included:
-1.  **API Integration:** A major correction was rewriting  to use the correct public API () instead of the initially incorrect Pro Exchange API.
-2.  **Connectivity & Environment Discrepancy:** A recurring theme was the difference between the cloud development environment and the user's local macOS setup. This caused issues with API connectivity (MetaAPI/Bitpanda being blocked in the cloud) and local environment configuration (e.g.,  not being loaded, leading to crashes). This necessitated creating Mac-specific installation guides and scripts.
-3.  **Data Flow Bugs:** Several critical bugs were found and fixed. Market data stopped updating due to an empty  function in . Charts failed to load because of  API rate-limiting, which was addressed by adding caching.
-4.  **Credential Management:** The most recent and critical issue was a persistent MetaAPI connection failure, which was ultimately diagnosed as a typo in the user-provided JWT token (an extra e at the beginning).
+The core tasks were:
+1.  **Libertex Integration:** Display portfolio risk and open positions.
+2.  **Live Charts:** Implement a free live ticker with a 2-hour view.
+3.  **Mac Compatibility:** Resolve an issue where the  Python library was unavailable on the user's local Mac, breaking the AI Chat feature.
+4.  **AI Chat Enhancement:** Enable the AI to handle conversational context and execute trading commands.
+5.  **Voice Control:** Add voice input for the AI chat via both browser-native Web Speech API and a local Whisper-based solution.
 
-The last interaction involves the user providing a new, correct MetaAPI token and confirming both accounts are in the London region, setting the stage for the final connection fix.
+Development was highly iterative, marked by frequent user feedback and bug reports. Key challenges included:
+*   Fixing a  data fetching limitation for the 2h chart timeframe.
+*   Debugging AI chat context loss, which required implementing session management and refining the AI's system prompt.
+*   Resolving a critical backend bug related to incorrect boolean checks on database objects.
+*   Implementing a robust connection pooling mechanism to fix platform connection stability issues.
+*   Debugging frontend issues with chart rendering () and the newly implemented voice control features.
+
+The process concluded after fixing a major connection stability problem, right before the environment was restarted due to memory limits. The application is now significantly more feature-rich and stable.
 </analysis>
 
 <product_requirements>
-The goal is to build and maintain the Rohstoff Trader, a multi-platform trading application. Initially a demo, it has evolved to support real-time trading with live data.
+The goal is to enhance an existing full-stack trading dashboard application. The application connects to multiple trading platforms (Libertex, ICMarkets, Bitpanda) and provides users with an overview of their accounts, market data, and an AI-powered chat assistant.
 
-**Core Requirements:**
-1.  **Multi-Platform Support:** The application must connect to and manage trades across three platforms: MT5 Libertex, MT5 ICMarkets (both via MetaAPI), and the Bitpanda main retail platform.
-2.  **Dashboard UI:**
-    *   Display separate balance and risk information for each connected platform.
-    *   Show commodity cards with real-time price data, indicators, and buy/sell buttons.
-    *   A Trades tab to list all open positions with live P&L, with the ability to close positions directly.
-    *   A Charts tab with dynamic price charts for each commodity, featuring selectable timeframes (1D, 1W, 2W, 1M, etc.).
-3.  **Trading & Settings:**
-    *   Allow users to configure Stop Loss and Take Profit percentages.
-    *   Implement a configurable AI trading strategy with adjustable parameters (RSI thresholds, confidence levels, etc.) and a reset-to-default button.
-4.  **Local Execution:** The application must be fully functional on the user's local macOS environment, including Bitpanda connectivity, which is blocked in the cloud development environment.
+**Functional Requirements:**
+1.  **Dashboard Enhancement:** The Libertex section of the dashboard must be updated to display real-time portfolio risk percentages and a list of all open positions, moving away from any previously hardcoded data.
+2.  **Live Charting:** All commodity charts must feature a live data ticker. This functionality must be free to use. It requires user-configurable interval and period selectors, specifically including an option for a 2-hour period with 1-minute intervals.
+3.  **AI Chat Control:** The AI chat assistant must be enhanced to support stateful conversations. When Auto-Trading is enabled in the settings, the AI must be able to understand and execute user commands like close all positions or open a WTI position.
+4.  **Voice Interaction:** The AI chat must support voice input through two distinct methods:
+    a. A browser-native solution (Web Speech API) for ease of use.
+    b. A local, offline solution (OpenAI's Whisper) for Mac users, ensuring privacy and robustness.
+5.  **Cross-Platform Compatibility:** The application must be fully functional on both the Emergent cloud environment and a local Mac setup. This involves creating a fallback for the cloud-specific  library to ensure the AI chat works locally.
 
-**Implementation History:**
-The project has undergone significant bug fixing, including UI input validation, correcting the Bitpanda API integration from Pro to the main platform, fixing broken market data refresh logic, and resolving numerous connectivity issues related to incorrect API keys and environment discrepancies between cloud and local setups. The most recent task was to fix persistent MetaAPI connection failures.
+**Non-Functional Requirements:**
+1.  **Stability:** Resolve recurring connection drops to trading platforms.
+2.  **Usability:** Address and fix all reported bugs, including chart rendering errors, unresponsive UI elements (checkboxes, microphone), and confusing UI labels.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-stack Architecture**: React.js (Frontend), FastAPI (Backend), MongoDB (Database).
-- **Trading APIs**: MetaAPI for MetaTrader 5 (MT5), Bitpanda Public API v1.
-- **Data Sourcing**:  for fetching historical OHLCV and real-time market data.
-- **Backend**:  for periodic tasks (market data refresh), Pydantic for data validation,  for local environment management.
-- **Frontend**:  for charting, Tailwind CSS for styling.
-- **Connectivity**: Debugging involved environment-specific issues (Cloud vs. macOS) and API credential/endpoint validation.
+- **Full-Stack Frameworks:** React (frontend) with  and ; FastAPI (backend).
+- **Database:** MongoDB.
+- **API Integrations:** MetaAPI (for live trading data),  (for historical chart data).
+- **LLM & AI:**  library for cloud-based LLM, with a custom fallback module using standard SDKs (usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
+              [-o ORGANIZATION] [-t {openai,azure}]
+              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
+              [--azure-ad-token AZURE_AD_TOKEN] [-V]
+              {api,tools,migrate,grit} ...
+
+positional arguments:
+  {api,tools,migrate,grit}
+    api                 Direct API calls
+    tools               Client side tools for convenience
+
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Set verbosity.
+  -b API_BASE, --api-base API_BASE
+                        What API base url to use.
+  -k API_KEY, --api-key API_KEY
+                        What API key to use.
+  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
+                        What proxy to use.
+  -o ORGANIZATION, --organization ORGANIZATION
+                        Which organization to run as (will use your default
+                        organization if not specified)
+  -t {openai,azure}, --api-type {openai,azure}
+                        The backend API to call, must be `openai` or `azure`
+  --api-version API_VERSION
+                        The Azure API version, e.g.
+                        'https://learn.microsoft.com/en-us/azure/ai-
+                        services/openai/reference#rest-api-versioning'
+  --azure-endpoint AZURE_ENDPOINT
+                        The Azure endpoint, e.g.
+                        'https://endpoint.openai.azure.com'
+  --azure-ad-token AZURE_AD_TOKEN
+                        A token from Azure Active Directory,
+                        https://www.microsoft.com/en-
+                        us/security/business/identity-access/microsoft-entra-
+                        id
+  -V, --version         show program's version number and exit) for local development. Support for Ollama as a local-first option. Keyword-based intent recognition for AI-driven trading actions.
+- **Voice Recognition:** Browser-based Web Speech API (frontend); OpenAI Whisper via a dedicated backend API endpoint for local audio file transcription.
+- **Connection Management:** Backend connection pooling to maintain stable, persistent connections to trading platforms.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a client-server architecture with a React frontend and a FastAPI backend, communicating via a REST API.
+The application follows a standard full-stack architecture with a React frontend, a FastAPI backend, and a MongoDB database.
 
 **Directory Structure:**
 
 
-   - ****
-      - **Importance**: The core of the backend, defining all FastAPI endpoints, managing application state (like ), and running the  for data refreshes.
-      - **Changes**: Numerous changes were made, including adding endpoints for AI settings (), fixing the  endpoint to return the full commodity list, and repairing the empty  function which was preventing market data from being saved.
+**Key Files & Modifications:**
 
-   - ****
-      - **Importance**: Stores all secrets and environment-specific configurations, including , and API keys for MetaAPI and Bitpanda.
-      - **Changes**: This file was updated multiple times with new MetaAPI Account IDs and tokens as the user provided them. A critical fix involved correcting a typo in the  (removing an extra e at the start).
+- ****
+  - **Importance:** The main entry point for the FastAPI application. Defines all API routes, CORS middleware, and application startup logic.
+  - **Changes:** New endpoints were added:  was updated to accept a , and a new  endpoint was created for the Whisper service. Logic was modified to use a shared, persistent connection to trading platforms instead of connecting on each request.
 
-   - ****
-      - **Importance**: Handles all communication with the Bitpanda API.
-      - **Changes**: This file was completely rewritten. The initial implementation incorrectly used the Bitpanda Pro/Exchange API (). It was replaced with a new implementation using the correct public retail API () based on official documentation provided by the user.
+- ****
+  - **Importance:** Contains all business logic for the AI chat assistant. Manages the system prompt, conversation history, and interaction with the LLM.
+  - **Changes:** Heavily refactored to:
+    1.  Integrate the  module.
+    2.  Manage conversation context based on a  to prevent the AI from forgetting previous messages.
+    3.  Implement keyword-based function calling to execute trading actions ().
+    4.  Fix a critical bug () preventing trading commands from working.
+    5.  Refine the system prompt to guide the AI's behavior correctly.
 
-   - ****
-      - **Importance**: Responsible for fetching data from  and calculating technical indicators.
-      - **Changes**: A caching mechanism () was added to the  function to prevent API rate-limiting errors from , which was causing charts to fail loading. Error handling was also improved to prevent crashes when  returned no data.
+- **** (New File)
+  - **Importance:** A critical new module created to solve the Mac compatibility issue. It attempts to import the cloud-native  and, upon failure, gracefully falls back to using standard LLM SDKs like usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
+              [-o ORGANIZATION] [-t {openai,azure}]
+              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
+              [--azure-ad-token AZURE_AD_TOKEN] [-V]
+              {api,tools,migrate,grit} ...
 
-   - ****
-      - **Importance**: The single most important frontend file, containing the entire UI and state management for the dashboard, settings modal, and chart modal.
-      - **Changes**: This file saw extensive modifications.
-        - **UI Fixes**: Chart timeframe options were added. Input fields for Stop Loss/Take Profit and AI strategy were fixed to allow decimal inputs and prevent values from resetting on edit.
-        - **New Features**: A new section for AI Trading Strategy was added to the settings modal, along with a reset button. A list of open trades for the selected asset was added to the chart modal.
-        - **Bug Fixes**: State management for the settings form was corrected with a  hook to properly handle asynchronous loading of settings data and allow fields to be editable.
+positional arguments:
+  {api,tools,migrate,grit}
+    api                 Direct API calls
+    tools               Client side tools for convenience
 
-   - ****
-      - **Importance**: Documentation created to help the user set up and run the application on their local macOS machine.
-      - **Changes**: Created and updated to provide step-by-step instructions for installation, configuration (especially  to point to ), and troubleshooting.
+options:
+  -h, --help            show this help message and exit
+  -v, --verbose         Set verbosity.
+  -b API_BASE, --api-base API_BASE
+                        What API base url to use.
+  -k API_KEY, --api-key API_KEY
+                        What API key to use.
+  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
+                        What proxy to use.
+  -o ORGANIZATION, --organization ORGANIZATION
+                        Which organization to run as (will use your default
+                        organization if not specified)
+  -t {openai,azure}, --api-type {openai,azure}
+                        The backend API to call, must be `openai` or `azure`
+  --api-version API_VERSION
+                        The Azure API version, e.g.
+                        'https://learn.microsoft.com/en-us/azure/ai-
+                        services/openai/reference#rest-api-versioning'
+  --azure-endpoint AZURE_ENDPOINT
+                        The Azure endpoint, e.g.
+                        'https://endpoint.openai.azure.com'
+  --azure-ad-token AZURE_AD_TOKEN
+                        A token from Azure Active Directory,
+                        https://www.microsoft.com/en-
+                        us/security/business/identity-access/microsoft-entra-
+                        id
+  -V, --version         show program's version number and exit, enabling local development.
 
-   - ****
-      - **Importance**: A debugging script created to automatically test MetaAPI account IDs against all possible regions to find the correct one.
-      - **Changes**: Created to diagnose a 404 Account Not Found error, which helped confirm the issue was not the region but an invalid API token.
+- ****
+  - **Importance:** Manages connections to the various trading platforms (e.g., MetaAPI).
+  - **Changes:** Refactored to implement connection pooling. It now maintains a dictionary of active connections and includes an  check, which resolved major stability issues caused by frequent reconnects.
+
+- ****
+  - **Importance:** The primary UI view of the application, displaying all balance cards, charts, and settings.
+  - **Changes:** Significantly updated to display live Libertex data (portfolio risk, open positions), add selectors for chart timeframe/period, and fix bugs related to settings toggles.
+
+- ****
+  - **Importance:** The React component for the AI chat interface.
+  - **Changes:** Extensively modified to:
+    1.  Generate and send a  with each request to enable conversational context.
+    2.  Add UI elements (microphone buttons) and handlers for both Web Speech API and Whisper-based voice input.
+    3.  Include improved error handling and debug logs for voice recognition.
+
+- ****
+  - **Importance:** The -based component for rendering commodity price charts.
+  - **Changes:** The component was modified to handle data formatting more robustly, fixing a rendering bug that caused charts to appear as a diagonal line. The  domain was also adjusted for better scaling.
 </code_architecture>
 
 <pending_tasks>
-- Fix the issue where commodity tiles are missing from the UI.
-- Fix the issue where platform balances are not being displayed.
-- Integrate the new, correct  provided by the user.
-- Confirm that both MT5 accounts (Libertex and ICMarkets) connect successfully using the new token and the specified London region.
+- **Verify Voice Control:** The user reported that the microphone was not working. While debugging and error handling were added, there has been no final confirmation from the user that the feature is now fully functional.
+- **Confirm Stability Fix:** The connection stability fix was the last major change before the environment restarted. It needs to be confirmed with the user that the platform disconnection issue is resolved.
 </pending_tasks>
 
 <current_work>
-Immediately before this summary request, the AI engineer was diagnosing a critical failure where both platform balances and commodity cards were not appearing in the UI. The user reported this issue and confirmed that both MT5 accounts are hosted in the London region.
+Immediately before the environment restarted, the primary focus was on resolving a critical stability issue where the trading platforms would constantly disconnect and reconnect.
 
-The core of the problem was identified through a series of debugging steps:
-1.  Running  showed both accounts were Not found in any region.
-2.  A manual inspection of the  in  revealed a typo: it started with  instead of the correct JWT format .
-3.  The AI engineer corrected this typo, but the cloud environment continued to block MetaAPI connections, preventing a full validation.
-4.  The user then provided a brand-new, valid , explicitly stating it has permissions for both accounts.
+**Problem Analysis:** The user reported that Die Plattformen verlieren aber immerzu die Verbindung für 3-5 Sekunden. (The platforms are always losing the connection for 3-5 seconds). Investigation revealed that a new connection to the trading platform (e.g., MetaAPI) was being initiated on every single API request, leading to rate-limiting and connection instability.
 
-The current, unfinished task is to take this new, correct token, update it in the  file, and verify that it resolves the MetaAPI connection issues, which is the root cause for the missing balances and commodity data.
+**Implementation Steps:**
+1.  **Code Identification:** The problematic logic was located in  and its usage in .
+2.  **Refactoring :** The  method was refactored to implement connection pooling. A dictionary () was added to store active connection instances. The logic was updated to first check if a connection for a given platform already exists and is healthy before attempting to create a new one.
+    
+3.  **Refactoring :** Redundant calls to  within individual API route handlers were removed. Instead, the connection is now established once during a background task at application startup.
+4.  **Verification:** The backend service was restarted. Logs confirmed that the platforms connected successfully upon startup, and subsequent API calls used the existing connections.
+
+**Final State:** The fix was successfully implemented and verified via server logs. The next logical step was to summarize the work and confirm the resolution with the user, but the environment was restarted due to exceeding its memory limit.
 </current_work>
 
 <optional_next_step>
-I will update the  file with the new  provided by the user, ensuring the previous faulty token is completely replaced. Then, I will restart the backend server and check the logs for successful MetaAPI connections.
+Check server status to ensure all services are running correctly after the restart, then provide the user with a final summary of all implemented features and fixes, specifically asking for confirmation that the connection stability and voice control issues are now resolved.
 </optional_next_step>

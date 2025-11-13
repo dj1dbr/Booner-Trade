@@ -459,8 +459,8 @@ agent_communication:
       - KI-Signale (BUY/SELL/HOLD) funktionieren ✅
       
       Korrekte Account-IDs in .env:
-      - METAAPI_ACCOUNT_ID=5cc9abd1-671a-447e-ab93-5abbfe0ed941 (Libertex)
-      - METAAPI_ICMARKETS_ACCOUNT_ID=d2605e89-7bc2-4144-9f7c-951edd596c39 (ICMarkets)
+      - METAAPI_ACCOUNT_ID=voicetrade (Libertex)
+      - METAAPI_ICMARKETS_ACCOUNT_ID=voicetrade (ICMarkets)
       - METAAPI_TOKEN=[korrektes JWT Token]
       
       Beide Accounts in London Region deployed und connected!
