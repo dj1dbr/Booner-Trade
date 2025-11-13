@@ -1655,8 +1655,8 @@ const Dashboard = () => {
 
       {/* AI Chat Component */}
       <AIChat 
-        aiProvider={settings?.ai_trading_strategy || 'openai'}
-        aiModel={settings?.ai_trading_strategy === 'ollama' ? 'llama3' : 'gpt-5'}
+        aiProvider={settings?.ai_provider || 'emergent'}
+        aiModel={settings?.ai_model || 'gpt-5'}
       />
     </div>
   );
