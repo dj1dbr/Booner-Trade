@@ -295,14 +295,58 @@ async def close_all_trades(db) -> Dict[str, Any]:
 
 
 async def close_trades_by_symbol(db, symbol: str) -> Dict[str, Any]:
-    """Close all trades for a specific symbol"""
+    """Close all trades for a specific symbol - including MT5 positions"""
     try:
+        # Get symbol mapping for MT5
+        from commodity_processor import COMMODITY_MAPPINGS
+        commodity = COMMODITY_MAPPINGS.get(symbol, {})
+        mt5_symbols = [
+            commodity.get('mt5_libertex_symbol'),
+            commodity.get('mt5_icmarkets_symbol'),
+            symbol  # Also try the symbol as-is
+        ]
+        
+        # Get open trades from DB
         open_trades = await db.trades.find({
             "status": "OPEN",
             "commodity": symbol
         }).to_list(100)
         
+        # Close MT5 positions for this symbol
+        from multi_platform_connector import MultiPlatformConnector
+        connector = MultiPlatformConnector()
+        
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        active_platforms = settings.get('active_platforms', []) if settings else []
+        
         closed_count = 0
+        errors = []
+        
+        for platform_name in active_platforms:
+            if platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+                try:
+                    await connector.connect_platform(platform_name)
+                    platform = connector.platforms.get(platform_name)
+                    if platform and platform.get('connector'):
+                        mt5_connector = platform['connector']
+                        positions = await mt5_connector.get_positions()
+                        
+                        for pos in positions:
+                            pos_symbol = pos.get('symbol', '')
+                            # Check if position symbol matches any of our symbol variants
+                            if any(mt5_sym and mt5_sym in pos_symbol for mt5_sym in mt5_symbols if mt5_sym):
+                                ticket = pos.get('id') or pos.get('positionId')
+                                if ticket:
+                                    success = await mt5_connector.close_position(str(ticket))
+                                    if success:
+                                        closed_count += 1
+                                        logger.info(f"✅ Closed {symbol} position {ticket} on {platform_name}")
+                                    else:
+                                        errors.append(f"{ticket}")
+                except Exception as e:
+                    logger.error(f"Error closing {symbol} on {platform_name}: {e}")
+        
+        # Close DB trades
         for trade in open_trades:
             await db.trades.update_one(
                 {"id": trade['id']},
@@ -312,11 +356,16 @@ async def close_trades_by_symbol(db, symbol: str) -> Dict[str, Any]:
         
         logger.info(f"✅ AI closed {symbol} trades: {closed_count} trades")
         
+        message = f"✅ {closed_count} {symbol}-Positionen geschlossen"
+        if errors:
+            message += f"\n⚠️ Fehler bei Tickets: {', '.join(errors[:3])}"
+        
         return {
             "success": True,
-            "message": f"✅ {closed_count} {symbol}-Trades geschlossen",
+            "message": message,
             "closed_count": closed_count,
-            "symbol": symbol
+            "symbol": symbol,
+            "errors": errors if errors else None
         }
         
     except Exception as e:
