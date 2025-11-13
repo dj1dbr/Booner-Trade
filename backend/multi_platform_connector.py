@@ -201,8 +201,8 @@ class MultiPlatformConnector:
             positions = await platform['connector'].get_positions()
             
             # Deduplicate and filter error positions
-            seen_tickets = set()
-            unique_positions = []
+            # Group by ticket first to keep the BEST version (with P&L)
+            ticket_groups = {}
             
             for pos in positions:
                 ticket = pos.get('id') or pos.get('positionId') or pos.get('ticket')
@@ -217,14 +217,40 @@ class MultiPlatformConnector:
                     logger.debug(f"Filtered error position: symbol={symbol}")
                     continue
                 
-                # Skip duplicates
-                if ticket and ticket in seen_tickets:
-                    logger.debug(f"Filtered duplicate position: {ticket}")
+                # No ticket - always include
+                if not ticket:
+                    if 'no_ticket' not in ticket_groups:
+                        ticket_groups['no_ticket'] = []
+                    ticket_groups['no_ticket'].append(pos)
                     continue
                 
-                unique_positions.append(pos)
-                if ticket:
-                    seen_tickets.add(ticket)
+                # Group by ticket
+                if ticket not in ticket_groups:
+                    ticket_groups[ticket] = []
+                ticket_groups[ticket].append(pos)
+            
+            # For each ticket, keep the BEST position (with P&L, not 0)
+            unique_positions = []
+            for ticket, pos_list in ticket_groups.items():
+                if ticket == 'no_ticket':
+                    unique_positions.extend(pos_list)
+                    continue
+                
+                if len(pos_list) == 1:
+                    unique_positions.append(pos_list[0])
+                else:
+                    # Multiple positions with same ticket - keep the one with P&L
+                    logger.warning(f"Duplicate ticket {ticket}: {len(pos_list)} positions")
+                    
+                    # Sort by: 1) Has non-zero P&L, 2) Has updateTime (newer)
+                    best_pos = max(pos_list, key=lambda p: (
+                        abs(p.get('profit', 0) or p.get('unrealizedProfit', 0)) > 0.01,  # Has real P&L
+                        p.get('updateTime', ''),  # Newer update time
+                        p.get('openTime', '')  # Newer open time
+                    ))
+                    
+                    unique_positions.append(best_pos)
+                    logger.info(f"Kept position with P&L={best_pos.get('profit', 0)}, discarded {len(pos_list)-1} duplicates")
             
             if len(positions) != len(unique_positions):
                 logger.info(f"{platform_name}: {len(positions)} positions → {len(unique_positions)} after deduplication")
