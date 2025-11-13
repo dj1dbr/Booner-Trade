@@ -42,17 +42,38 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
       recognitionInstance.lang = 'de-DE'; // German
       
       recognitionInstance.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setInput(transcript);
-        setIsListening(false);
+        try {
+          const transcript = event.results[0][0].transcript;
+          console.log('✅ Erkannt:', transcript);
+          setInput(transcript);
+          setIsListening(false);
+        } catch (error) {
+          console.error('Fehler beim Verarbeiten der Spracherkennung:', error);
+          setIsListening(false);
+        }
       };
       
       recognitionInstance.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('❌ Speech recognition error:', event.error);
         setIsListening(false);
+        
+        if (event.error === 'not-allowed') {
+          alert('⚠️ Mikrofon-Zugriff verweigert!\n\nBitte erlauben Sie den Mikrofon-Zugriff in Ihren Browser-Einstellungen.');
+        } else if (event.error === 'no-speech') {
+          console.log('Keine Sprache erkannt');
+        } else if (event.error === 'network') {
+          alert('⚠️ Netzwerkfehler bei der Spracherkennung. Prüfen Sie Ihre Internetverbindung.');
+        } else {
+          alert(`⚠️ Spracherkennungs-Fehler: ${event.error}`);
+        }
+      };
+      
+      recognitionInstance.onstart = () => {
+        console.log('🎤 Spracherkennung läuft...');
       };
       
       recognitionInstance.onend = () => {
+        console.log('⏹️ Spracherkennung beendet');
         setIsListening(false);
       };
       
