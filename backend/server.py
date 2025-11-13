@@ -1515,10 +1515,12 @@ async def execute_trade(request: TradeExecuteRequest):
                 price=price,
                 quantity=quantity,
                 mode=default_platform,
+                platform=default_platform,
                 entry_price=price,
                 stop_loss=stop_loss,
                 take_profit=take_profit,
-                strategy_signal=f"Manual - {default_platform} #{platform_ticket}"
+                strategy_signal=f"Manual - {default_platform} #{platform_ticket}",
+                mt5_ticket=str(platform_ticket)  # ← WICHTIG!
             )
             
             doc = trade.model_dump()
