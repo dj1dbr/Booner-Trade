@@ -1507,9 +1507,13 @@ async def execute_trade(trade_type: str, price: float, quantity: float = None, c
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/trades/close")
-async def close_trade_v2(trade_id: str = None, ticket: str = None, platform: str = None):
+async def close_trade_v2(request: CloseTradeRequest):
     """Close an open trade - supports both DB trades and MT5 positions"""
     try:
+        trade_id = request.trade_id
+        ticket = request.ticket
+        platform = request.platform
+        
         logger.info(f"Close trade request: trade_id={trade_id}, ticket={ticket}, platform={platform}")
         
         # If we have a ticket, close the MT5 position
