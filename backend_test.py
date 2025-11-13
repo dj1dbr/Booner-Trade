@@ -612,43 +612,39 @@ class RohstoffTraderTester:
             self.log_test_result("AI Chat with Settings", False, f"AI Chat failed: {error_msg}", data)
     
     async def test_market_data_endpoint(self):
-        """Test Market Data - GET /api/market-data (alias for /api/market/all)"""
-        # Test both endpoints to ensure compatibility
-        endpoints_to_test = ["/api/market/all", "/api/market-data"]
+        """Test Market Data - GET /api/market/all (main market data endpoint)"""
+        success, data = await self.make_request("GET", "/api/market/all")
         
-        for endpoint in endpoints_to_test:
-            success, data = await self.make_request("GET", endpoint)
+        if success:
+            markets = data.get("markets", {})
+            commodities = data.get("commodities", [])
             
-            if success:
-                markets = data.get("markets", {})
-                commodities = data.get("commodities", [])
-                
-                # Check if we have market data for key commodities
-                key_commodities = ["GOLD", "WTI_CRUDE", "SILVER"]
-                found_data = []
-                
-                for commodity in key_commodities:
-                    if commodity in markets and markets[commodity].get("price"):
-                        price = markets[commodity]["price"]
-                        signal = markets[commodity].get("signal", "UNKNOWN")
-                        found_data.append(f"{commodity}=${price:.2f}({signal})")
-                
-                if len(found_data) >= 2:
-                    self.log_test_result(
-                        f"Market Data ({endpoint})", 
-                        True, 
-                        f"Live data available: {', '.join(found_data)}",
-                        {"markets_count": len(markets), "commodities_count": len(commodities)}
-                    )
-                else:
-                    self.log_test_result(
-                        f"Market Data ({endpoint})", 
-                        False, 
-                        f"Insufficient market data. Found: {found_data}",
-                        data
-                    )
+            # Check if we have market data for key commodities
+            key_commodities = ["GOLD", "WTI_CRUDE", "SILVER"]
+            found_data = []
+            
+            for commodity in key_commodities:
+                if commodity in markets and markets[commodity].get("price"):
+                    price = markets[commodity]["price"]
+                    signal = markets[commodity].get("signal", "UNKNOWN")
+                    found_data.append(f"{commodity}=${price:.2f}({signal})")
+            
+            if len(found_data) >= 2:
+                self.log_test_result(
+                    "Market Data Endpoint", 
+                    True, 
+                    f"Live data available: {', '.join(found_data)}",
+                    {"markets_count": len(markets), "commodities_count": len(commodities)}
+                )
             else:
-                self.log_test_result(f"Market Data ({endpoint})", False, f"Failed to get market data: {data}")
+                self.log_test_result(
+                    "Market Data Endpoint", 
+                    False, 
+                    f"Insufficient market data. Found: {found_data}",
+                    data
+                )
+        else:
+            self.log_test_result("Market Data Endpoint", False, f"Failed to get market data: {data}")
     
     async def test_backend_logs_ai_settings(self):
         """Test Backend Logs for AI Settings Usage - Check if logs show settings being used"""
