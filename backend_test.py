@@ -582,13 +582,10 @@ class RohstoffTraderTester:
         ai_provider = settings_data.get("ai_provider", "emergent")
         ai_model = settings_data.get("ai_model", "gpt-5")
         
-        # Test AI chat endpoint with German message
-        chat_data = {
-            "message": "Hallo, was ist der aktuelle Gold-Preis?",
-            "session_id": "test-session"
-        }
+        # Test AI chat endpoint with German message using query parameters
+        endpoint = "/api/ai-chat?message=Hallo, was ist der aktuelle Gold-Preis?&session_id=test-session"
         
-        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        success, data = await self.make_request("POST", endpoint)
         
         if success:
             response_text = data.get("response", "")
