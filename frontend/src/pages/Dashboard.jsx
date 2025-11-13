@@ -1081,28 +1081,41 @@ const Dashboard = () => {
           <TabsContent value="trades">
             <Card className="bg-slate-900/80 border-slate-700/50 p-6 backdrop-blur-sm">
               <h3 className="text-xl font-semibold mb-4 text-cyan-400">Trade Historie</h3>
-              {trades.length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
-                  <p>Noch keine Trades vorhanden</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-800/50 border-b border-slate-700">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-slate-300">Rohstoff</th>
-                        <th className="px-4 py-3 text-left text-slate-300">Typ</th>
-                        <th className="px-4 py-3 text-right text-slate-300">Einstieg</th>
-                        <th className="px-4 py-3 text-right text-slate-300">Aktuell</th>
-                        <th className="px-4 py-3 text-right text-slate-300">Menge</th>
-                        <th className="px-4 py-3 text-right text-slate-300">P&L</th>
-                        <th className="px-4 py-3 text-center text-slate-300">Plattform</th>
-                        <th className="px-4 py-3 text-center text-slate-300">Status</th>
-                        <th className="px-4 py-3 text-center text-slate-300">Aktion</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {trades.map((trade) => {
+              
+              {/* Sub-Tabs for Open/Closed Trades */}
+              <Tabs defaultValue="open" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="open">
+                    📊 Offene Trades ({trades.filter(t => t.status === 'OPEN').length})
+                  </TabsTrigger>
+                  <TabsTrigger value="closed">
+                    📈 Geschlossene Trades ({trades.filter(t => t.status === 'CLOSED').length})
+                  </TabsTrigger>
+                </TabsList>
+
+                {/* Open Trades Tab */}
+                <TabsContent value="open">
+                  {trades.filter(t => t.status === 'OPEN').length === 0 ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <p>Keine offenen Trades</p>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-slate-800/50 border-b border-slate-700">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-slate-300">Rohstoff</th>
+                            <th className="px-4 py-3 text-left text-slate-300">Typ</th>
+                            <th className="px-4 py-3 text-right text-slate-300">Einstieg</th>
+                            <th className="px-4 py-3 text-right text-slate-300">Aktuell</th>
+                            <th className="px-4 py-3 text-right text-slate-300">Menge</th>
+                            <th className="px-4 py-3 text-right text-slate-300">P&L</th>
+                            <th className="px-4 py-3 text-center text-slate-300">Plattform</th>
+                            <th className="px-4 py-3 text-center text-slate-300">Aktion</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {trades.filter(t => t.status === 'OPEN').map((trade) => {
                         // Map MT5 symbols to commodity IDs
                         const symbolToCommodity = {
                           'XAUUSD': 'GOLD',
