@@ -1643,14 +1643,55 @@ async def cleanup_trades():
 
 @api_router.get("/trades/list")
 async def get_trades(status: Optional[str] = None):
-    """Get all trades - deduplicates DB trades and MT5 positions by ticket number"""
+    """Get all trades - ONLY real MT5 positions + closed DB trades"""
     try:
-        query = {}
-        if status:
-            query['status'] = status.upper()
+        # Get settings
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        active_platforms = settings.get('active_platforms', []) if settings else []
         
-        # Get DB trades
-        trades = await db.trades.find(query, {"_id": 0}).to_list(1000)
+        # Hole echte MT5-Positionen (LIVE)
+        live_mt5_positions = []
+        
+        for platform_name in active_platforms:
+            if platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+                try:
+                    from multi_platform_connector import multi_platform
+                    positions = await multi_platform.get_open_positions(platform_name)
+                    
+                    # Konvertiere MT5-Positionen zu Trade-Format
+                    for pos in positions:
+                        trade = {
+                            "id": f"mt5_{pos.get('ticket', pos.get('id'))}",
+                            "mt5_ticket": str(pos.get('ticket', pos.get('id'))),
+                            "commodity": pos.get('symbol', 'UNKNOWN'),
+                            "type": "BUY" if pos.get('type') == 'POSITION_TYPE_BUY' else "SELL",
+                            "entry_price": pos.get('price_open', 0),
+                            "price": pos.get('price_current', pos.get('price_open', 0)),
+                            "quantity": pos.get('volume', 0),
+                            "profit_loss": pos.get('profit', 0),
+                            "status": "OPEN",
+                            "platform": platform_name,
+                            "mode": platform_name,
+                            "stop_loss": pos.get('sl'),
+                            "take_profit": pos.get('tp'),
+                            "timestamp": pos.get('time', datetime.now(timezone.utc).isoformat())
+                        }
+                        live_mt5_positions.append(trade)
+                except Exception as e:
+                    logger.error(f"Fehler beim Holen von {platform_name} Positionen: {e}")
+        
+        # Hole GESCHLOSSENE Trades aus DB
+        query = {"status": "CLOSED"}
+        if status and status.upper() == "OPEN":
+            # Wenn nur OPEN angefordert, gib nur MT5-Positionen zurück
+            trades = live_mt5_positions
+        elif status and status.upper() == "CLOSED":
+            # Wenn nur CLOSED angefordert, gib nur DB-Trades zurück
+            trades = await db.trades.find(query, {"_id": 0}).to_list(1000)
+        else:
+            # Sonst beide kombinieren
+            closed_trades = await db.trades.find(query, {"_id": 0}).to_list(1000)
+            trades = live_mt5_positions + closed_trades
         
         # Sort manually if needed
         trades.sort(key=lambda x: x.get('created_at') or x.get('timestamp') or '', reverse=True)
