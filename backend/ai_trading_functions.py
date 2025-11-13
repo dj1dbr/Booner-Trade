@@ -227,11 +227,45 @@ async def close_trade(db, trade_id: str) -> Dict[str, Any]:
 
 
 async def close_all_trades(db) -> Dict[str, Any]:
-    """Close all open trades"""
+    """Close all open trades - including MT5 positions"""
     try:
+        # Get all open trades from DB
         open_trades = await db.trades.find({"status": "OPEN"}).to_list(100)
         
+        # Also get MT5 positions from platforms
+        from multi_platform_connector import MultiPlatformConnector
+        connector = MultiPlatformConnector()
+        
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        active_platforms = settings.get('active_platforms', []) if settings else []
+        
         closed_count = 0
+        errors = []
+        
+        # Close MT5 positions
+        for platform_name in active_platforms:
+            if platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+                try:
+                    await connector.connect_platform(platform_name)
+                    platform = connector.platforms.get(platform_name)
+                    if platform and platform.get('connector'):
+                        mt5_connector = platform['connector']
+                        positions = await mt5_connector.get_positions()
+                        
+                        for pos in positions:
+                            ticket = pos.get('id') or pos.get('positionId')
+                            if ticket:
+                                success = await mt5_connector.close_position(str(ticket))
+                                if success:
+                                    closed_count += 1
+                                    logger.info(f"✅ Closed MT5 position {ticket} on {platform_name}")
+                                else:
+                                    errors.append(f"{platform_name} Position {ticket}")
+                except Exception as e:
+                    logger.error(f"Error closing {platform_name} positions: {e}")
+                    errors.append(f"{platform_name}: {str(e)}")
+        
+        # Close DB trades
         for trade in open_trades:
             await db.trades.update_one(
                 {"id": trade['id']},
@@ -239,12 +273,17 @@ async def close_all_trades(db) -> Dict[str, Any]:
             )
             closed_count += 1
         
-        logger.info(f"✅ AI closed all trades: {closed_count} trades")
+        logger.info(f"✅ AI closed all trades: {closed_count} total")
+        
+        message = f"✅ {closed_count} Positionen geschlossen"
+        if errors:
+            message += f"\n⚠️ Fehler bei: {', '.join(errors[:3])}"
         
         return {
             "success": True,
-            "message": f"✅ Alle {closed_count} offenen Trades geschlossen",
-            "closed_count": closed_count
+            "message": message,
+            "closed_count": closed_count,
+            "errors": errors if errors else None
         }
         
     except Exception as e:
