@@ -34,12 +34,20 @@ const AIChat = ({ aiProvider, aiModel, onClose }) => {
     
     // Initialize Web Speech API
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      console.log('✅ Web Speech API verfügbar');
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
       
       recognitionInstance.continuous = false;
       recognitionInstance.interimResults = false;
       recognitionInstance.lang = 'de-DE'; // German
+      recognitionInstance.maxAlternatives = 1;
+      
+      console.log('✅ Speech Recognition konfiguriert:', {
+        continuous: recognitionInstance.continuous,
+        lang: recognitionInstance.lang,
+        interimResults: recognitionInstance.interimResults
+      });
       
       recognitionInstance.onresult = (event) => {
         try {
