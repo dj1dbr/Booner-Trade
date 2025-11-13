@@ -200,6 +200,26 @@ backend:
           - GOLD trades executing successfully with correct XAUUSD symbol
           - Symbol mapping fix is complete and functional
 
+  - task: "AI Settings Integration"
+    implemented: true
+    working: true
+    file: "server.py, ai_chat_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ VERIFIED! AI Settings Integration fully functional:
+          - GET /api/settings: Returns ai_provider=emergent, ai_model=gpt-5 ✅
+          - POST /api/ai-chat: Uses settings values (not hardcoded defaults) ✅
+          - Backend logs confirm: "AI Chat: Using provider=emergent, model=gpt-5 (from settings)" ✅
+          - AI Chat responds correctly to German message: "Hallo, was ist der aktuelle Gold-Preis?" ✅
+          - Settings priority working: URL params > Settings > Defaults ✅
+          - All 4 test cases from review request completed successfully
+          - No errors in API responses, proper provider/model usage confirmed
+
   - task: "WTI_CRUDE Manual Trade Execution"
     implemented: true
     working: false
