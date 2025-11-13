@@ -487,10 +487,6 @@ const Dashboard = () => {
   };
 
   const handleCloseTrade = async (trade) => {
-    if (!window.confirm(`Position "${trade.commodity} ${trade.type}" wirklich schließen?`)) {
-      return;
-    }
-    
     try {
       // Close MT5 position
       if (trade.mt5_ticket && (trade.platform === 'MT5_LIBERTEX' || trade.platform === 'MT5_ICMARKETS')) {
@@ -512,7 +508,9 @@ const Dashboard = () => {
         }
       }
     } catch (error) {
-      toast.error('Fehler beim Schließen: ' + (error.response?.data?.detail || error.message));
+      const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Unbekannter Fehler';
+      console.error('Close trade error:', error.response?.data || error);
+      toast.error('Fehler beim Schließen: ' + errorMsg);
     }
   };
 
