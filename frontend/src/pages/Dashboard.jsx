@@ -15,8 +15,12 @@ import TradesTable from '../components/TradesTable';
 import IndicatorsPanel from '../components/IndicatorsPanel';
 import AIChat from '../components/AIChat';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 const API = `${BACKEND_URL}/api`;
+
+// Debug: Log the backend URL being used
+console.log('🔧 Backend URL:', BACKEND_URL);
+console.log('🔧 API URL:', API);
 
 // Configure axios defaults with timeout
 axios.defaults.timeout = 10000; // 10 second timeout for all requests
