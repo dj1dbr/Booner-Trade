@@ -647,37 +647,50 @@ class RohstoffTraderTester:
             self.log_test_result("Market Data Endpoint", False, f"Failed to get market data: {data}")
     
     async def test_backend_logs_ai_settings(self):
-        """Test Backend Logs for AI Settings Usage - Check if logs show settings being used"""
-        # This test will make an AI chat request and check if backend logs the settings usage
-        # We'll look for the specific log message: "AI Chat: Using provider=..., model=..."
+        """Test Backend Logs for AI Settings Usage - Verify logs show settings being used"""
+        # Check backend logs for the specific AI Chat settings usage message
+        # Expected log: "AI Chat: Using provider=emergent, model=gpt-5 (from settings)"
         
-        # Test AI chat endpoint with query parameters
-        endpoint = "/api/ai-chat?message=Kurze Marktanalyse bitte&session_id=log-test-session"
-        
-        success, data = await self.make_request("POST", endpoint)
-        
-        if success:
-            # The backend should log: "AI Chat: Using provider=..., model=... (from settings)"
-            # Since we can't directly access logs in this test, we'll verify the response contains provider info
-            provider_used = data.get("provider", "")
-            model_used = data.get("model", "")
+        try:
+            # Check if the log file contains the expected message
+            import subprocess
+            result = subprocess.run(
+                ["grep", "-i", "AI Chat: Using provider", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
             
-            if provider_used and model_used:
-                self.log_test_result(
-                    "Backend Logs AI Settings", 
-                    True, 
-                    f"Backend should log: 'AI Chat: Using provider={provider_used}, model={model_used}'",
-                    {"expected_log_provider": provider_used, "expected_log_model": model_used}
-                )
+            if result.returncode == 0 and result.stdout:
+                log_lines = result.stdout.strip().split('\n')
+                latest_log = log_lines[-1] if log_lines else ""
+                
+                if "emergent" in latest_log and "gpt-5" in latest_log and "from settings" in latest_log:
+                    self.log_test_result(
+                        "Backend Logs AI Settings", 
+                        True, 
+                        f"✅ Backend logs confirm settings usage: {latest_log.split(' - ')[-1]}",
+                        {"log_message": latest_log}
+                    )
+                else:
+                    self.log_test_result(
+                        "Backend Logs AI Settings", 
+                        False, 
+                        f"Log found but doesn't match expected format: {latest_log}",
+                        {"log_message": latest_log}
+                    )
             else:
                 self.log_test_result(
                     "Backend Logs AI Settings", 
                     False, 
-                    f"Missing provider/model info in response for log verification",
-                    data
+                    "No AI Chat settings logs found in backend.err.log",
+                    {"grep_result": result.stdout}
                 )
-        else:
-            self.log_test_result("Backend Logs AI Settings", False, f"AI Chat failed, cannot verify logs: {data}")
+        except Exception as e:
+            self.log_test_result(
+                "Backend Logs AI Settings", 
+                False, 
+                f"Error checking logs: {str(e)}",
+                {"error": str(e)}
+            )
     
     async def run_all_tests(self):
         """Run all backend tests in sequence"""
