@@ -252,6 +252,12 @@ class Trade(BaseModel):
     closed_at: Optional[datetime] = None
     mt5_ticket: Optional[str] = None  # MT5 order ticket number
 
+class CloseTradeRequest(BaseModel):
+    """Request model for closing trades"""
+    trade_id: Optional[str] = None
+    ticket: Optional[str] = None
+    platform: Optional[str] = None
+
 class TradingSettings(BaseModel):
     model_config = ConfigDict(extra="ignore")
     
