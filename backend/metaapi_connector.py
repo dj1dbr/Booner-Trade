@@ -24,6 +24,13 @@ class MetaAPIConnector:
         self.margin = 0.0
         self.free_margin = 0.0
         
+        # CACHING für Stabilität
+        self._account_info_cache = None
+        self._account_info_cache_time = None
+        self._positions_cache = None
+        self._positions_cache_time = None
+        self._cache_ttl = 5  # 5 Sekunden Cache
+        
         logger.info(f"MetaAPI Connector initialized: Account={account_id}")
     
     def _get_headers(self) -> Dict[str, str]:
