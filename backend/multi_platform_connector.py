@@ -18,21 +18,21 @@ class MultiPlatformConnector:
         self.platforms = {}
         self.metaapi_token = os.environ.get('METAAPI_TOKEN', '')
         
-        # Initialize MT5 Libertex (Default/Primary)
-        self.platforms['MT5_LIBERTEX'] = {
+        # Initialize MT5 Libertex Demo (Primary Demo Account)
+        self.platforms['MT5_LIBERTEX_DEMO'] = {
             'type': 'MT5',
-            'name': 'MT5 Libertex',
-            'account_id': os.environ.get('METAAPI_ACCOUNT_ID', '142e1085-f20b-437e-93c7-b87a0e639a30'),
+            'name': 'MT5 Libertex Demo',
+            'account_id': os.environ.get('METAAPI_ACCOUNT_ID', '5cc9abd1-671a-447e-ab93-5abbfe0ed941'),
             'region': 'london',
             'connector': None,
             'active': False,
             'balance': 0.0
         }
         
-        # Initialize MT5 ICMarkets (Secondary)
-        self.platforms['MT5_ICMARKETS'] = {
+        # Initialize MT5 ICMarkets Demo (Secondary Demo Account)
+        self.platforms['MT5_ICMARKETS_DEMO'] = {
             'type': 'MT5',
-            'name': 'MT5 ICMarkets',
+            'name': 'MT5 ICMarkets Demo',
             'account_id': os.environ.get('METAAPI_ICMARKETS_ACCOUNT_ID', 'd2605e89-7bc2-4144-9f7c-951edd596c39'),
             'region': 'london',
             'connector': None,
@@ -40,17 +40,18 @@ class MultiPlatformConnector:
             'balance': 0.0
         }
         
-        # Initialize Bitpanda
-        self.platforms['BITPANDA'] = {
-            'type': 'BITPANDA',
-            'name': 'Bitpanda',
-            'api_key': os.environ.get('BITPANDA_API_KEY', ''),
+        # Initialize MT5 Libertex Real (REAL MONEY ACCOUNT!)
+        self.platforms['MT5_LIBERTEX_REAL'] = {
+            'type': 'MT5',
+            'name': 'MT5 Libertex REAL',
+            'account_id': os.environ.get('METAAPI_LIBERTEX_REAL_ACCOUNT_ID', 'PLACEHOLDER_REAL_ACCOUNT_ID'),
+            'region': 'london',
             'connector': None,
             'active': False,
             'balance': 0.0
         }
         
-        logger.info("MultiPlatformConnector initialized with 3 platforms")
+        logger.info("MultiPlatformConnector initialized with 3 MT5 platforms (2 Demo + 1 REAL)")
     
     async def connect_platform(self, platform_name: str) -> bool:
         """Connect to a specific platform (with connection reuse)"""
