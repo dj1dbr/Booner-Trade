@@ -249,6 +249,17 @@ backend:
           - Same issue affects GOLD, SILVER, and all other commodities
           - FIX NEEDED: Update platform check logic to handle MT5_LIBERTEX and MT5_ICMARKETS
           - This is blocking ALL manual trade execution via MT5
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ COMPREHENSIVE TESTING RESULTS (Nov 14, 2025):
+          - Trade execution failing with "Trade konnte nicht ausgeführt werden"
+          - GOLD trades return "TRADE_RETCODE_MARKET_CLOSED" (market hours issue)
+          - WTI_CRUDE trades also failing with same generic error
+          - Platform connections working perfectly (MT5_LIBERTEX, MT5_ICMARKETS both active)
+          - Issue appears to be: 1) Market closure for Gold, 2) Possible broker restrictions for WTI
+          - All other systems working: positions sync, no duplicates, stable connections
+          - Trade execution logic needs investigation during market hours
 
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
