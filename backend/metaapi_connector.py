@@ -153,15 +153,22 @@ class MetaAPIConnector:
                                 "tp": pos.get('takeProfit')
                             })
                         
+                        # Cache it
+                        self._positions_cache = result
+                        self._positions_cache_time = now
+                        
                         logger.info(f"MetaAPI Positions: {len(result)} open")
                         return result
+                    elif response.status == 429:
+                        logger.warning("MetaAPI rate limit hit for positions, using cached data")
+                        return self._positions_cache if self._positions_cache is not None else []
                     else:
                         error_text = await response.text()
                         logger.error(f"MetaAPI positions error {response.status}: {error_text}")
-                        return []
+                        return self._positions_cache if self._positions_cache is not None else []
         except Exception as e:
             logger.error(f"Error getting MetaAPI positions: {e}")
-            return []
+            return self._positions_cache if self._positions_cache is not None else []
     
     async def get_symbols(self) -> List[Dict[str, Any]]:
         """Get all available symbols from MetaAPI broker"""
