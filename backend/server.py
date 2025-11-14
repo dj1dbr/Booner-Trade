@@ -1680,11 +1680,37 @@ async def get_trades(status: Optional[str] = None):
                     positions = await multi_platform.get_open_positions(platform_name)
                     
                     # Konvertiere MT5-Positionen zu Trade-Format
+                    # Symbol-Mapping: MT5-Symbole → Unsere Commodity-IDs
+                    symbol_to_commodity = {
+                        'XAUUSD': 'GOLD',
+                        'XAGUSD': 'SILVER',
+                        'XPTUSD': 'PLATINUM',
+                        'XPDUSD': 'PALLADIUM',
+                        'PL': 'PLATINUM',
+                        'PA': 'PALLADIUM',
+                        'USOILCash': 'WTI_CRUDE',
+                        'WTI_F6': 'WTI_CRUDE',
+                        'UKOUSD': 'BRENT_CRUDE',
+                        'CL': 'BRENT_CRUDE',
+                        'NGASCash': 'NATURAL_GAS',
+                        'NG': 'NATURAL_GAS',
+                        'WHEAT': 'WHEAT',
+                        'CORN': 'CORN',
+                        'SOYBEAN': 'SOYBEANS',
+                        'COFFEE': 'COFFEE',
+                        'SUGAR': 'SUGAR',
+                        'COTTON': 'COTTON',
+                        'COCOA': 'COCOA'
+                    }
+                    
                     for pos in positions:
+                        mt5_symbol = pos.get('symbol', 'UNKNOWN')
+                        commodity_id = symbol_to_commodity.get(mt5_symbol, mt5_symbol)  # Fallback to MT5 symbol
+                        
                         trade = {
                             "id": f"mt5_{pos.get('ticket', pos.get('id'))}",
                             "mt5_ticket": str(pos.get('ticket', pos.get('id'))),
-                            "commodity": pos.get('symbol', 'UNKNOWN'),
+                            "commodity": commodity_id,  # Unser internes Symbol!
                             "type": "BUY" if pos.get('type') == 'POSITION_TYPE_BUY' else "SELL",
                             "entry_price": pos.get('price_open', 0),
                             "price": pos.get('price_current', pos.get('price_open', 0)),
