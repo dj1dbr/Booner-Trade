@@ -111,7 +111,7 @@ class MetaAPIConnector:
                         logger.info(f"MetaAPI Account Info: Balance={self.balance}, Equity={self.equity}")
                         return result
                     elif response.status == 429:
-                        logger.warning(f"MetaAPI rate limit hit for account info, using cached data")
+                        logger.warning("MetaAPI rate limit hit for account info, using cached data")
                         return self._account_info_cache
                     else:
                         error_text = await response.text()
