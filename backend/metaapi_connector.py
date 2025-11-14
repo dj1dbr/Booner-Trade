@@ -58,8 +58,15 @@ class MetaAPIConnector:
             return False
     
     async def get_account_info(self) -> Optional[Dict[str, Any]]:
-        """Get real account information from MetaAPI"""
+        """Get current account information (with caching)"""
         try:
+            # Check cache
+            now = datetime.now().timestamp()
+            if (self._account_info_cache and self._account_info_cache_time and 
+                now - self._account_info_cache_time < self._cache_ttl):
+                logger.debug(f"Using cached account info for {self.account_id}")
+                return self._account_info_cache
+            
             url = f"{self.base_url}/users/current/accounts/{self.account_id}/account-information"
             
             # Create SSL context that doesn't verify certificates
@@ -71,19 +78,18 @@ class MetaAPIConnector:
             connector = aiohttp.TCPConnector(ssl=ssl_context)
             
             async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.get(url, headers=self._get_headers(), timeout=aiohttp.ClientTimeout(total=10)) as response:
+                async with session.get(url, headers=self._get_headers(), timeout=aiohttp.ClientTimeout(total=15)) as response:
                     if response.status == 200:
                         data = await response.json()
                         
-                        # Update local cache
+                        # Update internal state
                         self.balance = data.get('balance', 0.0)
                         self.equity = data.get('equity', 0.0)
                         self.margin = data.get('margin', 0.0)
                         self.free_margin = data.get('freeMargin', 0.0)
                         
-                        logger.info(f"MetaAPI Account Info: Balance={self.balance}, Equity={self.equity}")
-                        
-                        return {
+                        # Prepare return data
+                        result = {
                             "balance": self.balance,
                             "equity": self.equity,
                             "margin": self.margin,
@@ -97,13 +103,23 @@ class MetaAPIConnector:
                             "name": data.get('name', 'MetaTrader Account'),
                             "broker": data.get('broker', 'Unknown')
                         }
+                        
+                        # Cache it
+                        self._account_info_cache = result
+                        self._account_info_cache_time = now
+                        
+                        logger.info(f"MetaAPI Account Info: Balance={self.balance}, Equity={self.equity}")
+                        return result
+                    elif response.status == 429:
+                        logger.warning(f"MetaAPI rate limit hit for account info, using cached data")
+                        return self._account_info_cache
                     else:
                         error_text = await response.text()
                         logger.error(f"MetaAPI error {response.status}: {error_text}")
-                        return None
+                        return self._account_info_cache  # Return cached on error
         except Exception as e:
             logger.error(f"Error getting MetaAPI account info: {e}")
-            return None
+            return self._account_info_cache  # Return cached on error
     
     async def get_positions(self) -> List[Dict[str, Any]]:
         """Get open positions from MetaAPI"""
