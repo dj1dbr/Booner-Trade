@@ -692,54 +692,300 @@ class RohstoffTraderTester:
                 {"error": str(e)}
             )
     
+    async def test_comprehensive_trade_execution(self):
+        """KRITISCHER TEST: Trade Execution mit Duplikat-Prüfung"""
+        logger.info("🔥 KRITISCHER TEST: Trade Execution mit Duplikat-Prüfung")
+        
+        # Test data
+        trade_data = {
+            "trade_type": "BUY",
+            "price": 4200.0,
+            "commodity": "GOLD",
+            "quantity": 0.01
+        }
+        
+        executed_tickets = []
+        
+        # Execute 3 trades and check for duplicates
+        for i in range(3):
+            success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
+            
+            if success:
+                success_status = data.get("success", False)
+                ticket = data.get("ticket")
+                mt5_ticket = data.get("mt5_ticket")
+                
+                if success_status and ticket and mt5_ticket:
+                    executed_tickets.append({
+                        "ticket": ticket,
+                        "mt5_ticket": mt5_ticket,
+                        "execution": i + 1
+                    })
+                    logger.info(f"Trade {i+1}: SUCCESS - Ticket: {ticket}, MT5: {mt5_ticket}")
+                else:
+                    logger.error(f"Trade {i+1}: FAILED - Response: {data}")
+            else:
+                logger.error(f"Trade {i+1}: HTTP ERROR - {data}")
+        
+        # Check for duplicates
+        unique_tickets = set(t["ticket"] for t in executed_tickets)
+        unique_mt5_tickets = set(t["mt5_ticket"] for t in executed_tickets)
+        
+        if len(executed_tickets) == 3 and len(unique_tickets) == 3 and len(unique_mt5_tickets) == 3:
+            self.log_test_result(
+                "Trade Execution - No Duplicates", 
+                True, 
+                f"3 trades executed successfully, all unique tickets: {[t['ticket'] for t in executed_tickets]}",
+                {"executed_tickets": executed_tickets}
+            )
+        else:
+            self.log_test_result(
+                "Trade Execution - No Duplicates", 
+                False, 
+                f"Duplicate detection failed - Executed: {len(executed_tickets)}, Unique tickets: {len(unique_tickets)}, Unique MT5: {len(unique_mt5_tickets)}",
+                {"executed_tickets": executed_tickets}
+            )
+    
+    async def test_trades_list_duplicates(self):
+        """KRITISCH: Prüfe Trades List auf Duplikate und Fake-Trades"""
+        success, data = await self.make_request("GET", "/api/trades/list")
+        
+        if success:
+            trades = data.get("trades", [])
+            
+            # Check for duplicates (same ticket number)
+            tickets = [t.get("ticket") for t in trades if t.get("ticket")]
+            unique_tickets = set(tickets)
+            duplicates = len(tickets) - len(unique_tickets)
+            
+            # Check for fake trades (mt5_ticket=null, P&L=0)
+            fake_trades = []
+            for trade in trades:
+                if trade.get("mt5_ticket") is None and trade.get("profit_loss", 0) == 0:
+                    fake_trades.append(trade.get("ticket", "unknown"))
+            
+            if duplicates == 0 and len(fake_trades) == 0:
+                self.log_test_result(
+                    "Trades List - No Duplicates/Fakes", 
+                    True, 
+                    f"✅ {len(trades)} trades, no duplicates, no fake trades",
+                    {"total_trades": len(trades), "unique_tickets": len(unique_tickets)}
+                )
+            else:
+                self.log_test_result(
+                    "Trades List - No Duplicates/Fakes", 
+                    False, 
+                    f"❌ Found {duplicates} duplicates, {len(fake_trades)} fake trades",
+                    {"duplicates": duplicates, "fake_trades": fake_trades, "total_trades": len(trades)}
+                )
+        else:
+            self.log_test_result("Trades List - No Duplicates/Fakes", False, f"Failed to get trades: {data}")
+    
+    async def test_live_mt5_positions_comparison(self):
+        """KRITISCH: Vergleiche Live MT5 Positions mit App Trades"""
+        # Get MT5 Libertex positions
+        libertex_success, libertex_data = await self.make_request("GET", "/api/platforms/MT5_LIBERTEX/positions")
+        
+        # Get MT5 ICMarkets positions  
+        icmarkets_success, icmarkets_data = await self.make_request("GET", "/api/platforms/MT5_ICMARKETS/positions")
+        
+        # Get app trades
+        trades_success, trades_data = await self.make_request("GET", "/api/trades/list")
+        
+        if libertex_success and icmarkets_success and trades_success:
+            libertex_positions = libertex_data.get("positions", [])
+            icmarkets_positions = icmarkets_data.get("positions", [])
+            app_trades = trades_data.get("trades", [])
+            
+            # Count open positions
+            total_mt5_positions = len(libertex_positions) + len(icmarkets_positions)
+            open_app_trades = [t for t in app_trades if t.get("status") == "OPEN"]
+            
+            # Check if they match
+            if total_mt5_positions == len(open_app_trades):
+                self.log_test_result(
+                    "MT5 Positions vs App Trades", 
+                    True, 
+                    f"✅ IDENTICAL: {total_mt5_positions} MT5 positions = {len(open_app_trades)} app trades",
+                    {
+                        "libertex_positions": len(libertex_positions),
+                        "icmarkets_positions": len(icmarkets_positions),
+                        "app_open_trades": len(open_app_trades)
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "MT5 Positions vs App Trades", 
+                    False, 
+                    f"❌ MISMATCH: {total_mt5_positions} MT5 positions ≠ {len(open_app_trades)} app trades",
+                    {
+                        "libertex_positions": len(libertex_positions),
+                        "icmarkets_positions": len(icmarkets_positions),
+                        "app_open_trades": len(open_app_trades)
+                    }
+                )
+        else:
+            self.log_test_result(
+                "MT5 Positions vs App Trades", 
+                False, 
+                f"Failed to get data - Libertex: {libertex_success}, ICMarkets: {icmarkets_success}, Trades: {trades_success}"
+            )
+    
+    async def test_settings_update_all_platform(self):
+        """Test Settings Update mit ALL Platform"""
+        settings_data = {"default_platform": "ALL"}
+        
+        success, data = await self.make_request("POST", "/api/settings", settings_data)
+        
+        if success:
+            updated_platform = data.get("default_platform")
+            if updated_platform == "ALL":
+                self.log_test_result(
+                    "Settings Update ALL Platform", 
+                    True, 
+                    f"Successfully updated to ALL platform: {updated_platform}",
+                    {"default_platform": updated_platform}
+                )
+            else:
+                self.log_test_result(
+                    "Settings Update ALL Platform", 
+                    False, 
+                    f"Platform not updated correctly: {updated_platform}",
+                    data
+                )
+        else:
+            self.log_test_result("Settings Update ALL Platform", False, f"Failed to update settings: {data}")
+    
+    async def test_stability_connections(self):
+        """Stability Test: 5x GET /api/platforms/status (alle 2 Sekunden)"""
+        logger.info("🔄 Stability Test: 5x Platform Status Checks")
+        
+        stable_connections = True
+        connection_results = []
+        
+        for i in range(5):
+            if i > 0:
+                await asyncio.sleep(2)  # Wait 2 seconds between requests
+            
+            success, data = await self.make_request("GET", "/api/platforms/status")
+            
+            if success:
+                platforms = data.get("platforms", {})
+                mt5_libertex_active = platforms.get("MT5_LIBERTEX", {}).get("active", False)
+                mt5_icmarkets_active = platforms.get("MT5_ICMARKETS", {}).get("active", False)
+                
+                connection_results.append({
+                    "check": i + 1,
+                    "libertex_active": mt5_libertex_active,
+                    "icmarkets_active": mt5_icmarkets_active,
+                    "both_connected": mt5_libertex_active and mt5_icmarkets_active
+                })
+                
+                if not (mt5_libertex_active and mt5_icmarkets_active):
+                    stable_connections = False
+                    
+                logger.info(f"Check {i+1}: Libertex={mt5_libertex_active}, ICMarkets={mt5_icmarkets_active}")
+            else:
+                stable_connections = False
+                connection_results.append({
+                    "check": i + 1,
+                    "error": data
+                })
+                logger.error(f"Check {i+1}: FAILED - {data}")
+        
+        if stable_connections and len(connection_results) == 5:
+            self.log_test_result(
+                "Stability Test - Connections", 
+                True, 
+                f"✅ All 5 checks passed, connections remain stable",
+                {"connection_results": connection_results}
+            )
+        else:
+            self.log_test_result(
+                "Stability Test - Connections", 
+                False, 
+                f"❌ Stability issues detected in {5 - sum(1 for r in connection_results if r.get('both_connected', False))} checks",
+                {"connection_results": connection_results}
+            )
+    
+    async def test_platform_connections_balances(self):
+        """Test Platform Connections mit Balance-Prüfung"""
+        success, data = await self.make_request("GET", "/api/platforms/status")
+        
+        if success:
+            platforms = data.get("platforms", {})
+            
+            # Check MT5_LIBERTEX
+            libertex = platforms.get("MT5_LIBERTEX", {})
+            libertex_connected = libertex.get("active", False)
+            libertex_balance = libertex.get("balance", 0)
+            
+            # Check MT5_ICMARKETS  
+            icmarkets = platforms.get("MT5_ICMARKETS", {})
+            icmarkets_connected = icmarkets.get("active", False)
+            icmarkets_balance = icmarkets.get("balance", 0)
+            
+            # Success criteria: Both connected AND both have non-zero balance
+            if (libertex_connected and libertex_balance > 0 and 
+                icmarkets_connected and icmarkets_balance > 0):
+                self.log_test_result(
+                    "Platform Connections with Balances", 
+                    True, 
+                    f"✅ MT5_LIBERTEX: connected={libertex_connected}, balance={libertex_balance} | MT5_ICMARKETS: connected={icmarkets_connected}, balance={icmarkets_balance}",
+                    {
+                        "libertex": {"connected": libertex_connected, "balance": libertex_balance},
+                        "icmarkets": {"connected": icmarkets_connected, "balance": icmarkets_balance}
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Platform Connections with Balances", 
+                    False, 
+                    f"❌ Connection/Balance issues - Libertex: connected={libertex_connected}, balance={libertex_balance} | ICMarkets: connected={icmarkets_connected}, balance={icmarkets_balance}",
+                    data
+                )
+        else:
+            self.log_test_result("Platform Connections with Balances", False, f"Failed to get platform status: {data}")
+
     async def run_all_tests(self):
-        """Run all backend tests in sequence"""
-        logger.info("🚀 Starting Rohstoff Trader Backend API Tests - AI Settings Integration Focus")
+        """Run all backend tests in sequence - KOMPLETTER APP-TEST"""
+        logger.info("🚀 KOMPLETTER APP-TEST - Alle Funktionen systematisch testen")
         logger.info(f"Testing against: {self.base_url}")
         
-        # Basic connectivity tests
-        await self.test_api_root()
-        
-        # AI SETTINGS INTEGRATION TESTS (PRIORITY - As per review request)
-        logger.info("\n=== AI SETTINGS INTEGRATION TESTS ===")
-        await self.test_ai_settings_retrieval()
-        await self.test_ai_chat_with_settings()
-        await self.test_backend_logs_ai_settings()
-        
-        # Multi-Platform Tests (REQUIRED)
-        logger.info("\n=== MULTI-PLATFORM TESTS ===")
+        # 1. Platform Connections (KRITISCH!)
+        logger.info("\n=== 1. PLATFORM CONNECTIONS ===")
         await self.test_platforms_status()
+        await self.test_platform_connections_balances()
+        
+        # 2. Trade-Execution Test (KRITISCH!)
+        logger.info("\n=== 2. TRADE-EXECUTION TEST (KRITISCH!) ===")
+        await self.test_comprehensive_trade_execution()
+        
+        # 3. Trades List (KRITISCH!)
+        logger.info("\n=== 3. TRADES LIST (KRITISCH!) ===")
+        await self.test_trades_list()
+        await self.test_trades_list_duplicates()
+        
+        # 4. Live MT5 Positions
+        logger.info("\n=== 4. LIVE MT5 POSITIONS ===")
         await self.test_mt5_libertex_account()
         await self.test_mt5_icmarkets_account()
-        await self.test_settings_platforms()
-        await self.test_commodities_multi_platform_symbols()
+        await self.test_live_mt5_positions_comparison()
         
-        # Market Data Tests (REQUIRED)
-        logger.info("\n=== MARKET DATA TESTS ===")
-        await self.test_market_data_endpoint()
-        await self.test_commodities_list()
-        await self.test_market_data_all()
-        
-        # Settings Tests
-        logger.info("\n=== SETTINGS TESTS ===")
+        # 5. Settings
+        logger.info("\n=== 5. SETTINGS ===")
         await self.test_settings_get()
-        await self.test_settings_update_mt5_mode()
+        await self.test_settings_update_all_platform()
         
-        # Legacy MT5 Connection Tests
-        logger.info("\n=== LEGACY MT5 TESTS ===")
-        await self.test_mt5_account_info()
-        await self.test_mt5_status()
-        await self.test_mt5_symbols()
-        await self.test_mt5_positions()
+        # 6. Stability Test
+        logger.info("\n=== 6. STABILITY TEST ===")
+        await self.test_stability_connections()
         
-        # Manual Trade Execution Tests (MOST IMPORTANT)
-        logger.info("\n=== TRADE EXECUTION TESTS ===")
-        await self.test_manual_trade_wti_crude()
-        await self.test_manual_trade_gold()
-        
-        # Additional tests
-        logger.info("\n=== ADDITIONAL TESTS ===")
-        await self.test_trades_list()
+        # Additional comprehensive tests
+        logger.info("\n=== ADDITIONAL COMPREHENSIVE TESTS ===")
+        await self.test_api_root()
+        await self.test_market_data_all()
+        await self.test_commodities_list()
         
         # Summary
         self.print_test_summary()
