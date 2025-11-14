@@ -122,8 +122,14 @@ class MetaAPIConnector:
             return self._account_info_cache  # Return cached on error
     
     async def get_positions(self) -> List[Dict[str, Any]]:
-        """Get open positions from MetaAPI"""
+        """Get open positions from MetaAPI (with caching)"""
         try:
+            # Check cache
+            now = datetime.now().timestamp()
+            if (self._positions_cache is not None and self._positions_cache_time and 
+                now - self._positions_cache_time < self._cache_ttl):
+                logger.debug(f"Using cached positions for {self.account_id}")
+                return self._positions_cache
             url = f"{self.base_url}/users/current/accounts/{self.account_id}/positions"
             
             async with aiohttp.ClientSession() as session:
