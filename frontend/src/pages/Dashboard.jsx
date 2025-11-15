@@ -1378,8 +1378,8 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {Object.entries(allMarkets).slice(0, 4).map(([commodityId, market]) => {
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Object.entries(allMarkets).map(([commodityId, market]) => {
                   const commodity = commodities[commodityId];
                   if (!commodity) return null;
                   
@@ -1392,7 +1392,8 @@ const Dashboard = () => {
                             setSelectedCommodity({id: commodityId, ...commodity, marketData: market});
                             setChartModalOpen(true);
                           }}
-                          className="text-cyan-400 hover:text-cyan-300"
+                          className="text-cyan-400 hover:text-cyan-300 hover:scale-110 transition-transform"
+                          title="Chart anzeigen"
                         >
                           <LineChart className="w-5 h-5" />
                         </button>
@@ -1402,6 +1403,15 @@ const Dashboard = () => {
                           ${market.price?.toFixed(2) || '0.00'}
                         </p>
                         <p className="text-sm text-slate-400">{commodity.unit}</p>
+                        <div className="mt-2 flex items-center justify-center gap-2">
+                          <span className={`text-xs px-2 py-1 rounded ${
+                            market.signal === 'BUY' ? 'bg-green-900/30 text-green-400' :
+                            market.signal === 'SELL' ? 'bg-red-900/30 text-red-400' :
+                            'bg-slate-700/30 text-slate-400'
+                          }`}>
+                            {market.signal || 'HOLD'}
+                          </span>
+                        </div>
                       </div>
                     </Card>
                   );
