@@ -364,13 +364,21 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
         interval = interval_map.get(timeframe, '1d')
         
         # yfinance period mapping (yfinance doesn't support '2h', '1wk', '2wk')
-        # For intraday intervals (1m, 5m, 15m, 30m, 1h), use '1d' as minimum period
+        # For short intraday intervals (1m, 5m, 15m, 30m), we need to fetch enough data
         yf_period_map = {
             '2h': '1d',     # yfinance doesn't support 2h, use 1d (then filter)
             '1wk': '1wk',   # yfinance supports 1wk
             '2wk': '1mo',   # yfinance doesn't support 2wk, use 1mo (then filter)
         }
-        yf_period = yf_period_map.get(period, period)
+        
+        # Special handling for very short timeframes (1m, 5m)
+        # yfinance limits: 1m = max 7d, 5m = max 60d
+        if interval in ['1m', '5m', '15m', '30m'] and period in ['2h', '1d']:
+            yf_period = '1d'  # Ensure we get enough intraday data
+        elif interval in ['1m', '5m'] and period in ['5d', '1wk']:
+            yf_period = '5d'  # For 1-5min intervals, limit to 5d for stability
+        else:
+            yf_period = yf_period_map.get(period, period)
         
         # Get historical data with specified timeframe
         logger.info(f"Fetching {commodity['name']} data: period={period} (yf_period={yf_period}), interval={interval}")
