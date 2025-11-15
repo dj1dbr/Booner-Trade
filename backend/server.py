@@ -313,16 +313,20 @@ class TradingSettings(BaseModel):
     use_volume_confirmation: bool = True  # Verwende Volumen zur Bestätigung
     risk_per_trade_percent: float = 2.0  # Maximales Risiko pro Trade (% der Balance)
     
-    # MT5 Libertex Credentials
+    # MetaAPI Token (shared across all MT5 accounts)
+    metaapi_token: Optional[str] = None
+    # MT5 Libertex Demo Credentials
     mt5_libertex_account_id: Optional[str] = None
-    # MT5 ICMarkets Credentials
+    # MT5 ICMarkets Demo Credentials
     mt5_icmarkets_account_id: Optional[str] = None
+    # MT5 Libertex REAL Credentials
+    mt5_libertex_real_account_id: Optional[str] = None
     # Deprecated MT5 credentials (kept for compatibility)
     mt5_login: Optional[str] = None
     mt5_password: Optional[str] = None
     mt5_server: Optional[str] = None
     
-    # Bitpanda Credentials
+    # Deprecated Bitpanda Credentials (no longer used)
     bitpanda_api_key: Optional[str] = None
     bitpanda_email: Optional[str] = None
 
