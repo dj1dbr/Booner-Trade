@@ -2075,22 +2075,21 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="mode">Aktive Plattform</Label>
-            <select
-              id="mode"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              value={formData.mode || 'MT5'}
-              onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
-              data-testid="mode-select"
-            >
-              <option value="MT5">🔷 MetaTrader 5 (11 Rohstoffe)</option>
-              <option value="BITPANDA">🟢 Bitpanda (Krypto & Rohstoffe)</option>
-            </select>
-            <p className="text-xs text-slate-500">
-              {formData.mode === 'MT5' && 'Echtes Trading über MetaTrader 5 - 11 Rohstoffe verfügbar'}
-              {formData.mode === 'BITPANDA' && 'Echtes Trading über Bitpanda - Alle Rohstoffe verfügbar'}
-            </p>
+          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="text-2xl">ℹ️</div>
+              <div className="space-y-2 flex-1">
+                <h5 className="font-semibold text-slate-200">Plattform-Auswahl</h5>
+                <p className="text-sm text-slate-400">
+                  Sie können Plattformen direkt über die Checkboxen bei den Balance-Cards oben aktivieren/deaktivieren.
+                </p>
+                <p className="text-sm text-slate-400">
+                  Aktive Plattformen: <span className="text-cyan-400 font-semibold">
+                    {formData.active_platforms?.join(', ') || 'Keine'}
+                  </span>
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -2098,18 +2097,15 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             <select
               id="default_platform"
               className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              value={formData.default_platform || 'ALL'}
+              value={formData.default_platform || 'MT5_LIBERTEX'}
               onChange={(e) => setFormData({ ...formData, default_platform: e.target.value })}
             >
-              <option value="ALL">🌐 Alle Plattformen gleichzeitig</option>
-              <option value="MT5_LIBERTEX">🔷 MT5 Libertex (€47.727)</option>
-              <option value="MT5_ICMARKETS">🔷 MT5 ICMarkets (€2.585)</option>
-              <option value="BITPANDA">🟢 Bitpanda (€0 - nur lokal)</option>
+              <option value="MT5_LIBERTEX">🔷 MT5 Libertex Demo</option>
+              <option value="MT5_ICMARKETS">🟣 MT5 ICMarkets Demo</option>
+              <option value="MT5_LIBERTEX_REAL">💰 MT5 Libertex REAL (wenn verfügbar)</option>
             </select>
             <p className="text-xs text-slate-500">
-              {formData.default_platform === 'ALL' ? 
-                'Trades werden auf allen aktiven Plattformen platziert' : 
-                'Plattform, die für neue manuelle und automatische Trades verwendet wird'}
+              Plattform für neue manuelle Trades (Auto-Trading nutzt alle aktiven)
             </p>
           </div>
 
