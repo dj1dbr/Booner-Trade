@@ -1,0 +1,18 @@
+📍 ICON ERSTELLEN
+
+Für ein professionelles App-Icon:
+
+1. Erstellen Sie ein 512x512px Icon-Design (PNG)
+2. Speichern Sie es als /app/electron/icon.png
+
+ODER nutzen Sie Online-Tools:
+- https://www.canva.com (kostenlos)
+- https://www.figma.com (kostenlos)
+
+Design-Ideen:
+- Schwarzer/Dunkler Hintergrund
+- Goldenes/Grünes Trading-Symbol (Candlestick-Chart)
+- "WTI" oder "ST" Initialen
+- Moderne, minimale Optik
+
+Aktuell: Platzhalter-Icon wird verwendet
