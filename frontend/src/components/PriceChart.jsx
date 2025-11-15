@@ -77,18 +77,46 @@ const PriceChart = ({ data, commodityName = 'Commodity', commodityId = null, isO
     );
   }
 
-  // Format time based on data length (detect if intraday or daily)
+  // Format time based on timespan (detect if intraday or multi-day)
   const formatTime = (timestamp) => {
     const date = new Date(timestamp);
-    if (data.length > 100) {
-      // Long period - show date
-      return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short' });
-    } else if (data.length > 20) {
-      // Medium period - show date and time
-      return date.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit' });
-    } else {
-      // Short period - show time only
-      return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    
+    // Calculate timespan between first and last data point
+    if (data.length < 2) {
+      return date.toLocaleString('de-DE', { 
+        day: '2-digit', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+    
+    const firstDate = new Date(data[0].timestamp);
+    const lastDate = new Date(data[data.length - 1].timestamp);
+    const timespanHours = (lastDate - firstDate) / (1000 * 60 * 60);
+    
+    // For very short periods (< 12 hours): Show only time
+    if (timespanHours < 12) {
+      return date.toLocaleTimeString('de-DE', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+    // For intraday (< 3 days): Show date + time
+    else if (timespanHours < 72) {
+      return date.toLocaleString('de-DE', { 
+        day: '2-digit', 
+        month: 'short', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+    }
+    // For longer periods: Show only date
+    else {
+      return date.toLocaleDateString('de-DE', { 
+        day: '2-digit', 
+        month: 'short' 
+      });
     }
   };
 
