@@ -84,27 +84,65 @@ class MetaAPISDKConnector:
             if not self.connection:
                 return []
             
-            positions = self.connection.terminal_state.positions if self.connection.terminal_state else []
+            terminal_state = self.connection.terminal_state
+            if not terminal_state:
+                return []
+            
+            positions = terminal_state.positions if hasattr(terminal_state, 'positions') else []
             
             result = []
             for pos in positions:
-                result.append({
-                    'ticket': pos.id,
-                    'symbol': pos.symbol,
-                    'type': pos.type,  # POSITION_TYPE_BUY oder POSITION_TYPE_SELL
-                    'volume': pos.volume,
-                    'price_open': pos.openPrice,
-                    'price_current': pos.currentPrice,
-                    'profit': pos.profit,
-                    'swap': pos.swap,
-                    'time': pos.time,
-                    'sl': pos.stopLoss if hasattr(pos, 'stopLoss') else None,
-                    'tp': pos.takeProfit if hasattr(pos, 'takeProfit') else None
-                })
+                # Handle both dict and object types
+                if isinstance(pos, dict):
+                    result.append({
+                        'ticket': pos.get('id'),
+                        'id': pos.get('id'),
+                        'positionId': pos.get('id'),
+                        'symbol': pos.get('symbol'),
+                        'type': pos.get('type'),
+                        'volume': pos.get('volume'),
+                        'price_open': pos.get('openPrice'),
+                        'openPrice': pos.get('openPrice'),
+                        'price_current': pos.get('currentPrice'),
+                        'currentPrice': pos.get('currentPrice'),
+                        'profit': pos.get('profit'),
+                        'unrealizedProfit': pos.get('profit'),
+                        'swap': pos.get('swap'),
+                        'time': pos.get('time'),
+                        'openTime': pos.get('time'),
+                        'updateTime': pos.get('updateTime'),
+                        'sl': pos.get('stopLoss'),
+                        'stopLoss': pos.get('stopLoss'),
+                        'tp': pos.get('takeProfit'),
+                        'takeProfit': pos.get('takeProfit')
+                    })
+                else:
+                    result.append({
+                        'ticket': pos.id if hasattr(pos, 'id') else None,
+                        'id': pos.id if hasattr(pos, 'id') else None,
+                        'positionId': pos.id if hasattr(pos, 'id') else None,
+                        'symbol': pos.symbol if hasattr(pos, 'symbol') else None,
+                        'type': pos.type if hasattr(pos, 'type') else None,
+                        'volume': pos.volume if hasattr(pos, 'volume') else None,
+                        'price_open': pos.openPrice if hasattr(pos, 'openPrice') else None,
+                        'openPrice': pos.openPrice if hasattr(pos, 'openPrice') else None,
+                        'price_current': pos.currentPrice if hasattr(pos, 'currentPrice') else None,
+                        'currentPrice': pos.currentPrice if hasattr(pos, 'currentPrice') else None,
+                        'profit': pos.profit if hasattr(pos, 'profit') else None,
+                        'unrealizedProfit': pos.profit if hasattr(pos, 'profit') else None,
+                        'swap': pos.swap if hasattr(pos, 'swap') else None,
+                        'time': pos.time if hasattr(pos, 'time') else None,
+                        'openTime': pos.time if hasattr(pos, 'time') else None,
+                        'updateTime': pos.updateTime if hasattr(pos, 'updateTime') else None,
+                        'sl': pos.stopLoss if hasattr(pos, 'stopLoss') else None,
+                        'stopLoss': pos.stopLoss if hasattr(pos, 'stopLoss') else None,
+                        'tp': pos.takeProfit if hasattr(pos, 'takeProfit') else None,
+                        'takeProfit': pos.takeProfit if hasattr(pos, 'takeProfit') else None
+                    })
             
             return result
         except Exception as e:
-            logger.error(f"Error getting positions: {e}")
+            logger.error(f"Error getting positions: {e}", exc_info=True)
             return []
     
     async def create_market_order(self, symbol: str, order_type: str, volume: float, 
