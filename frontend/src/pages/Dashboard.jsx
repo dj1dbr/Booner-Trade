@@ -2075,38 +2075,29 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             />
           </div>
 
-          <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-4">
+          <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 border border-cyan-700/30 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="text-2xl">ℹ️</div>
+              <div className="text-3xl">⚡</div>
               <div className="space-y-2 flex-1">
-                <h5 className="font-semibold text-slate-200">Plattform-Auswahl</h5>
-                <p className="text-sm text-slate-400">
-                  Sie können Plattformen direkt über die Checkboxen bei den Balance-Cards oben aktivieren/deaktivieren.
+                <h5 className="font-semibold text-cyan-400">Multi-Platform Trading</h5>
+                <p className="text-sm text-slate-300">
+                  Alle aktivierten Plattformen (mit ✓ Häkchen bei Balance-Cards) erhalten <span className="text-cyan-400 font-bold">gleichzeitig</span> Trades!
                 </p>
-                <p className="text-sm text-slate-400">
-                  Aktive Plattformen: <span className="text-cyan-400 font-semibold">
-                    {formData.active_platforms?.join(', ') || 'Keine'}
-                  </span>
-                </p>
+                <div className="mt-3 p-3 bg-slate-800/50 rounded border border-slate-700">
+                  <p className="text-xs text-slate-400 mb-2">📊 Aktuell aktive Plattformen:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(formData.active_platforms || []).map(platform => (
+                      <span key={platform} className="px-2 py-1 bg-cyan-900/30 text-cyan-300 text-xs rounded border border-cyan-700/50">
+                        {platform}
+                      </span>
+                    ))}
+                    {(!formData.active_platforms || formData.active_platforms.length === 0) && (
+                      <span className="text-xs text-slate-500 italic">Keine Plattform aktiv</span>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="default_platform">Standard-Plattform für neue Trades</Label>
-            <select
-              id="default_platform"
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-md text-white"
-              value={formData.default_platform || 'MT5_LIBERTEX'}
-              onChange={(e) => setFormData({ ...formData, default_platform: e.target.value })}
-            >
-              <option value="MT5_LIBERTEX">🔷 MT5 Libertex Demo</option>
-              <option value="MT5_ICMARKETS">🟣 MT5 ICMarkets Demo</option>
-              <option value="MT5_LIBERTEX_REAL">💰 MT5 Libertex REAL (wenn verfügbar)</option>
-            </select>
-            <p className="text-xs text-slate-500">
-              Plattform für neue manuelle Trades (Auto-Trading nutzt alle aktiven)
-            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
