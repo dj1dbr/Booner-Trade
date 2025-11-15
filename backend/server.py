@@ -2504,9 +2504,23 @@ async def startup_event():
     import commodity_processor
     commodity_processor.set_platform_connector(multi_platform)
     
-    # Connect platforms for chart data availability (SDK version)
-    await multi_platform.connect_platform('MT5_ICMARKETS_DEMO')
-    await multi_platform.connect_platform('MT5_LIBERTEX_DEMO')
+    # Connect platforms for chart data availability (SDK version) - parallel for speed
+    import asyncio
+    connection_tasks = [
+        multi_platform.connect_platform('MT5_LIBERTEX_DEMO'),
+        multi_platform.connect_platform('MT5_ICMARKETS_DEMO')
+    ]
+    results = await asyncio.gather(*connection_tasks, return_exceptions=True)
+    
+    # Log results
+    for i, (platform_name, result) in enumerate(zip(['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO'], results)):
+        if isinstance(result, Exception):
+            logger.error(f"Failed to connect {platform_name}: {result}")
+        elif result:
+            logger.info(f"✅ Successfully connected {platform_name}")
+        else:
+            logger.warning(f"⚠️ Failed to connect {platform_name} (returned False)")
+    
     logger.info("Platform connector initialized and platforms connected for MetaAPI chart data (SDK)")
     
     # Fetch initial market data
