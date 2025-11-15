@@ -2301,20 +2301,31 @@ async def get_mt5_symbols():
 # Multi-Platform Endpoints
 @api_router.get("/platforms/status")
 async def get_platforms_status():
-    """Get status of all trading platforms"""
+    """Get status of all trading platforms (SDK version)"""
     try:
         from multi_platform_connector import multi_platform
         
-        status = multi_platform.get_platform_status()
+        status_dict = multi_platform.get_platform_status()
         active_platforms = multi_platform.get_active_platforms()
+        
+        # Convert dict to list for frontend compatibility
+        platforms_list = []
+        for platform_name, platform_data in status_dict.items():
+            platforms_list.append({
+                "platform": platform_name,
+                "name": platform_data.get('name', platform_name),
+                "connected": platform_data.get('active', False),
+                "balance": platform_data.get('balance', 0.0),
+                "is_real": platform_data.get('is_real', False)
+            })
         
         return {
             "success": True,
             "active_platforms": active_platforms,
-            "platforms": status
+            "platforms": platforms_list
         }
     except Exception as e:
-        logger.error(f"Error getting platforms status: {e}")
+        logger.error(f"Error getting platforms status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/platforms/{platform_name}/connect")
