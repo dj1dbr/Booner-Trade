@@ -52,7 +52,7 @@ function createWindow() {
   // Menü entfernen (optional - für cleaner Look)
   Menu.setApplicationMenu(null);
 
-  // Warte bis Backend bereit ist (5 Sekunden - Backend braucht Zeit zum Starten)
+  // Warte nochmal 3 Sekunden zusätzlich (Backend läuft bereits seit 5 Sekunden)
   setTimeout(() => {
     // Lade die React-App vom lokalen Backend-Server
     // Das Backend liefert das Frontend aus (siehe server.py - Static Files)
