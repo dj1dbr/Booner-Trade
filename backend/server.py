@@ -1071,13 +1071,24 @@ async def get_simple_ohlcv(commodity: str, timeframe: str = "5m", period: str = 
         # Map timeframe to number of minutes
         timeframe_minutes = {
             '1m': 1, '5m': 5, '15m': 15, '30m': 30, 
-            '1h': 60, '4h': 240, '1d': 1440
+            '1h': 60, '2h': 120, '4h': 240, '1d': 1440
         }
         interval_minutes = timeframe_minutes.get(timeframe, 5)
         
-        # Generate last 12 candles
+        # Map period to total minutes
+        period_minutes = {
+            '2h': 120, '1d': 1440, '5d': 7200, '1wk': 10080, 
+            '2wk': 20160, '1mo': 43200, '3mo': 129600, 
+            '6mo': 259200, '1y': 525600
+        }
+        total_minutes = period_minutes.get(period, 1440)  # Default 1 day
+        
+        # Calculate number of candles needed
+        num_candles = min(int(total_minutes / interval_minutes), 500)  # Max 500 candles for performance
+        
+        # Generate candles
         data = []
-        for i in range(11, -1, -1):  # 12 candles going backwards
+        for i in range(num_candles - 1, -1, -1):  # Going backwards from now
             candle_time = current_time - timedelta(minutes=i * interval_minutes)
             # Add small random variance to simulate real price movement
             variance = (i - 6) * 0.0005  # Small trend
