@@ -58,29 +58,64 @@ https://tradinghelm.preview.emergentagent.com
 
 ---
 
-## 📦 Desktop App bauen
+## 📦 Desktop App bauen (Standalone Installer)
 
-### macOS:
+### Vorbereitung (nur einmal):
+
+1. **Frontend Production Build erstellen:**
+```bash
+cd /app/frontend
+yarn build
+```
+
+2. **Backend Dependencies prüfen:**
+```bash
+cd /app/backend
+pip freeze > requirements.txt
+```
+
+### App bauen:
+
+#### macOS (.dmg Installer):
 ```bash
 cd /app/electron
 yarn build:mac
 ```
 
-Ausgabe: `dist/WTI Smart Trader.dmg`
+**Ausgabe**: `dist/WTI Smart Trader.dmg`
 
-### Windows:
+Installieren: Doppelklick auf .dmg → App nach `/Applications` ziehen
+
+#### Windows (.exe Installer):
 ```bash
+cd /app/electron
 yarn build:win
 ```
 
-Ausgabe: `dist/WTI Smart Trader Setup.exe`
+**Ausgabe**: `dist/WTI Smart Trader Setup.exe`
 
-### Linux:
+Installieren: Doppelklick auf .exe und Setup folgen
+
+#### Linux (AppImage):
 ```bash
+cd /app/electron
 yarn build:linux
 ```
 
-Ausgabe: `dist/WTI Smart Trader.AppImage`
+**Ausgabe**: `dist/WTI Smart Trader.AppImage`
+
+Nutzen: Rechtsklick → Eigenschaften → Ausführbar machen → Doppelklick
+
+---
+
+### Nach der Installation:
+
+Die App ist jetzt eine **eigenständige Anwendung**:
+- ✅ Erscheint in Spotlight/Startmenü
+- ✅ Startet per Doppelklick auf Icon
+- ✅ KEIN Terminal nötig
+- ✅ KEIN Browser-Fenster
+- ✅ Läuft komplett lokal mit eigenem Backend
 
 ---
 
