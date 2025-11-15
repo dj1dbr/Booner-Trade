@@ -52,13 +52,11 @@ function createWindow() {
   // Menü entfernen (optional - für cleaner Look)
   Menu.setApplicationMenu(null);
 
-  // Warte bis Backend bereit ist (3 Sekunden)
+  // Warte bis Backend bereit ist (5 Sekunden - Backend braucht Zeit zum Starten)
   setTimeout(() => {
-    // Lade die React-App vom Production-Server
-    // (Das Backend läuft lokal auf 8001, aber das Frontend wird von der Production-URL geladen)
-    const appURL = process.env.ELECTRON_DEV 
-      ? 'http://localhost:3000'  // Development: React Dev Server
-      : 'https://tradinghelm.preview.emergentagent.com';  // Production: Deployed Frontend
+    // Lade die React-App vom lokalen Backend-Server
+    // Das Backend liefert das Frontend aus (siehe server.py - Static Files)
+    const appURL = 'http://localhost:8001';
     
     console.log(`📱 Loading App from: ${appURL}`);
     mainWindow.loadURL(appURL);
