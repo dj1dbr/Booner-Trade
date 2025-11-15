@@ -2493,10 +2493,10 @@ async def startup_event():
     import commodity_processor
     commodity_processor.set_platform_connector(multi_platform)
     
-    # Connect platforms for chart data availability
-    await multi_platform.connect_platform('MT5_ICMARKETS')
-    await multi_platform.connect_platform('MT5_LIBERTEX')
-    logger.info("Platform connector initialized and platforms connected for MetaAPI chart data")
+    # Connect platforms for chart data availability (SDK version)
+    await multi_platform.connect_platform('MT5_ICMARKETS_DEMO')
+    await multi_platform.connect_platform('MT5_LIBERTEX_DEMO')
+    logger.info("Platform connector initialized and platforms connected for MetaAPI chart data (SDK)")
     
     # Fetch initial market data
     await process_market_data()
