@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BACKEND_URL = "https://voicetrade.preview.emergentagent.com"
+BACKEND_URL = "https://tradinghelm.preview.emergentagent.com"
 
 async def list_positions():
     """Liste alle offenen Positionen auf"""

@@ -1,187 +1,173 @@
 <analysis>
-The trajectory details the iterative development of a full-stack trading application. The process began with importing a GitHub repository and understanding the existing codebase, which is a React/FastAPI/MongoDB stack. The user, communicating in German, initially provided a set of new requirements after dismissing the old ones found in a  file.
+The trajectory documents an extensive and complex debugging and feature-enhancement cycle for a full-stack trading application. The user, communicating in German, reported a cascade of critical issues, starting with the AI not respecting user settings and escalating to catastrophic data integrity problems.
 
-The core tasks were:
-1.  **Libertex Integration:** Display portfolio risk and open positions.
-2.  **Live Charts:** Implement a free live ticker with a 2-hour view.
-3.  **Mac Compatibility:** Resolve an issue where the  Python library was unavailable on the user's local Mac, breaking the AI Chat feature.
-4.  **AI Chat Enhancement:** Enable the AI to handle conversational context and execute trading commands.
-5.  **Voice Control:** Add voice input for the AI chat via both browser-native Web Speech API and a local Whisper-based solution.
+Major issues addressed include:
+1.  **Data Corruption:** Phantom trades appeared, trades showed incorrect 0.00€ P&L, and manually closed trades vanished. This was traced to multiple root causes: a rogue background process () closing trades incorrectly in the database, a frontend/backend race condition creating duplicate trades, and, most critically, the agent operating on the wrong database ( instead of ).
+2.  **Trade Execution Failure:** Users were unable to execute or close trades, encountering  or  errors. This required fixing frontend  calls (from URL params to JSON body), updating backend Pydantic models to accept new data structures, and correcting API endpoint definitions.
+3.  **Connection Instability:** The connection to MetaTrader platforms repeatedly dropped. Initial fixes involved connection pooling, but the problem persisted. The final, decisive action was to abandon the custom REST API implementation in favor of the official .
+4.  **Local vs. Cloud Environment Mismatch:** The user faced  on their local Mac setup, which was debugged and traced to an incorrect backend port in the frontend's  file.
 
-Development was highly iterative, marked by frequent user feedback and bug reports. Key challenges included:
-*   Fixing a  data fetching limitation for the 2h chart timeframe.
-*   Debugging AI chat context loss, which required implementing session management and refining the AI's system prompt.
-*   Resolving a critical backend bug related to incorrect boolean checks on database objects.
-*   Implementing a robust connection pooling mechanism to fix platform connection stability issues.
-*   Debugging frontend issues with chart rendering () and the newly implemented voice control features.
+The work concluded with the AI pivoting to the  to solve the core instability and preparing to add a new Libertex Real account as requested by the user.
 
-The process concluded after fixing a major connection stability problem, right before the environment was restarted due to memory limits. The application is now significantly more feature-rich and stable.
+*Instruction for next agent: The user's primary language is German. Please conduct all future interactions in German.*
 </analysis>
 
 <product_requirements>
-The goal is to enhance an existing full-stack trading dashboard application. The application connects to multiple trading platforms (Libertex, ICMarkets, Bitpanda) and provides users with an overview of their accounts, market data, and an AI-powered chat assistant.
+The goal is to stabilize and enhance a full-stack (React, FastAPI, MongoDB) trading dashboard.
 
-**Functional Requirements:**
-1.  **Dashboard Enhancement:** The Libertex section of the dashboard must be updated to display real-time portfolio risk percentages and a list of all open positions, moving away from any previously hardcoded data.
-2.  **Live Charting:** All commodity charts must feature a live data ticker. This functionality must be free to use. It requires user-configurable interval and period selectors, specifically including an option for a 2-hour period with 1-minute intervals.
-3.  **AI Chat Control:** The AI chat assistant must be enhanced to support stateful conversations. When Auto-Trading is enabled in the settings, the AI must be able to understand and execute user commands like close all positions or open a WTI position.
-4.  **Voice Interaction:** The AI chat must support voice input through two distinct methods:
-    a. A browser-native solution (Web Speech API) for ease of use.
-    b. A local, offline solution (OpenAI's Whisper) for Mac users, ensuring privacy and robustness.
-5.  **Cross-Platform Compatibility:** The application must be fully functional on both the Emergent cloud environment and a local Mac setup. This involves creating a fallback for the cloud-specific  library to ensure the AI chat works locally.
+**Core Requirements Implemented:**
+- **Use User Settings:** The AI Chat and trade execution logic must use configurations (e.g., AI provider, API keys, default platform) from the user's settings, not hardcoded values.
+- **UI/UX Improvements:**
+    - The Trades view is now split into Open and Closed sub-tabs for clarity.
+    - Annoying confirmation dialogs for closing trades have been removed.
+    - Trades with platform error codes (e.g., ) are now automatically filtered from view.
+- **Bug Fixes:** A significant effort was made to resolve critical bugs, including duplicate trades, phantom trades appearing, trades closing with 0€ P&L, and trade execution failures.
 
-**Non-Functional Requirements:**
-1.  **Stability:** Resolve recurring connection drops to trading platforms.
-2.  **Usability:** Address and fix all reported bugs, including chart rendering errors, unresponsive UI elements (checkboxes, microphone), and confusing UI labels.
+**New & Pending Requirements:**
+1.  **Replace Bitpanda:** The Bitpanda integration must be removed.
+2.  **Add Libertex Real Account:** A new MT5 Real Account for Libertex must be integrated. The application should support seamless switching between this new real account and the two existing demo accounts.
+3.  **Ultimate Stability:** The persistent platform disconnection and data integrity issues must be permanently resolved by migrating to the official .
+4.  **Desktop App:** After the web application is fully stable and functional, create a standalone desktop version using Electron.
 </product_requirements>
 
 <key_technical_concepts>
-- **Full-Stack Frameworks:** React (frontend) with  and ; FastAPI (backend).
-- **Database:** MongoDB.
-- **API Integrations:** MetaAPI (for live trading data),  (for historical chart data).
-- **LLM & AI:**  library for cloud-based LLM, with a custom fallback module using standard SDKs (usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
-              [-o ORGANIZATION] [-t {openai,azure}]
-              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
-              [--azure-ad-token AZURE_AD_TOKEN] [-V]
-              {api,tools,migrate,grit} ...
-
-positional arguments:
-  {api,tools,migrate,grit}
-    api                 Direct API calls
-    tools               Client side tools for convenience
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Set verbosity.
-  -b API_BASE, --api-base API_BASE
-                        What API base url to use.
-  -k API_KEY, --api-key API_KEY
-                        What API key to use.
-  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
-                        What proxy to use.
-  -o ORGANIZATION, --organization ORGANIZATION
-                        Which organization to run as (will use your default
-                        organization if not specified)
-  -t {openai,azure}, --api-type {openai,azure}
-                        The backend API to call, must be `openai` or `azure`
-  --api-version API_VERSION
-                        The Azure API version, e.g.
-                        'https://learn.microsoft.com/en-us/azure/ai-
-                        services/openai/reference#rest-api-versioning'
-  --azure-endpoint AZURE_ENDPOINT
-                        The Azure endpoint, e.g.
-                        'https://endpoint.openai.azure.com'
-  --azure-ad-token AZURE_AD_TOKEN
-                        A token from Azure Active Directory,
-                        https://www.microsoft.com/en-
-                        us/security/business/identity-access/microsoft-entra-
-                        id
-  -V, --version         show program's version number and exit) for local development. Support for Ollama as a local-first option. Keyword-based intent recognition for AI-driven trading actions.
-- **Voice Recognition:** Browser-based Web Speech API (frontend); OpenAI Whisper via a dedicated backend API endpoint for local audio file transcription.
-- **Connection Management:** Backend connection pooling to maintain stable, persistent connections to trading platforms.
+- **Full-Stack:** React (Frontend), FastAPI (Backend), MongoDB (Database).
+- **API Integration:** Previously custom REST calls to MetaAPI; now migrating to the official .
+- **AI/LLM:**  for cloud LLMs, with fallbacks for user-provided API keys (OpenAI, Gemini).
+- **Asynchronous Operations:** Extensive use of  in Python for non-blocking API calls.
+- **Debugging:** Heavy reliance on backend logs,  tests, browser console inspection, and iterative database cleanup to resolve data integrity issues.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard full-stack architecture with a React frontend, a FastAPI backend, and a MongoDB database.
+The application uses a monolithic backend and a React single-page application frontend.
 
 **Directory Structure:**
 
 
-**Key Files & Modifications:**
+- ****
+  - **Importance:** The core of the backend, defining all API endpoints, startup events, and business logic.
+  - **Changes:** This file underwent massive changes.
+    1.  **Trade Endpoints Fixed:**  and  were refactored to use Pydantic models and expect JSON bodies, fixing execution errors.
+    2.  **Data Integrity Fix:** The  endpoint was completely rewritten to fetch open positions *only* from the live MT5 API and closed positions from the DB, and to map MT5 symbols (e.g., ) to internal names (), resolving the phantom trades issue.
+    3.  **Background Process Disabled:** The call to the problematic  was commented out to stop fake trades from being created.
+    4.  **Database Cleanup:** A startup event was added to call  to purge invalid trades from the database.
+
+- ** (New File)**
+  - **Importance:** This new file was created to house the implementation for the official . It represents a major architectural shift to solve connection stability issues.
+  - **Changes:** The file was created and the SDK was installed. The initial connection logic is being drafted.
 
 - ****
-  - **Importance:** The main entry point for the FastAPI application. Defines all API routes, CORS middleware, and application startup logic.
-  - **Changes:** New endpoints were added:  was updated to accept a , and a new  endpoint was created for the Whisper service. Logic was modified to use a shared, persistent connection to trading platforms instead of connecting on each request.
+  - **Importance:** Previously managed all platform connections. It is now being superseded by .
+  - **Changes:** Logic was added to deduplicate positions fetched from the MetaAPI to solve the double-trade bug. It was modified to prioritize the position with non-zero profit.
 
 - ****
-  - **Importance:** Contains all business logic for the AI chat assistant. Manages the system prompt, conversation history, and interaction with the LLM.
-  - **Changes:** Heavily refactored to:
-    1.  Integrate the  module.
-    2.  Manage conversation context based on a  to prevent the AI from forgetting previous messages.
-    3.  Implement keyword-based function calling to execute trading actions ().
-    4.  Fix a critical bug () preventing trading commands from working.
-    5.  Refine the system prompt to guide the AI's behavior correctly.
+  - **Importance:** The main user-facing component, displaying all data and handling user interactions.
+  - **Changes:**
+    1.  **UI Tabs:** The trades list was restructured with  for Offene Trades and Geschlossene Trades.
+    2.  **API Call Fixes:**  and  were updated to send a JSON body with  instead of URL parameters.
+    3.  **Filtering:** Logic was added to filter out trades with  errors.
+    4.  **Settings Enhancement:** The Standard-Plattform dropdown was updated to include an Alle Plattformen gleichzeitig option.
 
-- **** (New File)
-  - **Importance:** A critical new module created to solve the Mac compatibility issue. It attempts to import the cloud-native  and, upon failure, gracefully falls back to using standard LLM SDKs like usage: openai [-h] [-v] [-b API_BASE] [-k API_KEY] [-p PROXY [PROXY ...]]
-              [-o ORGANIZATION] [-t {openai,azure}]
-              [--api-version API_VERSION] [--azure-endpoint AZURE_ENDPOINT]
-              [--azure-ad-token AZURE_AD_TOKEN] [-V]
-              {api,tools,migrate,grit} ...
-
-positional arguments:
-  {api,tools,migrate,grit}
-    api                 Direct API calls
-    tools               Client side tools for convenience
-
-options:
-  -h, --help            show this help message and exit
-  -v, --verbose         Set verbosity.
-  -b API_BASE, --api-base API_BASE
-                        What API base url to use.
-  -k API_KEY, --api-key API_KEY
-                        What API key to use.
-  -p PROXY [PROXY ...], --proxy PROXY [PROXY ...]
-                        What proxy to use.
-  -o ORGANIZATION, --organization ORGANIZATION
-                        Which organization to run as (will use your default
-                        organization if not specified)
-  -t {openai,azure}, --api-type {openai,azure}
-                        The backend API to call, must be `openai` or `azure`
-  --api-version API_VERSION
-                        The Azure API version, e.g.
-                        'https://learn.microsoft.com/en-us/azure/ai-
-                        services/openai/reference#rest-api-versioning'
-  --azure-endpoint AZURE_ENDPOINT
-                        The Azure endpoint, e.g.
-                        'https://endpoint.openai.azure.com'
-  --azure-ad-token AZURE_AD_TOKEN
-                        A token from Azure Active Directory,
-                        https://www.microsoft.com/en-
-                        us/security/business/identity-access/microsoft-entra-
-                        id
-  -V, --version         show program's version number and exit, enabling local development.
-
-- ****
-  - **Importance:** Manages connections to the various trading platforms (e.g., MetaAPI).
-  - **Changes:** Refactored to implement connection pooling. It now maintains a dictionary of active connections and includes an  check, which resolved major stability issues caused by frequent reconnects.
-
-- ****
-  - **Importance:** The primary UI view of the application, displaying all balance cards, charts, and settings.
-  - **Changes:** Significantly updated to display live Libertex data (portfolio risk, open positions), add selectors for chart timeframe/period, and fix bugs related to settings toggles.
-
-- ****
-  - **Importance:** The React component for the AI chat interface.
-  - **Changes:** Extensively modified to:
-    1.  Generate and send a  with each request to enable conversational context.
-    2.  Add UI elements (microphone buttons) and handlers for both Web Speech API and Whisper-based voice input.
-    3.  Include improved error handling and debug logs for voice recognition.
-
-- ****
-  - **Importance:** The -based component for rendering commodity price charts.
-  - **Changes:** The component was modified to handle data formatting more robustly, fixing a rendering bug that caused charts to appear as a diagonal line. The  domain was also adjusted for better scaling.
+- **Environment ( files & Database)**
+    - **Importance:** A critical discovery was that the agent was operating on a database named  while the application was using , leading to failed cleanup attempts. This was eventually identified and corrected.
 </code_architecture>
 
 <pending_tasks>
-- **Verify Voice Control:** The user reported that the microphone was not working. While debugging and error handling were added, there has been no final confirmation from the user that the feature is now fully functional.
-- **Confirm Stability Fix:** The connection stability fix was the last major change before the environment restarted. It needs to be confirmed with the user that the platform disconnection issue is resolved.
+- **Implement :** Complete the migration to the new, more stable MetaAPI Python SDK.
+- **Integrate Libertex Real Account:** Use the MetaAPI Management API to programmatically add the user's real account credentials and integrate it into the system.
+- **Remove Bitpanda:** Purge all code related to the Bitpanda integration from both the frontend and backend.
+- **Final Comprehensive Test:** After the above changes, conduct a thorough test of all functionalities, especially trade execution and data consistency.
+- **Build Electron App:** Once stability is confirmed, begin work on packaging the application as a standalone desktop app.
 </pending_tasks>
 
 <current_work>
-Immediately before the environment restarted, the primary focus was on resolving a critical stability issue where the trading platforms would constantly disconnect and reconnect.
+The immediate focus is a major architectural overhaul to fix the root cause of the application's instability: the connection to MetaAPI. After numerous failed attempts to stabilize the custom REST API-based connector, the user suggested using the official .
 
-**Problem Analysis:** The user reported that Die Plattformen verlieren aber immerzu die Verbindung für 3-5 Sekunden. (The platforms are always losing the connection for 3-5 seconds). Investigation revealed that a new connection to the trading platform (e.g., MetaAPI) was being initiated on every single API request, leading to rate-limiting and connection instability.
+**Last Actions:**
+1.  **User Confirmation:** The AI engineer proposed two paths: fix the old connector or switch to the new SDK. The user approved the SDK migration and also requested help in setting up their Libertex Real Account, providing credentials.
+2.  **SDK Installation:** The  was successfully installed via 
+Usage:   
+  pip <command> [options]
 
-**Implementation Steps:**
-1.  **Code Identification:** The problematic logic was located in  and its usage in .
-2.  **Refactoring :** The  method was refactored to implement connection pooling. A dictionary () was added to store active connection instances. The logic was updated to first check if a connection for a given platform already exists and is healthy before attempting to create a new one.
-    
-3.  **Refactoring :** Redundant calls to  within individual API route handlers were removed. Instead, the connection is now established once during a background task at application startup.
-4.  **Verification:** The backend service was restarted. Logs confirmed that the platforms connected successfully upon startup, and subsequent API calls used the existing connections.
+Commands:
+  install                     Install packages.
+  lock                        Generate a lock file.
+  download                    Download packages.
+  uninstall                   Uninstall packages.
+  freeze                      Output installed packages in requirements format.
+  inspect                     Inspect the python environment.
+  list                        List installed packages.
+  show                        Show information about installed packages.
+  check                       Verify installed packages have compatible dependencies.
+  config                      Manage local and global configuration.
+  search                      Search PyPI for packages.
+  cache                       Inspect and manage pip's wheel cache.
+  index                       Inspect information available from package indexes.
+  wheel                       Build wheels from your requirements.
+  hash                        Compute hashes of package archives.
+  completion                  A helper command used for command completion.
+  debug                       Show information useful for debugging.
+  help                        Show help for commands.
 
-**Final State:** The fix was successfully implemented and verified via server logs. The next logical step was to summarize the work and confirm the resolution with the user, but the environment was restarted due to exceeding its memory limit.
+General Options:
+  -h, --help                  Show help.
+  --debug                     Let unhandled exceptions propagate outside the
+                              main subroutine, instead of logging them to
+                              stderr.
+  --isolated                  Run pip in an isolated mode, ignoring
+                              environment variables and user configuration.
+  --require-virtualenv        Allow pip to only run in a virtual environment;
+                              exit with an error otherwise.
+  --python <python>           Run pip with the specified Python interpreter.
+  -v, --verbose               Give more output. Option is additive, and can be
+                              used up to 3 times.
+  -V, --version               Show version and exit.
+  -q, --quiet                 Give less output. Option is additive, and can be
+                              used up to 3 times (corresponding to WARNING,
+                              ERROR, and CRITICAL logging levels).
+  --log <path>                Path to a verbose appending log.
+  --no-input                  Disable prompting for input.
+  --keyring-provider <keyring_provider>
+                              Enable the credential lookup via the keyring
+                              library if user input is allowed. Specify which
+                              mechanism to use [auto, disabled, import,
+                              subprocess]. (default: auto)
+  --proxy <proxy>             Specify a proxy in the form
+                              scheme://[user:passwd@]proxy.server:port.
+  --retries <retries>         Maximum attempts to establish a new HTTP
+                              connection. (default: 5)
+  --timeout <sec>             Set the socket timeout (default 15 seconds).
+  --exists-action <action>    Default action when a path already exists:
+                              (s)witch, (i)gnore, (w)ipe, (b)ackup, (a)bort.
+  --trusted-host <hostname>   Mark this host or host:port pair as trusted,
+                              even though it does not have valid or any HTTPS.
+  --cert <path>               Path to PEM-encoded CA certificate bundle. If
+                              provided, overrides the default. See 'SSL
+                              Certificate Verification' in pip documentation
+                              for more information.
+  --client-cert <path>        Path to SSL client certificate, a single file
+                              containing the private key and the certificate
+                              in PEM format.
+  --cache-dir <dir>           Store the cache data in <dir>.
+  --no-cache-dir              Disable the cache.
+  --disable-pip-version-check
+                              Don't periodically check PyPI to determine
+                              whether a new version of pip is available for
+                              download. Implied with --no-index.
+  --no-color                  Suppress colored output.
+  --use-feature <feature>     Enable new functionality, that may be backward
+                              incompatible.
+  --use-deprecated <feature>  Enable deprecated functionality, that will be
+                              removed in the future.
+  --resume-retries <resume_retries>
+                              Maximum attempts to resume or restart an
+                              incomplete download. (default: 5).
+3.  **New Connector File:** A new file, , was created to encapsulate all logic related to the new SDK, separating it from the old, problematic implementation.
+4.  **Strategy Shift:** The engineer decided to attempt adding the user's Real Account to MetaAPI programmatically using the MetaAPI Management API, rather than asking the user to do it manually.
+
+The work stopped right after the decision to implement the SDK and programmatically add the new account. The system is now poised for a significant refactoring of its core data connection layer.
 </current_work>
 
 <optional_next_step>
-Check server status to ensure all services are running correctly after the restart, then provide the user with a final summary of all implemented features and fixes, specifically asking for confirmation that the connection stability and voice control issues are now resolved.
+Implement the connection logic in  using the newly installed SDK and attempt to programmatically create the new Libertex Real Account via the MetaAPI Management API, as promised to the user.
 </optional_next_step>
