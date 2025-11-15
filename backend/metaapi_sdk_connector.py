@@ -221,19 +221,35 @@ class MetaAPISDKConnector:
             if not terminal_state:
                 return None
             
-            # Access price data
-            if hasattr(terminal_state, 'price') and symbol in terminal_state.price:
-                price_data = terminal_state.price[symbol]
-                return {
-                    'symbol': symbol,
-                    'bid': price_data.get('bid') if isinstance(price_data, dict) else getattr(price_data, 'bid', None),
-                    'ask': price_data.get('ask') if isinstance(price_data, dict) else getattr(price_data, 'ask', None),
-                    'time': price_data.get('time') if isinstance(price_data, dict) else getattr(price_data, 'time', None)
-                }
+            # Access price data - terminal_state.price is a dict
+            if hasattr(terminal_state, 'price'):
+                prices = terminal_state.price
+                # price is actually a method, we need to call it
+                if callable(prices):
+                    try:
+                        # Try to get the price by calling the method
+                        price_data = await prices(symbol)
+                        if price_data:
+                            return {
+                                'symbol': symbol,
+                                'bid': price_data.get('bid') if isinstance(price_data, dict) else getattr(price_data, 'bid', None),
+                                'ask': price_data.get('ask') if isinstance(price_data, dict) else getattr(price_data, 'ask', None),
+                                'time': price_data.get('time') if isinstance(price_data, dict) else getattr(price_data, 'time', None)
+                            }
+                    except:
+                        pass
+                elif isinstance(prices, dict) and symbol in prices:
+                    price_data = prices[symbol]
+                    return {
+                        'symbol': symbol,
+                        'bid': price_data.get('bid') if isinstance(price_data, dict) else getattr(price_data, 'bid', None),
+                        'ask': price_data.get('ask') if isinstance(price_data, dict) else getattr(price_data, 'ask', None),
+                        'time': price_data.get('time') if isinstance(price_data, dict) else getattr(price_data, 'time', None)
+                    }
             
             return None
         except Exception as e:
-            logger.error(f"Error getting symbol price for {symbol}: {e}")
+            logger.error(f"Error getting symbol price for {symbol}: {e}", exc_info=True)
             return None
     
     async def get_symbols(self) -> List[str]:
