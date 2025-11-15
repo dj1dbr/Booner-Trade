@@ -5,6 +5,10 @@ import asyncio
 import os
 import logging
 from metaapi_cloud_sdk import MetaApi
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
