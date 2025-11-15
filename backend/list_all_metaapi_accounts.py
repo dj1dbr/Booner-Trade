@@ -36,7 +36,7 @@ async def list_accounts():
             logger.info(f"   Name: {account.name}")
             logger.info(f"   Login: {account.login}")
             logger.info(f"   Server: {account.server}")
-            logger.info(f"   Platform: {account.platform}")
+            logger.info(f"   Type: {account.type}")
             logger.info(f"   State: {account.state}")
             logger.info(f"   Region: {account.region if hasattr(account, 'region') else 'N/A'}")
             logger.info(f"   Connection Status: {account.connectionStatus}")
