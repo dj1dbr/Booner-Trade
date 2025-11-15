@@ -1,124 +1,132 @@
 """
-Multi-Platform Connector - Manages multiple MT5 accounts and platforms
-Supports: MT5 Libertex, MT5 ICMarkets, and Bitpanda
+Multi-Platform Connector - SDK VERSION (Viel stabiler!)
+Migrated from REST API to official metaapi-python-sdk
+Supports: MT5 Libertex Demo, MT5 ICMarkets Demo, MT5 Libertex REAL
+Removed: Bitpanda (as requested)
 """
 
 import logging
 import os
 from typing import Optional, Dict, List, Any
-from metaapi_connector import MetaAPIConnector
-from bitpanda_connector import BitpandaConnector
+from metaapi_sdk_connector import MetaAPISDKConnector
 
 logger = logging.getLogger(__name__)
 
 class MultiPlatformConnector:
-    """Manages connections to multiple trading platforms"""
+    """Manages connections to multiple MT5 platforms using stable SDK"""
     
     def __init__(self):
         self.platforms = {}
         self.metaapi_token = os.environ.get('METAAPI_TOKEN', '')
         
-        # Initialize MT5 Libertex Demo (Primary Demo Account)
+        # MT5 Libertex Demo
+        libertex_demo_id = os.environ.get('METAAPI_ACCOUNT_ID', '5cc9abd1-671a-447e-ab93-5abbfe0ed941')
         self.platforms['MT5_LIBERTEX_DEMO'] = {
             'type': 'MT5',
             'name': 'MT5 Libertex Demo',
-            'account_id': os.environ.get('METAAPI_ACCOUNT_ID', '5cc9abd1-671a-447e-ab93-5abbfe0ed941'),
+            'account_id': libertex_demo_id,
             'region': 'london',
             'connector': None,
             'active': False,
-            'balance': 0.0
+            'balance': 0.0,
+            'is_real': False
         }
         
-        # Initialize MT5 ICMarkets Demo (Secondary Demo Account)
+        # MT5 ICMarkets Demo
+        icmarkets_demo_id = os.environ.get('METAAPI_ICMARKETS_ACCOUNT_ID', 'd2605e89-7bc2-4144-9f7c-951edd596c39')
         self.platforms['MT5_ICMARKETS_DEMO'] = {
             'type': 'MT5',
             'name': 'MT5 ICMarkets Demo',
-            'account_id': os.environ.get('METAAPI_ICMARKETS_ACCOUNT_ID', 'd2605e89-7bc2-4144-9f7c-951edd596c39'),
+            'account_id': icmarkets_demo_id,
             'region': 'london',
             'connector': None,
             'active': False,
-            'balance': 0.0
+            'balance': 0.0,
+            'is_real': False
         }
         
-        # Initialize MT5 Libertex Real (REAL MONEY ACCOUNT!)
-        self.platforms['MT5_LIBERTEX_REAL'] = {
-            'type': 'MT5',
-            'name': 'MT5 Libertex REAL',
-            'account_id': os.environ.get('METAAPI_LIBERTEX_REAL_ACCOUNT_ID', 'PLACEHOLDER_REAL_ACCOUNT_ID'),
-            'region': 'london',
-            'connector': None,
-            'active': False,
-            'balance': 0.0
-        }
+        # MT5 Libertex REAL (wenn in .env konfiguriert)
+        libertex_real_id = os.environ.get('METAAPI_LIBERTEX_REAL_ACCOUNT_ID', '')
+        if libertex_real_id and libertex_real_id != 'PLACEHOLDER_REAL_ACCOUNT_ID':
+            self.platforms['MT5_LIBERTEX_REAL'] = {
+                'type': 'MT5',
+                'name': '💰 MT5 Libertex REAL 💰',
+                'account_id': libertex_real_id,
+                'region': 'london',
+                'connector': None,
+                'active': False,
+                'balance': 0.0,
+                'is_real': True  # ECHTES GELD!
+            }
+            logger.warning("⚠️  REAL MONEY ACCOUNT available: MT5_LIBERTEX_REAL")
+        else:
+            logger.info("ℹ️  Real Account not configured (only Demo available)")
         
-        logger.info("MultiPlatformConnector initialized with 3 MT5 platforms (2 Demo + 1 REAL)")
+        # Legacy compatibility mappings
+        if 'MT5_LIBERTEX_DEMO' in self.platforms:
+            self.platforms['MT5_LIBERTEX'] = self.platforms['MT5_LIBERTEX_DEMO']
+        if 'MT5_ICMARKETS_DEMO' in self.platforms:
+            self.platforms['MT5_ICMARKETS'] = self.platforms['MT5_ICMARKETS_DEMO']
+        
+        logger.info(f"MultiPlatformConnector (SDK) initialized with {len(self.platforms)} platform(s)")
     
     async def connect_platform(self, platform_name: str) -> bool:
-        """Connect to a specific platform (with connection reuse)"""
+        """Connect to platform using stable SDK"""
         try:
+            # Handle legacy names
+            if platform_name == 'MT5_LIBERTEX':
+                platform_name = 'MT5_LIBERTEX_DEMO'
+            elif platform_name == 'MT5_ICMARKETS':
+                platform_name = 'MT5_ICMARKETS_DEMO'
+            
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
                 return False
             
             platform = self.platforms[platform_name]
             
-            # CHECK: Already connected and active?
+            # Already connected?
             if platform.get('active') and platform.get('connector'):
-                logger.debug(f"ℹ️ {platform_name} already connected, reusing connection")
+                connector = platform['connector']
+                if await connector.is_connected():
+                    logger.debug(f"ℹ️  {platform_name} already connected")
+                    return True
+                else:
+                    logger.warning(f"⚠️  {platform_name} connection lost, reconnecting...")
+            
+            # Create SDK connector
+            logger.info(f"🔄 Connecting to {platform_name} via SDK...")
+            connector = MetaAPISDKConnector(
+                account_id=platform['account_id'],
+                token=self.metaapi_token
+            )
+            
+            # Connect
+            success = await connector.connect()
+            if success:
+                account_info = await connector.get_account_info()
+                
+                platform['connector'] = connector
+                platform['active'] = True
+                platform['balance'] = account_info.get('balance', 0.0) if account_info else 0.0
+                
+                logger.info(f"✅ SDK Connected: {platform_name} | Balance: €{platform['balance']:.2f}")
                 return True
-            
-            if platform['type'] == 'MT5':
-                # Create MetaAPI connector
-                connector = MetaAPIConnector(
-                    account_id=platform['account_id'],
-                    token=self.metaapi_token
-                )
-                
-                # Set region-specific base URL
-                if platform['region'] == 'london':
-                    connector.base_url = "https://mt-client-api-v1.london.agiliumtrade.ai"
-                elif platform['region'] == 'new-york':
-                    connector.base_url = "https://mt-client-api-v1.new-york.agiliumtrade.ai"
-                elif platform['region'] == 'singapore':
-                    connector.base_url = "https://mt-client-api-v1.singapore.agiliumtrade.ai"
-                
-                # Connect
-                success = await connector.connect()
-                if success:
-                    platform['connector'] = connector
-                    platform['active'] = True
-                    platform['balance'] = connector.balance
-                    logger.info(f"✅ Connected to {platform_name}: Balance={connector.balance}")
-                    return True
-                else:
-                    logger.error(f"Failed to connect to {platform_name}")
-                    return False
-                    
-            elif platform['type'] == 'BITPANDA':
-                # Create Bitpanda connector
-                connector = BitpandaConnector(api_key=platform['api_key'])
-                success = await connector.connect()
-                if success:
-                    platform['connector'] = connector
-                    platform['active'] = True
-                    platform['balance'] = connector.balance
-                    logger.info(f"✅ Connected to {platform_name}: Balance={connector.balance}")
-                    return True
-                else:
-                    logger.error(f"Failed to connect to {platform_name}")
-                    return False
-            
-            return False
+            else:
+                logger.error(f"❌ Failed to connect {platform_name}")
+                return False
             
         except Exception as e:
-            logger.error(f"Error connecting to {platform_name}: {e}")
+            logger.error(f"Error connecting to {platform_name}: {e}", exc_info=True)
             return False
     
     async def disconnect_platform(self, platform_name: str) -> bool:
-        """Disconnect from a specific platform"""
+        """Disconnect from platform"""
         try:
             if platform_name in self.platforms:
                 platform = self.platforms[platform_name]
+                if platform.get('connector'):
+                    await platform['connector'].disconnect()
                 platform['active'] = False
                 platform['connector'] = None
                 logger.info(f"Disconnected from {platform_name}")
@@ -129,20 +137,29 @@ class MultiPlatformConnector:
             return False
     
     async def get_account_info(self, platform_name: str) -> Optional[Dict[str, Any]]:
-        """Get account information for a specific platform"""
+        """Get account information"""
         try:
+            # Handle legacy names
+            if platform_name == 'MT5_LIBERTEX':
+                platform_name = 'MT5_LIBERTEX_DEMO'
+            elif platform_name == 'MT5_ICMARKETS':
+                platform_name = 'MT5_ICMARKETS_DEMO'
+            
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
                 return None
             
             platform = self.platforms[platform_name]
             
+            # Connect if needed
             if not platform['active'] or not platform['connector']:
-                # Try to connect first
                 await self.connect_platform(platform_name)
             
             if platform['connector']:
-                return await platform['connector'].get_account_info()
+                account_info = await platform['connector'].get_account_info()
+                if account_info:
+                    platform['balance'] = account_info.get('balance', 0.0)
+                return account_info
             
             return None
             
@@ -153,43 +170,56 @@ class MultiPlatformConnector:
     async def execute_trade(self, platform_name: str, symbol: str, action: str, 
                            volume: float, stop_loss: float = None, 
                            take_profit: float = None) -> Optional[Dict[str, Any]]:
-        """Execute a trade on a specific platform"""
+        """Execute trade via SDK"""
         try:
+            # Handle legacy names
+            if platform_name == 'MT5_LIBERTEX':
+                platform_name = 'MT5_LIBERTEX_DEMO'
+            elif platform_name == 'MT5_ICMARKETS':
+                platform_name = 'MT5_ICMARKETS_DEMO'
+            
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
                 return None
             
             platform = self.platforms[platform_name]
             
+            # SAFETY: Warnung bei Real Account
+            if platform.get('is_real', False):
+                logger.warning(f"⚠️⚠️⚠️  EXECUTING REAL MONEY TRADE on {platform_name}! ⚠️⚠️⚠️")
+            
+            # Connect if needed
             if not platform['active'] or not platform['connector']:
+                await self.connect_platform(platform_name)
+            
+            if not platform['connector']:
                 logger.error(f"Platform {platform_name} not connected")
                 return None
             
-            # Route to appropriate connector
-            if platform['type'] == 'MT5':
-                return await platform['connector'].execute_trade(
-                    symbol=symbol,
-                    action=action,
-                    volume=volume,
-                    stop_loss=stop_loss,
-                    take_profit=take_profit
-                )
-            elif platform['type'] == 'BITPANDA':
-                return await platform['connector'].execute_trade(
-                    symbol=symbol,
-                    side=action.lower(),
-                    amount=volume
-                )
+            # Execute via SDK
+            result = await platform['connector'].create_market_order(
+                symbol=symbol,
+                order_type=action.upper(),
+                volume=volume,
+                sl=stop_loss,
+                tp=take_profit
+            )
             
-            return None
+            return result
             
         except Exception as e:
             logger.error(f"Error executing trade on {platform_name}: {e}")
             return None
     
     async def get_open_positions(self, platform_name: str) -> List[Dict[str, Any]]:
-        """Get open positions for a specific platform - with deduplication and error filtering"""
+        """Get open positions with deduplication"""
         try:
+            # Handle legacy names
+            if platform_name == 'MT5_LIBERTEX':
+                platform_name = 'MT5_LIBERTEX_DEMO'
+            elif platform_name == 'MT5_ICMARKETS':
+                platform_name = 'MT5_ICMARKETS_DEMO'
+            
             if platform_name not in self.platforms:
                 logger.error(f"Unknown platform: {platform_name}")
                 return []
@@ -201,15 +231,14 @@ class MultiPlatformConnector:
             
             positions = await platform['connector'].get_positions()
             
-            # Deduplicate and filter error positions
-            # Group by ticket first to keep the BEST version (with P&L)
+            # Deduplicate and filter errors
             ticket_groups = {}
             
             for pos in positions:
-                ticket = pos.get('id') or pos.get('positionId') or pos.get('ticket')
+                ticket = pos.get('ticket') or pos.get('id') or pos.get('positionId')
                 symbol = pos.get('symbol', '')
                 
-                # Filter out error positions
+                # Filter error positions
                 if ticket and 'TRADE_RETCODE' in str(ticket):
                     logger.debug(f"Filtered error position: {ticket}")
                     continue
@@ -218,7 +247,7 @@ class MultiPlatformConnector:
                     logger.debug(f"Filtered error position: symbol={symbol}")
                     continue
                 
-                # No ticket - always include
+                # No ticket
                 if not ticket:
                     if 'no_ticket' not in ticket_groups:
                         ticket_groups['no_ticket'] = []
@@ -230,7 +259,7 @@ class MultiPlatformConnector:
                     ticket_groups[ticket] = []
                 ticket_groups[ticket].append(pos)
             
-            # For each ticket, keep the BEST position (with P&L, not 0)
+            # Keep best position per ticket
             unique_positions = []
             for ticket, pos_list in ticket_groups.items():
                 if ticket == 'no_ticket':
@@ -240,21 +269,17 @@ class MultiPlatformConnector:
                 if len(pos_list) == 1:
                     unique_positions.append(pos_list[0])
                 else:
-                    # Multiple positions with same ticket - keep the one with P&L
+                    # Keep position with P&L
                     logger.warning(f"Duplicate ticket {ticket}: {len(pos_list)} positions")
-                    
-                    # Sort by: 1) Has non-zero P&L, 2) Has updateTime (newer)
                     best_pos = max(pos_list, key=lambda p: (
-                        abs(p.get('profit', 0) or p.get('unrealizedProfit', 0)) > 0.01,  # Has real P&L
-                        p.get('updateTime', ''),  # Newer update time
-                        p.get('openTime', '')  # Newer open time
+                        abs(p.get('profit', 0)) > 0.01,
+                        p.get('time', '')
                     ))
-                    
                     unique_positions.append(best_pos)
-                    logger.info(f"Kept position with P&L={best_pos.get('profit', 0)}, discarded {len(pos_list)-1} duplicates")
+                    logger.info(f"Kept position with P&L={best_pos.get('profit', 0)}")
             
             if len(positions) != len(unique_positions):
-                logger.info(f"{platform_name}: {len(positions)} positions → {len(unique_positions)} after deduplication")
+                logger.info(f"{platform_name}: {len(positions)} → {len(unique_positions)} after dedup")
             
             return unique_positions
             
@@ -262,19 +287,36 @@ class MultiPlatformConnector:
             logger.error(f"Error getting positions for {platform_name}: {e}")
             return []
     
+    async def get_positions(self) -> List[Dict[str, Any]]:
+        """Alias for compatibility"""
+        # Return positions from all active platforms
+        all_positions = []
+        for platform_name in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']:
+            if platform_name in self.platforms:
+                positions = await self.get_open_positions(platform_name)
+                for pos in positions:
+                    pos['platform'] = platform_name
+                all_positions.extend(positions)
+        return all_positions
+    
     def get_active_platforms(self) -> List[str]:
-        """Get list of currently active platforms"""
-        return [name for name, platform in self.platforms.items() if platform['active']]
+        """Get list of active platforms"""
+        return [name for name, platform in self.platforms.items() 
+                if platform['active'] and name in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']]
     
     def get_platform_status(self) -> Dict[str, Any]:
         """Get status of all platforms"""
+        # Only return actual platforms, not legacy aliases
+        actual_platforms = ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']
         return {
             name: {
                 'active': platform['active'],
                 'balance': platform['balance'],
-                'name': platform['name']
+                'name': platform['name'],
+                'is_real': platform.get('is_real', False)
             }
             for name, platform in self.platforms.items()
+            if name in actual_platforms
         }
 
 # Global instance
