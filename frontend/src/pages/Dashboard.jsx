@@ -2042,20 +2042,21 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             </div>
           </div>
 
-          {/* Bitpanda */}
-          <div className="space-y-2 p-3 bg-green-900/10 rounded-lg border border-green-700/30">
-            <Label className="text-green-400 font-semibold">🟢 Bitpanda</Label>
+          {/* MT5 Libertex REAL - wenn verfügbar */}
+          <div className="space-y-2 p-3 bg-amber-900/10 rounded-lg border border-amber-700/30">
+            <Label className="text-amber-400 font-semibold">💰 MT5 Libertex REAL (Echtgeld)</Label>
             <div className="space-y-2">
-              <Label htmlFor="bitpanda_api_key" className="text-sm">API Key</Label>
+              <Label htmlFor="mt5_libertex_real_account_id" className="text-sm">Account ID (MetaAPI)</Label>
               <Input
-                id="bitpanda_api_key"
-                type="password"
-                value={formData.bitpanda_api_key || ''}
-                onChange={(e) => setFormData({ ...formData, bitpanda_api_key: e.target.value })}
+                id="mt5_libertex_real_account_id"
+                type="text"
+                value={formData.mt5_libertex_real_account_id || ''}
+                onChange={(e) => setFormData({ ...formData, mt5_libertex_real_account_id: e.target.value })}
                 className="bg-slate-800 border-slate-700 font-mono text-xs"
-                placeholder="Bitpanda API Key"
+                placeholder="Nach manuellem Hinzufügen bei MetaAPI"
+                disabled={true}
               />
-              <p className="text-xs text-slate-500">API-Schlüssel von Bitpanda Pro</p>
+              <p className="text-xs text-amber-400">⚠️ Real Account muss manuell bei MetaAPI hinzugefügt werden</p>
             </div>
           </div>
         </div>
