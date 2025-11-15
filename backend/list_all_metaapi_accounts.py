@@ -39,7 +39,6 @@ async def list_accounts():
             logger.info(f"   Type: {account.type}")
             logger.info(f"   State: {account.state}")
             logger.info(f"   Region: {account.region if hasattr(account, 'region') else 'N/A'}")
-            logger.info(f"   Connection Status: {account.connectionStatus}")
             
             # Check if this is our Libertex Real account
             if account.login == '560031700':
