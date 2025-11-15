@@ -209,6 +209,55 @@ class MetaAPISDKConnector:
             return self.connection.terminal_state.connected and self.connection.terminal_state.connectedToBroker
         except:
             return False
+    
+    async def get_symbol_price(self, symbol: str) -> Optional[Dict[str, Any]]:
+        """Get current symbol price"""
+        try:
+            if not self.connection:
+                return None
+            
+            # Get symbol price from terminal state
+            terminal_state = self.connection.terminal_state
+            if not terminal_state:
+                return None
+            
+            # Access price data
+            if hasattr(terminal_state, 'price') and symbol in terminal_state.price:
+                price_data = terminal_state.price[symbol]
+                return {
+                    'symbol': symbol,
+                    'bid': price_data.get('bid') if isinstance(price_data, dict) else getattr(price_data, 'bid', None),
+                    'ask': price_data.get('ask') if isinstance(price_data, dict) else getattr(price_data, 'ask', None),
+                    'time': price_data.get('time') if isinstance(price_data, dict) else getattr(price_data, 'time', None)
+                }
+            
+            return None
+        except Exception as e:
+            logger.error(f"Error getting symbol price for {symbol}: {e}")
+            return None
+    
+    async def get_symbols(self) -> List[str]:
+        """Get all available symbols"""
+        try:
+            if not self.connection:
+                return []
+            
+            terminal_state = self.connection.terminal_state
+            if not terminal_state:
+                return []
+            
+            # Get specifications
+            if hasattr(terminal_state, 'specifications'):
+                specs = terminal_state.specifications
+                if isinstance(specs, dict):
+                    return list(specs.keys())
+                elif isinstance(specs, list):
+                    return [s.get('symbol') if isinstance(s, dict) else s.symbol for s in specs]
+            
+            return []
+        except Exception as e:
+            logger.error(f"Error getting symbols: {e}")
+            return []
 
 
 async def test_sdk_connector():
