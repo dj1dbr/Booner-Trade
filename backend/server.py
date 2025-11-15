@@ -2582,3 +2582,35 @@ async def shutdown_event():
     scheduler.shutdown()
     client.close()
     logger.info("Application shutdown complete")
+
+
+# ========================================
+# STATIC FILES - Serve React Frontend
+# ========================================
+
+# Mount static files (für Desktop-App)
+frontend_build_path = Path(__file__).parent.parent / "frontend" / "build"
+
+if frontend_build_path.exists():
+    # Serve static files (JS, CSS, etc.)
+    app.mount("/static", StaticFiles(directory=str(frontend_build_path / "static")), name="static")
+    
+    # Catch-all route für React Router (muss NACH allen API-Routen kommen)
+    @app.get("/{full_path:path}")
+    async def serve_react_app(full_path: str):
+        """Serve React app for all non-API routes"""
+        # Don't serve React for API routes
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not Found")
+        
+        # Serve index.html for all other routes (React Router handles routing)
+        index_path = frontend_build_path / "index.html"
+        if index_path.exists():
+            return FileResponse(str(index_path))
+        else:
+            raise HTTPException(status_code=404, detail="Frontend build not found")
+    
+    logger.info(f"✅ Serving React Frontend from: {frontend_build_path}")
+else:
+    logger.warning(f"⚠️  Frontend build not found at: {frontend_build_path}")
+    logger.warning("   Run 'cd /app/frontend && yarn build' to create production build")
