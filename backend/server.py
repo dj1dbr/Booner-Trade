@@ -1086,25 +1086,48 @@ async def get_simple_ohlcv(commodity: str, timeframe: str = "5m", period: str = 
         # Calculate number of candles needed
         num_candles = min(int(total_minutes / interval_minutes), 500)  # Max 500 candles for performance
         
-        # Generate candles
+        # Generate candles with realistic price movement simulation
+        import random
         data = []
+        
+        # Start from a slightly higher price for historical data
+        base_price = current_price * 1.002  # 0.2% higher than current
+        
         for i in range(num_candles - 1, -1, -1):  # Going backwards from now
             candle_time = current_time - timedelta(minutes=i * interval_minutes)
-            # Add small random variance to simulate real price movement
-            variance = (i - 6) * 0.0005  # Small trend
-            price_at_time = current_price * (1 + variance)
+            
+            # Create more realistic price movement with random walk
+            # Add small random variance + slight overall downward trend
+            random_walk = random.uniform(-0.0015, 0.0010)  # Random movement
+            trend = (i / num_candles) * 0.002  # Slight downward trend towards current price
+            
+            price_at_time = base_price * (1 + random_walk + trend)
+            
+            # Ensure we end close to current price
+            if i == 0:
+                price_at_time = current_price
+            
+            # Generate realistic OHLC with intrabar volatility
+            volatility = random.uniform(0.0003, 0.0008)
+            open_price = price_at_time * (1 + random.uniform(-volatility/2, volatility/2))
+            close_price = price_at_time
+            high_price = max(open_price, close_price) * (1 + random.uniform(0, volatility))
+            low_price = min(open_price, close_price) * (1 - random.uniform(0, volatility))
             
             data.append({
                 "timestamp": candle_time.isoformat(),
-                "open": price_at_time * 0.9995,
-                "high": price_at_time * 1.0005,
-                "low": price_at_time * 0.9995,
-                "close": price_at_time,
-                "volume": market_data.get('volume', 0),
-                "rsi": market_data.get('rsi', 50),
+                "open": open_price,
+                "high": high_price,
+                "low": low_price,
+                "close": close_price,
+                "volume": market_data.get('volume', 0) * random.uniform(0.8, 1.2),  # Vary volume
+                "rsi": market_data.get('rsi', 50) + random.uniform(-5, 5),  # Vary RSI
                 "sma_20": market_data.get('sma_20', current_price),
                 "ema_20": market_data.get('ema_20', current_price)
             })
+            
+            # Update base price for next candle
+            base_price = close_price
         
         return {
             "success": True,
