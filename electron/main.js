@@ -54,8 +54,14 @@ function createWindow() {
 
   // Warte bis Backend bereit ist (3 Sekunden)
   setTimeout(() => {
-    // Lade die React-App vom Backend-Server
-    mainWindow.loadURL('http://localhost:8001');
+    // Lade die React-App vom Production-Server
+    // (Das Backend läuft lokal auf 8001, aber das Frontend wird von der Production-URL geladen)
+    const appURL = process.env.ELECTRON_DEV 
+      ? 'http://localhost:3000'  // Development: React Dev Server
+      : 'https://tradinghelm.preview.emergentagent.com';  // Production: Deployed Frontend
+    
+    console.log(`📱 Loading App from: ${appURL}`);
+    mainWindow.loadURL(appURL);
     
     // Zeige Fenster wenn fertig geladen
     mainWindow.once('ready-to-show', () => {
@@ -64,7 +70,7 @@ function createWindow() {
     });
 
     // DevTools nur in Entwicklung öffnen
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.ELECTRON_DEV || process.env.NODE_ENV === 'development') {
       mainWindow.webContents.openDevTools();
     }
   }, 3000);
