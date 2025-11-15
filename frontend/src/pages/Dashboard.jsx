@@ -936,77 +936,42 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          {/* Bitpanda Balance Card */}
-          <Card className="bg-gradient-to-br from-green-900/20 to-slate-900/90 border-green-700/50 backdrop-blur-sm p-4 shadow-2xl">
+          {/* MT5 Libertex REAL Account Card */}
+          <Card className="bg-gradient-to-br from-amber-900/20 to-slate-900/90 border-amber-700/50 backdrop-blur-sm p-4 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={settings?.active_platforms?.includes('BITPANDA') || false}
+                  checked={settings?.active_platforms?.includes('MT5_LIBERTEX_REAL') || false}
                   onChange={async (e) => {
                     if (!settings) {
                       toast.error('Settings noch nicht geladen');
                       return;
                     }
                     const newPlatforms = e.target.checked
-                      ? [...(settings.active_platforms || []), 'BITPANDA']
-                      : (settings.active_platforms || []).filter(p => p !== 'BITPANDA');
+                      ? [...(settings.active_platforms || []), 'MT5_LIBERTEX_REAL']
+                      : (settings.active_platforms || []).filter(p => p !== 'MT5_LIBERTEX_REAL');
                     await handleUpdateSettings({ ...settings, active_platforms: newPlatforms });
                   }}
                   className="w-4 h-4 rounded border-gray-300 cursor-pointer"
-                  disabled={!settings}
+                  disabled={true}
                 />
-                <h3 className="text-sm font-bold text-green-400">🟢 Bitpanda</h3>
-                {bitpandaConnected && settings?.active_platforms?.includes('BITPANDA') && (
-                  <Badge className="bg-emerald-600 text-white text-xs">Aktiv</Badge>
-                )}
+                <h3 className="text-sm font-bold text-amber-400">💰 MT5 Libertex REAL 💰</h3>
+                <Badge className="bg-yellow-600 text-white text-xs">ECHTGELD</Badge>
               </div>
-              <DollarSign className="w-8 h-8 text-green-400/20" />
+              <DollarSign className="w-8 h-8 text-amber-400/20" />
             </div>
             <div className="space-y-2">
               <div>
                 <p className="text-xs text-slate-400">Balance</p>
-                <p className="text-xl font-bold text-white">
-                  {bitpandaConnected ? `€${bitpandaAccount?.balance?.toFixed(2) || '0.00'}` : '€0.00'}
-                </p>
+                <p className="text-xl font-bold text-white">€0.00</p>
               </div>
-              {bitpandaConnected && (
-                <>
-                  <div className="text-xs text-slate-400">
-                    API: Aktiv | Verbunden
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between text-xs mb-1">
-                      <span className="text-slate-400">Portfolio-Risiko:</span>
-                      <span className={
-                        (bitpandaExposure / (bitpandaAccount?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
-                          ? 'text-red-400 font-semibold'
-                          : 'text-green-400'
-                      }>
-                        {((bitpandaExposure / (bitpandaAccount?.balance || 1)) * 100).toFixed(1)}% / {settings?.max_portfolio_risk_percent || 20}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all ${
-                          (bitpandaExposure / (bitpandaAccount?.balance || 1)) * 100 > (settings?.max_portfolio_risk_percent || 20)
-                            ? 'bg-red-500'
-                            : 'bg-green-500'
-                        }`}
-                        style={{ width: `${Math.min(((bitpandaExposure / (bitpandaAccount?.balance || 1)) * 100 / (settings?.max_portfolio_risk_percent || 20)) * 100, 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    Offene Positionen: €{bitpandaExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && (t.platform === 'BITPANDA' || t.mode === 'BITPANDA')).length})
-                  </div>
-                </>
-              )}
-              {!bitpandaConnected && (
-                <div className="text-xs text-slate-400">
-                  Nur lokal auf Mac verfügbar
-                </div>
-              )}
+              <div className="text-xs text-amber-400 bg-amber-900/20 p-2 rounded">
+                ⚠️ Real Account wird in Kürze hinzugefügt
+              </div>
+              <div className="text-xs text-slate-400">
+                Region: London | Status: Bald verfügbar
+              </div>
             </div>
           </Card>
         </div>
