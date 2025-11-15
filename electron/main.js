@@ -83,8 +83,8 @@ app.on('ready', () => {
   console.log('🎯 Electron App Starting...');
   startBackend();
   
-  // Warte kurz damit Backend starten kann
-  setTimeout(createWindow, 2000);
+  // Warte 5 Sekunden damit Backend vollständig starten kann
+  setTimeout(createWindow, 5000);
 });
 
 // Alle Fenster geschlossen
