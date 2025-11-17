@@ -1424,12 +1424,18 @@ async def execute_trade(request: TradeExecuteRequest):
             logger.info(f"📊 [{default_platform}] Auto Position Size: {quantity:.4f} lots (Balance: {balance:.2f}, Free Margin: {free_margin}, Price: {price:.2f})")
         
         # Stop Loss und Take Profit richtig berechnen für BUY und SELL
-        if trade_type.upper() == 'BUY':
-            stop_loss = price * (1 - settings.get('stop_loss_percent', 2.0) / 100)
-            take_profit = price * (1 + settings.get('take_profit_percent', 4.0) / 100)
-        else:  # SELL
-            stop_loss = price * (1 + settings.get('stop_loss_percent', 2.0) / 100)
-            take_profit = price * (1 - settings.get('take_profit_percent', 4.0) / 100)
+        # WICHTIG: SL/TP erstmal auf None setzen, um "Invalid stops" zu vermeiden
+        # Broker akzeptiert oft keine zu engen Stops bei manuellem Trading
+        stop_loss = None
+        take_profit = None
+        
+        # Optional: Berechne SL/TP für später (können nach Trade-Platzierung gesetzt werden)
+        # if trade_type.upper() == 'BUY':
+        #     stop_loss = price * (1 - settings.get('stop_loss_percent', 2.0) / 100)
+        #     take_profit = price * (1 + settings.get('take_profit_percent', 4.0) / 100)
+        # else:  # SELL
+        #     stop_loss = price * (1 + settings.get('stop_loss_percent', 2.0) / 100)
+        #     take_profit = price * (1 - settings.get('take_profit_percent', 4.0) / 100)
         
         # WICHTIG: Order an Trading-Plattform senden!
         platform_ticket = None
