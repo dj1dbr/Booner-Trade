@@ -449,19 +449,48 @@ class MarketAnalyzer:
             signals.append("Stochastic: Überkauft (SELL)")
             scores.append(-1.0)
         
-        # 6. News Sentiment
+        # 6. News Sentiment (Multi-Source)
         news_sentiment = news.get('sentiment', 'neutral')
         news_score = news.get('score', 0)
+        news_source = news.get('source', 'none')
         
         if news_sentiment == 'bullish':
-            signals.append(f"News: Positiv ({news.get('articles', 0)} Artikel)")
-            scores.append(news_score * 2)  # News haben hohen Einfluss
+            signals.append(f"News: Positiv ({news.get('articles', 0)} Artikel via {news_source})")
+            scores.append(news_score * 2.5)  # News haben sehr hohen Einfluss
         elif news_sentiment == 'bearish':
-            signals.append(f"News: Negativ ({news.get('articles', 0)} Artikel)")
-            scores.append(news_score * 2)
+            signals.append(f"News: Negativ ({news.get('articles', 0)} Artikel via {news_source})")
+            scores.append(news_score * 2.5)
         else:
             signals.append("News: Neutral")
             scores.append(0.0)
+        
+        # 7. Economic Calendar Impact
+        high_impact_events = economic.get('high_impact', 0)
+        if high_impact_events > 0:
+            signals.append(f"📅 Economic Events: {high_impact_events} High-Impact heute")
+            scores.append(-0.5 * high_impact_events)  # Vorsicht bei wichtigen Events
+        
+        # 8. Market Sentiment (Fear & Greed)
+        overall_sentiment = market_sentiment.get('sentiment', 'neutral')
+        if overall_sentiment == 'greedy':
+            signals.append("Market: Greedy (Chance für Contrarian)")
+            scores.append(0.5)
+        elif overall_sentiment == 'fearful':
+            signals.append("Market: Fearful (Vorsicht)")
+            scores.append(-0.5)
+        
+        # 9. Support/Resistance Levels
+        if sr_levels.get('current_price', 0) > 0:
+            current = sr_levels['current_price']
+            support = sr_levels.get('support', 0)
+            resistance = sr_levels.get('resistance', 0)
+            
+            if support > 0 and current <= support * 1.02:  # Nahe Support
+                signals.append(f"S/R: Nahe Support ({support:.2f})")
+                scores.append(1.0)
+            elif resistance > 0 and current >= resistance * 0.98:  # Nahe Resistance
+                signals.append(f"S/R: Nahe Resistance ({resistance:.2f})")
+                scores.append(-1.0)
         
         # Gesamtscore berechnen
         total_score = sum(scores)
