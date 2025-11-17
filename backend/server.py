@@ -1882,8 +1882,8 @@ async def get_trade_stats():
         
         return TradeStats(
             total_trades=total_trades,
-            open_positions=open_positions,
-            closed_positions=closed_positions,
+            open_positions=len(open_positions),
+            closed_positions=len(closed_positions),
             total_profit_loss=round(total_profit_loss, 2),
             win_rate=round(win_rate, 2),
             winning_trades=winning_trades,
