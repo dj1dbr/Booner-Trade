@@ -103,10 +103,21 @@
 #====================================================================================================
 
 user_problem_statement: |
-  Transform "Rohstoff Trader" application to enable real-time trading across multiple commodities and platforms.
-  Current critical issue: Manual trades for commodities other than Gold (e.g., WTI Crude Oil) are not being executed on MT5 via MetaAPI.
-  Error: "ERR_MARKET_UNKNOWN_SYMBOL" for symbol "USOIL", indicating symbol mapping mismatch with ICMarkets broker.
-  Additional issue discovered: MetaAPI account ID "multitrade-mt5" not found in any region (New York, London, Singapore).
+  Vollautonomer 24/7 AI Trading Bot für Rohstoffhandel
+  
+  HAUPTZIEL: Komplett autonomer Trading-Bot, der:
+  1. Selbstständig Marktdaten analysiert (technische Indikatoren + News + LLM)
+  2. Automatisch Positionen öffnet bei starken Signalen
+  3. Alle offenen Positionen überwacht (AI-generierte + manuelle)
+  4. Positionen automatisch schließt bei TP/SL-Bedingungen
+  
+  Features:
+  - Multi-Strategie-Analyse: RSI, MACD, SMA/EMA, Bollinger Bands, Stochastic
+  - News-Integration mit Sentiment-Analyse
+  - LLM-basierte finale Entscheidung (GPT-5 via Emergent LLM Key)
+  - Risk Management & Portfolio-Balance
+  - Background-Service in FastAPI integriert
+  - Control-Endpoints: /api/bot/start, /api/bot/stop, /api/bot/status
 
 backend:
   - task: "Multi-Platform Account Connections"
