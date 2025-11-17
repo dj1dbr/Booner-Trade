@@ -947,6 +947,493 @@ class RohstoffTraderTester:
         else:
             self.log_test_result("Platform Connections with Balances", False, f"Failed to get platform status: {data}")
 
+    # ========================================
+    # AI TRADING BOT TESTS - CRITICAL SECTION
+    # ========================================
+    
+    async def test_bot_status(self):
+        """Test AI Trading Bot Status - GET /api/bot/status"""
+        success, data = await self.make_request("GET", "/api/bot/status")
+        
+        if success:
+            running = data.get("running", False)
+            instance_running = data.get("instance_running", False)
+            task_alive = data.get("task_alive", False)
+            trade_count = data.get("trade_count", 0)
+            last_trades = data.get("last_trades", [])
+            
+            # Bot should be running if auto_trading is enabled
+            if running is not None and instance_running is not None:
+                self.log_test_result(
+                    "AI Bot Status", 
+                    True, 
+                    f"Bot status: running={running}, instance_running={instance_running}, task_alive={task_alive}, trade_count={trade_count}",
+                    {
+                        "running": running,
+                        "instance_running": instance_running, 
+                        "task_alive": task_alive,
+                        "trade_count": trade_count,
+                        "last_trades_count": len(last_trades)
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "AI Bot Status", 
+                    False, 
+                    f"Invalid bot status response: {data}",
+                    data
+                )
+        else:
+            self.log_test_result("AI Bot Status", False, f"Failed to get bot status: {data}")
+    
+    async def test_bot_stop(self):
+        """Test AI Trading Bot Stop - POST /api/bot/stop"""
+        success, data = await self.make_request("POST", "/api/bot/stop")
+        
+        if success:
+            success_flag = data.get("success", False)
+            message = data.get("message", "")
+            
+            if success_flag and "gestoppt" in message:
+                self.log_test_result(
+                    "AI Bot Stop", 
+                    True, 
+                    f"Bot stopped successfully: {message}",
+                    {"success": success_flag, "message": message}
+                )
+            else:
+                self.log_test_result(
+                    "AI Bot Stop", 
+                    False, 
+                    f"Bot stop failed: success={success_flag}, message={message}",
+                    data
+                )
+        else:
+            self.log_test_result("AI Bot Stop", False, f"Failed to stop bot: {data}")
+    
+    async def test_bot_start(self):
+        """Test AI Trading Bot Start - POST /api/bot/start"""
+        success, data = await self.make_request("POST", "/api/bot/start")
+        
+        if success:
+            success_flag = data.get("success", False)
+            message = data.get("message", "")
+            
+            if success_flag and "gestartet" in message:
+                self.log_test_result(
+                    "AI Bot Start", 
+                    True, 
+                    f"Bot started successfully: {message}",
+                    {"success": success_flag, "message": message}
+                )
+            else:
+                self.log_test_result(
+                    "AI Bot Start", 
+                    False, 
+                    f"Bot start failed: success={success_flag}, message={message}",
+                    data
+                )
+        else:
+            self.log_test_result("AI Bot Start", False, f"Failed to start bot: {data}")
+    
+    async def test_bot_lifecycle(self):
+        """Test Complete AI Bot Lifecycle: Status -> Stop -> Start"""
+        logger.info("🤖 Testing AI Bot Lifecycle: Status -> Stop -> Start")
+        
+        # 1. Check initial status
+        await self.test_bot_status()
+        
+        # 2. Stop bot
+        await self.test_bot_stop()
+        
+        # Wait a moment for bot to stop
+        await asyncio.sleep(2)
+        
+        # 3. Verify bot is stopped
+        success, data = await self.make_request("GET", "/api/bot/status")
+        if success:
+            running = data.get("running", True)  # Default True to catch failures
+            if not running:
+                self.log_test_result(
+                    "AI Bot Lifecycle - Stop Verification", 
+                    True, 
+                    f"Bot confirmed stopped: running={running}",
+                    {"running": running}
+                )
+            else:
+                self.log_test_result(
+                    "AI Bot Lifecycle - Stop Verification", 
+                    False, 
+                    f"Bot still running after stop command: running={running}",
+                    data
+                )
+        
+        # 4. Start bot again
+        await self.test_bot_start()
+        
+        # Wait a moment for bot to start
+        await asyncio.sleep(2)
+        
+        # 5. Verify bot is running
+        success, data = await self.make_request("GET", "/api/bot/status")
+        if success:
+            running = data.get("running", False)
+            if running:
+                self.log_test_result(
+                    "AI Bot Lifecycle - Start Verification", 
+                    True, 
+                    f"Bot confirmed running: running={running}",
+                    {"running": running}
+                )
+            else:
+                self.log_test_result(
+                    "AI Bot Lifecycle - Start Verification", 
+                    False, 
+                    f"Bot not running after start command: running={running}",
+                    data
+                )
+    
+    async def test_settings_auto_trading_toggle(self):
+        """Test Settings Auto-Trading Toggle Integration"""
+        logger.info("⚙️ Testing Auto-Trading Toggle Integration")
+        
+        # 1. Set auto_trading=false
+        settings_data = {"auto_trading": False}
+        success, data = await self.make_request("POST", "/api/settings", settings_data)
+        
+        if success:
+            auto_trading = data.get("auto_trading", True)  # Default True to catch failures
+            if not auto_trading:
+                self.log_test_result(
+                    "Settings Auto-Trading Disable", 
+                    True, 
+                    f"Auto-trading disabled: auto_trading={auto_trading}",
+                    {"auto_trading": auto_trading}
+                )
+                
+                # Wait for bot to stop automatically
+                await asyncio.sleep(3)
+                
+                # Check if bot stopped
+                bot_success, bot_data = await self.make_request("GET", "/api/bot/status")
+                if bot_success:
+                    bot_running = bot_data.get("running", True)
+                    if not bot_running:
+                        self.log_test_result(
+                            "Auto-Trading Disable - Bot Auto-Stop", 
+                            True, 
+                            f"Bot automatically stopped when auto_trading=false: running={bot_running}",
+                            {"bot_running": bot_running}
+                        )
+                    else:
+                        self.log_test_result(
+                            "Auto-Trading Disable - Bot Auto-Stop", 
+                            False, 
+                            f"Bot did not stop automatically: running={bot_running}",
+                            bot_data
+                        )
+            else:
+                self.log_test_result(
+                    "Settings Auto-Trading Disable", 
+                    False, 
+                    f"Failed to disable auto-trading: auto_trading={auto_trading}",
+                    data
+                )
+        
+        # 2. Try to start bot when auto_trading=false (should fail)
+        start_success, start_data = await self.make_request("POST", "/api/bot/start")
+        if not start_success or not start_data.get("success", True):
+            self.log_test_result(
+                "Bot Start Blocked when Auto-Trading Disabled", 
+                True, 
+                f"Bot start correctly blocked: {start_data.get('message', 'No message')}",
+                start_data
+            )
+        else:
+            self.log_test_result(
+                "Bot Start Blocked when Auto-Trading Disabled", 
+                False, 
+                f"Bot start should have been blocked but succeeded: {start_data}",
+                start_data
+            )
+        
+        # 3. Set auto_trading=true
+        settings_data = {"auto_trading": True}
+        success, data = await self.make_request("POST", "/api/settings", settings_data)
+        
+        if success:
+            auto_trading = data.get("auto_trading", False)
+            if auto_trading:
+                self.log_test_result(
+                    "Settings Auto-Trading Enable", 
+                    True, 
+                    f"Auto-trading enabled: auto_trading={auto_trading}",
+                    {"auto_trading": auto_trading}
+                )
+                
+                # Wait for bot to start automatically
+                await asyncio.sleep(3)
+                
+                # Check if bot started
+                bot_success, bot_data = await self.make_request("GET", "/api/bot/status")
+                if bot_success:
+                    bot_running = bot_data.get("running", False)
+                    if bot_running:
+                        self.log_test_result(
+                            "Auto-Trading Enable - Bot Auto-Start", 
+                            True, 
+                            f"Bot automatically started when auto_trading=true: running={bot_running}",
+                            {"bot_running": bot_running}
+                        )
+                    else:
+                        self.log_test_result(
+                            "Auto-Trading Enable - Bot Auto-Start", 
+                            False, 
+                            f"Bot did not start automatically: running={bot_running}",
+                            bot_data
+                        )
+            else:
+                self.log_test_result(
+                    "Settings Auto-Trading Enable", 
+                    False, 
+                    f"Failed to enable auto-trading: auto_trading={auto_trading}",
+                    data
+                )
+    
+    async def test_bot_requirements_check(self):
+        """Test Bot Requirements: Platform Connections, Market Data, Settings"""
+        logger.info("🔍 Testing Bot Requirements")
+        
+        # 1. Platform Connections
+        platform_success, platform_data = await self.make_request("GET", "/api/platforms/status")
+        platforms_ok = False
+        if platform_success:
+            platforms = platform_data.get("platforms", {})
+            libertex_active = platforms.get("MT5_LIBERTEX_DEMO", {}).get("active", False) or platforms.get("MT5_LIBERTEX", {}).get("active", False)
+            icmarkets_active = platforms.get("MT5_ICMARKETS_DEMO", {}).get("active", False) or platforms.get("MT5_ICMARKETS", {}).get("active", False)
+            platforms_ok = libertex_active or icmarkets_active
+        
+        # 2. Market Data
+        market_success, market_data = await self.make_request("GET", "/api/market/all")
+        market_data_ok = False
+        commodities_count = 0
+        if market_success:
+            markets = market_data.get("markets", {})
+            commodities_count = len(markets)
+            market_data_ok = commodities_count >= 10  # At least 10 commodities
+        
+        # 3. Settings
+        settings_success, settings_data = await self.make_request("GET", "/api/settings")
+        settings_ok = False
+        if settings_success:
+            enabled_commodities = settings_data.get("enabled_commodities", [])
+            auto_trading = settings_data.get("auto_trading", False)
+            settings_ok = len(enabled_commodities) > 0
+        
+        # Overall assessment
+        all_requirements_met = platforms_ok and market_data_ok and settings_ok
+        
+        self.log_test_result(
+            "Bot Requirements Check", 
+            all_requirements_met, 
+            f"Platform connections: {platforms_ok}, Market data ({commodities_count} commodities): {market_data_ok}, Settings: {settings_ok}",
+            {
+                "platforms_ok": platforms_ok,
+                "market_data_ok": market_data_ok,
+                "commodities_count": commodities_count,
+                "settings_ok": settings_ok,
+                "all_requirements_met": all_requirements_met
+            }
+        )
+    
+    async def check_backend_logs_bot_activity(self):
+        """Check Backend Logs for Bot Activity"""
+        logger.info("📋 Checking Backend Logs for Bot Activity")
+        
+        try:
+            import subprocess
+            
+            # Check for bot iteration logs
+            result = subprocess.run(
+                ["grep", "-i", "Bot Iteration", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            bot_iterations_found = result.returncode == 0 and result.stdout
+            
+            # Check for market data updates
+            result2 = subprocess.run(
+                ["grep", "-i", "Marktdaten aktualisiert", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            market_updates_found = result2.returncode == 0 and result2.stdout
+            
+            # Check for position monitoring
+            result3 = subprocess.run(
+                ["grep", "-i", "Überwache offene Positionen", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            position_monitoring_found = result3.returncode == 0 and result3.stdout
+            
+            # Check for AI analysis
+            result4 = subprocess.run(
+                ["grep", "-i", "KI analysiert Markt", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            ai_analysis_found = result4.returncode == 0 and result4.stdout
+            
+            # Count recent bot activities (last 10 lines)
+            recent_activities = 0
+            if bot_iterations_found:
+                recent_lines = result.stdout.strip().split('\n')[-10:]
+                recent_activities = len(recent_lines)
+            
+            # Success if we find bot iterations and market updates
+            logs_healthy = bot_iterations_found and market_updates_found
+            
+            if logs_healthy:
+                self.log_test_result(
+                    "Backend Logs - Bot Activity", 
+                    True, 
+                    f"✅ Bot activity detected: {recent_activities} recent iterations, market updates: {market_updates_found}, position monitoring: {position_monitoring_found}",
+                    {
+                        "bot_iterations": bot_iterations_found,
+                        "market_updates": market_updates_found,
+                        "position_monitoring": position_monitoring_found,
+                        "ai_analysis": ai_analysis_found,
+                        "recent_activities": recent_activities
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Backend Logs - Bot Activity", 
+                    False, 
+                    f"❌ Missing bot activity - Iterations: {bot_iterations_found}, Market updates: {market_updates_found}",
+                    {
+                        "bot_iterations": bot_iterations_found,
+                        "market_updates": market_updates_found,
+                        "position_monitoring": position_monitoring_found,
+                        "ai_analysis": ai_analysis_found
+                    }
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Backend Logs - Bot Activity", 
+                False, 
+                f"Error checking logs: {str(e)}",
+                {"error": str(e)}
+            )
+    
+    async def test_market_data_for_bot(self):
+        """Test Market Data Availability for Bot (specific commodities)"""
+        success, data = await self.make_request("GET", "/api/market/all")
+        
+        if success:
+            markets = data.get("markets", {})
+            commodities = data.get("commodities", [])
+            
+            # Check for specific commodities that bot needs
+            required_commodities = ["GOLD", "WTI_CRUDE", "SILVER", "PLATINUM"]
+            found_commodities = []
+            missing_commodities = []
+            
+            for commodity in required_commodities:
+                if commodity in markets and markets[commodity].get("price"):
+                    price = markets[commodity]["price"]
+                    rsi = markets[commodity].get("rsi", "N/A")
+                    signal = markets[commodity].get("signal", "N/A")
+                    found_commodities.append(f"{commodity}=${price:.2f}(RSI:{rsi},Signal:{signal})")
+                else:
+                    missing_commodities.append(commodity)
+            
+            # Success if we have at least 3 of the required commodities
+            if len(found_commodities) >= 3:
+                self.log_test_result(
+                    "Market Data for Bot", 
+                    True, 
+                    f"✅ {len(found_commodities)}/4 required commodities available: {', '.join(found_commodities)}",
+                    {
+                        "total_markets": len(markets),
+                        "found_commodities": found_commodities,
+                        "missing_commodities": missing_commodities
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Market Data for Bot", 
+                    False, 
+                    f"❌ Insufficient market data - Found: {found_commodities}, Missing: {missing_commodities}",
+                    data
+                )
+        else:
+            self.log_test_result("Market Data for Bot", False, f"Failed to get market data: {data}")
+    
+    async def test_trades_list_for_bot(self):
+        """Test Trades List (Bot needs to monitor existing trades)"""
+        success, data = await self.make_request("GET", "/api/trades/list")
+        
+        if success:
+            trades = data.get("trades", [])
+            open_trades = [t for t in trades if t.get("status") == "OPEN"]
+            closed_trades = [t for t in trades if t.get("status") == "CLOSED"]
+            
+            # Check for AI-generated trades (strategy_signal contains "AI" or "Bot")
+            ai_trades = []
+            manual_trades = []
+            
+            for trade in trades:
+                strategy = trade.get("strategy_signal", "")
+                if "AI" in strategy or "Bot" in strategy or "KI" in strategy:
+                    ai_trades.append(trade.get("id", "unknown"))
+                else:
+                    manual_trades.append(trade.get("id", "unknown"))
+            
+            self.log_test_result(
+                "Trades List for Bot", 
+                True, 
+                f"✅ Total trades: {len(trades)}, Open: {len(open_trades)}, Closed: {len(closed_trades)}, AI-generated: {len(ai_trades)}, Manual: {len(manual_trades)}",
+                {
+                    "total_trades": len(trades),
+                    "open_trades": len(open_trades),
+                    "closed_trades": len(closed_trades),
+                    "ai_trades": len(ai_trades),
+                    "manual_trades": len(manual_trades)
+                }
+            )
+        else:
+            self.log_test_result("Trades List for Bot", False, f"Failed to get trades: {data}")
+
+    async def run_ai_bot_tests(self):
+        """Run comprehensive AI Trading Bot tests"""
+        logger.info("\n" + "="*80)
+        logger.info("🤖 AI TRADING BOT COMPREHENSIVE TESTS")
+        logger.info("="*80)
+        
+        # A. Bot Lifecycle Test
+        logger.info("\n=== A. BOT LIFECYCLE TEST ===")
+        await self.test_bot_lifecycle()
+        
+        # B. Auto-Trading Toggle Test
+        logger.info("\n=== B. AUTO-TRADING TOGGLE TEST ===")
+        await self.test_settings_auto_trading_toggle()
+        
+        # C. Bot Requirements Check
+        logger.info("\n=== C. BOT REQUIREMENTS CHECK ===")
+        await self.test_bot_requirements_check()
+        await self.test_market_data_for_bot()
+        await self.test_trades_list_for_bot()
+        
+        # D. Backend Logs Check
+        logger.info("\n=== D. BACKEND LOGS CHECK ===")
+        await self.check_backend_logs_bot_activity()
+        
+        logger.info("\n🤖 AI Trading Bot Tests Complete")
+        logger.info("="*80)
+
     async def run_all_tests(self):
         """Run all backend tests in sequence - KOMPLETTER APP-TEST"""
         logger.info("🚀 KOMPLETTER APP-TEST - Alle Funktionen systematisch testen")
