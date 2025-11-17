@@ -1475,11 +1475,11 @@ async def execute_trade(request: TradeExecuteRequest):
                 if not connector:
                     raise HTTPException(status_code=503, detail=f"{default_platform} Connector nicht verfügbar")
                 
-                result = await connector.place_order(
+                # Verwende create_market_order (SDK-Methode)
+                result = await connector.create_market_order(
                     symbol=mt5_symbol,
                     order_type=trade_type.upper(),
                     volume=quantity,
-                    price=price,
                     sl=stop_loss,
                     tp=take_profit
                 )
