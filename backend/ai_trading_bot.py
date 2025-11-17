@@ -32,6 +32,10 @@ class AITradingBot:
         self.db = None
         self.settings = None
         self.market_data = {}
+        self.market_analyzer = None
+        self.llm_chat = None
+        self.trade_history = []  # Für Lernzwecke
+        self.last_analysis_time = {}  # Pro Commodity
         
     async def initialize(self):
         """Initialisiere Bot"""
