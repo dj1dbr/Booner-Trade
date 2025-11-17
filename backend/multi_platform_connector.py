@@ -212,7 +212,7 @@ class MultiPlatformConnector:
             return None
     
     async def get_open_positions(self, platform_name: str) -> List[Dict[str, Any]]:
-        """Get open positions with deduplication"""
+        """Get open positions - DIREKT von MT5, keine Deduplizierung"""
         try:
             # Handle legacy names
             if platform_name == 'MT5_LIBERTEX':
@@ -229,59 +229,25 @@ class MultiPlatformConnector:
             if not platform['active'] or not platform['connector']:
                 return []
             
+            # Hole Positionen DIREKT vom SDK (MT5-Sync)
             positions = await platform['connector'].get_positions()
             
-            # Deduplicate and filter errors
-            ticket_groups = {}
-            
+            # Filter nur offensichtliche Fehler (TRADE_RETCODE)
+            clean_positions = []
             for pos in positions:
                 ticket = pos.get('ticket') or pos.get('id') or pos.get('positionId')
                 symbol = pos.get('symbol', '')
                 
-                # Filter error positions
+                # Skip nur error positions
                 if ticket and 'TRADE_RETCODE' in str(ticket):
-                    logger.debug(f"Filtered error position: {ticket}")
                     continue
-                
                 if 'TRADE_RETCODE' in symbol:
-                    logger.debug(f"Filtered error position: symbol={symbol}")
                     continue
                 
-                # No ticket
-                if not ticket:
-                    if 'no_ticket' not in ticket_groups:
-                        ticket_groups['no_ticket'] = []
-                    ticket_groups['no_ticket'].append(pos)
-                    continue
-                
-                # Group by ticket
-                if ticket not in ticket_groups:
-                    ticket_groups[ticket] = []
-                ticket_groups[ticket].append(pos)
+                clean_positions.append(pos)
             
-            # Keep best position per ticket
-            unique_positions = []
-            for ticket, pos_list in ticket_groups.items():
-                if ticket == 'no_ticket':
-                    unique_positions.extend(pos_list)
-                    continue
-                
-                if len(pos_list) == 1:
-                    unique_positions.append(pos_list[0])
-                else:
-                    # Keep position with P&L
-                    logger.warning(f"Duplicate ticket {ticket}: {len(pos_list)} positions")
-                    best_pos = max(pos_list, key=lambda p: (
-                        abs(p.get('profit', 0)) > 0.01,
-                        p.get('time', '')
-                    ))
-                    unique_positions.append(best_pos)
-                    logger.info(f"Kept position with P&L={best_pos.get('profit', 0)}")
-            
-            if len(positions) != len(unique_positions):
-                logger.info(f"{platform_name}: {len(positions)} → {len(unique_positions)} after dedup")
-            
-            return unique_positions
+            logger.info(f"{platform_name}: {len(clean_positions)} open positions from MT5")
+            return clean_positions
             
         except Exception as e:
             logger.error(f"Error getting positions for {platform_name}: {e}")
