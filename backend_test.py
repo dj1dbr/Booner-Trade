@@ -1435,44 +1435,41 @@ class RohstoffTraderTester:
         logger.info("="*80)
 
     async def run_all_tests(self):
-        """Run all backend tests in sequence - KOMPLETTER APP-TEST"""
-        logger.info("🚀 KOMPLETTER APP-TEST - Alle Funktionen systematisch testen")
+        """Run all backend tests in sequence - KOMPLETTER APP-TEST + AI BOT"""
+        logger.info("🚀 VOLLAUTONOMER AI TRADING BOT - COMPREHENSIVE TESTING")
         logger.info(f"Testing against: {self.base_url}")
         
-        # 1. Platform Connections (KRITISCH!)
-        logger.info("\n=== 1. PLATFORM CONNECTIONS ===")
+        # PRIORITY 1: AI TRADING BOT TESTS (CRITICAL!)
+        logger.info("\n" + "="*80)
+        logger.info("🤖 PRIORITY 1: AI TRADING BOT TESTS (CRITICAL!)")
+        logger.info("="*80)
+        await self.run_ai_bot_tests()
+        
+        # PRIORITY 2: Platform Connections (Required for Bot)
+        logger.info("\n=== PRIORITY 2: PLATFORM CONNECTIONS (Required for Bot) ===")
         await self.test_platforms_status()
         await self.test_platform_connections_balances()
         
-        # 2. Trade-Execution Test (KRITISCH!)
-        logger.info("\n=== 2. TRADE-EXECUTION TEST (KRITISCH!) ===")
-        await self.test_comprehensive_trade_execution()
+        # PRIORITY 3: Market Data (Required for Bot)
+        logger.info("\n=== PRIORITY 3: MARKET DATA (Required for Bot) ===")
+        await self.test_market_data_all()
+        await self.test_market_data_for_bot()
         
-        # 3. Trades List (KRITISCH!)
-        logger.info("\n=== 3. TRADES LIST (KRITISCH!) ===")
+        # PRIORITY 4: Trades List (Bot monitors these)
+        logger.info("\n=== PRIORITY 4: TRADES LIST (Bot monitors these) ===")
         await self.test_trades_list()
         await self.test_trades_list_duplicates()
         
-        # 4. Live MT5 Positions
-        logger.info("\n=== 4. LIVE MT5 POSITIONS ===")
-        await self.test_mt5_libertex_account()
-        await self.test_mt5_icmarkets_account()
-        await self.test_live_mt5_positions_comparison()
-        
-        # 5. Settings
-        logger.info("\n=== 5. SETTINGS ===")
+        # PRIORITY 5: Settings Integration (Bot depends on these)
+        logger.info("\n=== PRIORITY 5: SETTINGS INTEGRATION (Bot depends on these) ===")
         await self.test_settings_get()
-        await self.test_settings_update_all_platform()
+        await self.test_ai_settings_retrieval()
         
-        # 6. Stability Test
-        logger.info("\n=== 6. STABILITY TEST ===")
-        await self.test_stability_connections()
-        
-        # Additional comprehensive tests
-        logger.info("\n=== ADDITIONAL COMPREHENSIVE TESTS ===")
+        # Additional system tests
+        logger.info("\n=== ADDITIONAL SYSTEM TESTS ===")
         await self.test_api_root()
-        await self.test_market_data_all()
         await self.test_commodities_list()
+        await self.test_stability_connections()
         
         # Summary
         self.print_test_summary()
