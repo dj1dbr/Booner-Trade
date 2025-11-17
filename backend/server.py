@@ -112,6 +112,8 @@ api_router = APIRouter(prefix="/api")
 @app.on_event("startup")
 async def startup_cleanup():
     """Bereinige fehlerhafte Trades und Duplikate beim Server-Start"""
+    global ai_trading_bot_instance, bot_task
+    
     try:
         logger.info("🚀 Server startet - führe Trade-Cleanup durch...")
         from trade_cleanup import cleanup_error_trades, cleanup_duplicate_trades
@@ -126,6 +128,25 @@ async def startup_cleanup():
             logger.info("✅ Startup-Cleanup: Datenbank ist sauber")
     except Exception as e:
         logger.error(f"⚠️ Startup-Cleanup fehlgeschlagen: {e}")
+    
+    # AI Trading Bot starten (wenn in Settings aktiviert)
+    try:
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if settings and settings.get('auto_trading', False):
+            logger.info("🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...")
+            from ai_trading_bot import AITradingBot
+            
+            ai_trading_bot_instance = AITradingBot()
+            if await ai_trading_bot_instance.initialize():
+                # Starte Bot als Background Task
+                bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
+                logger.info("✅ AI Trading Bot gestartet als Background Task")
+            else:
+                logger.error("❌ AI Trading Bot konnte nicht initialisiert werden")
+        else:
+            logger.info("ℹ️  Auto-Trading ist deaktiviert - Bot wird nicht gestartet")
+    except Exception as e:
+        logger.error(f"⚠️ AI Trading Bot Start fehlgeschlagen: {e}")
 
 # Configure logging
 logging.basicConfig(
