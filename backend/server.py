@@ -744,6 +744,11 @@ async def process_commodity_market_data(commodity_id: str, settings):
             upsert=True
         )
         
+        # Store in history for AI Trading Bot analysis (mit commodity_id statt commodity)
+        history_entry = market_data.copy()
+        history_entry['commodity_id'] = commodity_id
+        await db.market_data_history.insert_one(history_entry)
+        
         # Update in-memory cache
         latest_market_data[commodity_id] = market_data
         
