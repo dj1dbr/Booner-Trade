@@ -51,6 +51,26 @@ class AITradingBot:
             logger.error("❌ Settings nicht gefunden!")
             return False
         
+        # Market Analyzer initialisieren
+        from market_analysis import MarketAnalyzer
+        self.market_analyzer = MarketAnalyzer()
+        
+        # LLM Chat für KI-Entscheidungen initialisieren (optional)
+        try:
+            from ai_chat_service import get_ai_chat_instance
+            ai_provider = self.settings.get('ai_provider', 'emergent')
+            ai_model = self.settings.get('ai_model', 'gpt-5')
+            self.llm_chat = await get_ai_chat_instance(
+                self.settings, 
+                ai_provider, 
+                ai_model, 
+                session_id="ai_trading_bot"
+            )
+            logger.info(f"✅ LLM initialisiert: {ai_provider}/{ai_model}")
+        except Exception as e:
+            logger.warning(f"⚠️  LLM nicht verfügbar: {e}")
+            self.llm_chat = None
+        
         logger.info(f"✅ Bot initialisiert | Auto-Trading: {self.settings.get('auto_trading', False)}")
         return True
     
