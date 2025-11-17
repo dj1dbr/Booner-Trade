@@ -2184,15 +2184,18 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
                   id="trailing_distance"
                   type="number"
                   step="0.1"
-                  min="0.5"
+                  min="0"
                   max="10"
-                  value={formData.trailing_stop_distance || 1.5}
-                  onChange={(e) => setFormData({ ...formData, trailing_stop_distance: parseFloat(e.target.value) })}
+                  value={formData.trailing_stop_distance ?? 1.5}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                    setFormData({ ...formData, trailing_stop_distance: val });
+                  }}
                   className="bg-slate-800 border-slate-700"
                   placeholder="z.B. 1.5"
                 />
                 <p className="text-xs text-slate-500">
-                  Stop Loss hält {formData.trailing_stop_distance || 1.5}% Abstand zum aktuellen Preis
+                  Stop Loss hält {formData.trailing_stop_distance ?? 1.5}% Abstand zum aktuellen Preis
                 </p>
               </div>
             )}
