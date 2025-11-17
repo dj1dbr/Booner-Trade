@@ -116,7 +116,8 @@ class AITradingBot:
     async def fetch_market_data(self):
         """Hole aktuelle Marktdaten"""
         try:
-            # Hole Marktdaten aus DB (werden von server.py aktualisiert)
+            # Hole Marktdaten aus market_data Collection (werden von server.py gespeichert)
+            # Diese Collection wird vom /api/market/refresh Endpoint befüllt
             market_docs = await self.db.market_data.find({}).to_list(100)
             
             self.market_data = {}
@@ -124,6 +125,22 @@ class AITradingBot:
                 commodity_id = doc.get('commodity_id')
                 if commodity_id:
                     self.market_data[commodity_id] = doc
+            
+            # Fallback: Wenn keine Daten in market_data, versuche aus Settings
+            if not self.market_data:
+                logger.warning("⚠️  Keine Marktdaten in DB - versuche direkt zu fetchen")
+                # Trigger market data refresh via import
+                from server import process_market_data
+                try:
+                    await process_market_data()
+                    # Erneut versuchen
+                    market_docs = await self.db.market_data.find({}).to_list(100)
+                    for doc in market_docs:
+                        commodity_id = doc.get('commodity_id')
+                        if commodity_id:
+                            self.market_data[commodity_id] = doc
+                except Exception as e:
+                    logger.error(f"Market data fetch failed: {e}")
             
             logger.info(f"📊 Marktdaten aktualisiert: {len(self.market_data)} Rohstoffe")
             
