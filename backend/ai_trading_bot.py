@@ -260,8 +260,8 @@ class AITradingBot:
                 
                 # Hole Preishistorie
                 price_history = await self.get_price_history(commodity_id)
-                if len(price_history) < 50:
-                    logger.warning(f"⚠️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)})")
+                if len(price_history) < 20:  # Reduziert von 50 auf 20 für schnelleren Start
+                    logger.debug(f"ℹ️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)}), warte auf mehr History...")
                     continue
                 
                 # Vollständige Marktanalyse
