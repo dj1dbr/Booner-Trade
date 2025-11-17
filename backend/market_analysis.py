@@ -482,19 +482,143 @@ class MarketAnalyzer:
             "news": news
         }
     
+    async def fetch_economic_calendar(self) -> Dict:
+        """Hole Economic Calendar Events (Finnhub)"""
+        try:
+            cache_key = "economic_calendar"
+            if cache_key in self.economic_cache:
+                cache_time, cache_data = self.economic_cache[cache_key]
+                if (datetime.now() - cache_time).seconds < 3600:  # 1 Stunde Cache
+                    return cache_data
+            
+            # Finnhub Economic Calendar
+            today = datetime.now().strftime('%Y-%m-%d')
+            url = f"https://finnhub.io/api/v1/calendar/economic?from={today}&to={today}&token={self.finnhub_key}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        events = data.get('economicCalendar', [])
+                        
+                        # Filter wichtige Events
+                        important_events = [e for e in events if e.get('impact', '') in ['high', 'medium']]
+                        
+                        result = {
+                            "total_events": len(events),
+                            "high_impact": len([e for e in important_events if e.get('impact') == 'high']),
+                            "events": important_events[:10]  # Top 10
+                        }
+                        
+                        self.economic_cache[cache_key] = (datetime.now(), result)
+                        logger.info(f"📅 Economic Calendar: {result['total_events']} Events, {result['high_impact']} High-Impact")
+                        
+                        return result
+            
+            return {"total_events": 0, "high_impact": 0, "events": []}
+            
+        except Exception as e:
+            logger.error(f"Economic calendar error: {e}")
+            return {"total_events": 0, "high_impact": 0, "events": []}
+    
+    async def fetch_market_sentiment(self) -> Dict:
+        """Hole allgemeines Markt-Sentiment (Fear & Greed Index approximation)"""
+        try:
+            # Verwende Finnhub Aggregate Indicators
+            url = f"https://finnhub.io/api/v1/stock/metric?symbol=SPY&metric=all&token={self.finnhub_key}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        metric = data.get('metric', {})
+                        
+                        # RSI und andere Metriken
+                        rsi_14 = metric.get('rsi', 50)
+                        
+                        # Interpretiere als Markt-Sentiment
+                        if rsi_14 > 70:
+                            sentiment = "fearful"  # Überkauft = Euphorie/Angst vor Korrektur
+                        elif rsi_14 < 30:
+                            sentiment = "greedy"  # Überverkauft = Chance
+                        else:
+                            sentiment = "neutral"
+                        
+                        return {
+                            "sentiment": sentiment,
+                            "rsi": rsi_14,
+                            "source": "finnhub"
+                        }
+            
+            return {"sentiment": "neutral", "rsi": 50, "source": "none"}
+            
+        except Exception as e:
+            logger.error(f"Market sentiment error: {e}")
+            return {"sentiment": "neutral", "rsi": 50, "source": "error"}
+    
+    def calculate_support_resistance(self, price_history: List[Dict]) -> Dict:
+        """Berechne Support und Resistance Levels"""
+        try:
+            if len(price_history) < 20:
+                return {"support": 0, "resistance": 0}
+            
+            df = pd.DataFrame(price_history)
+            prices = df['close'].values if 'close' in df.columns else df['price'].values
+            
+            # Verwende lokale Minima/Maxima
+            from scipy.signal import argrelextrema
+            
+            # Finde lokale Maxima (Resistance)
+            maxima_idx = argrelextrema(prices, np.greater, order=5)[0]
+            # Finde lokale Minima (Support)
+            minima_idx = argrelextrema(prices, np.less, order=5)[0]
+            
+            resistance = np.mean(prices[maxima_idx]) if len(maxima_idx) > 0 else prices[-1]
+            support = np.mean(prices[minima_idx]) if len(minima_idx) > 0 else prices[-1]
+            
+            return {
+                "support": float(support),
+                "resistance": float(resistance),
+                "current_price": float(prices[-1])
+            }
+            
+        except Exception as e:
+            logger.error(f"Support/Resistance calculation error: {e}")
+            return {"support": 0, "resistance": 0, "current_price": 0}
+    
     async def analyze_commodity(self, commodity_id: str, price_history: List[Dict]) -> Dict:
-        """Vollständige Analyse eines Rohstoffs"""
+        """Vollständige ERWEITERTE Analyse eines Rohstoffs"""
         
         # 1. Technische Indikatoren berechnen
         indicators = self.calculate_technical_indicators(price_history)
         
-        # 2. News-Sentiment holen
+        # 2. News-Sentiment holen (Multi-Source)
         news = await self.fetch_news_sentiment(commodity_id)
         
-        # 3. Multi-Strategie-Signal generieren
-        analysis = self.generate_multi_strategy_signal(indicators, news)
+        # 3. Economic Calendar holen
+        economic = await self.fetch_economic_calendar()
         
-        logger.info(f"📊 Analyse {commodity_id}: {analysis['signal']} (Konfidenz: {analysis['confidence']}%, Score: {analysis['total_score']})")
+        # 4. Markt-Sentiment holen
+        market_sentiment = await self.fetch_market_sentiment()
+        
+        # 5. Support/Resistance berechnen
+        sr_levels = self.calculate_support_resistance(price_history)
+        
+        # 6. Multi-Strategie-Signal generieren (erweitert)
+        analysis = self.generate_multi_strategy_signal(
+            indicators, 
+            news, 
+            economic=economic,
+            market_sentiment=market_sentiment,
+            sr_levels=sr_levels
+        )
+        
+        # Füge zusätzliche Daten hinzu
+        analysis['economic_events'] = economic
+        analysis['market_sentiment'] = market_sentiment
+        analysis['support_resistance'] = sr_levels
+        
+        logger.info(f"📊 Erweiterte Analyse {commodity_id}: {analysis['signal']} (Konfidenz: {analysis['confidence']}%, Score: {analysis['total_score']})")
         
         return analysis
 
