@@ -1791,8 +1791,23 @@ async def get_trades(status: Optional[str] = None):
             logger.info(f"📊 Geschlossene Trades aus DB: {len(closed_trades)}")
             trades = live_mt5_positions + closed_trades
         
-        # Sort manually if needed
-        trades.sort(key=lambda x: x.get('created_at') or x.get('timestamp') or '', reverse=True)
+        # Sort manually - handle mixed timestamp formats
+        def get_sort_key(trade):
+            timestamp = trade.get('created_at') or trade.get('timestamp') or ''
+            if isinstance(timestamp, datetime):
+                return timestamp
+            elif isinstance(timestamp, str):
+                try:
+                    return datetime.fromisoformat(timestamp)
+                except:
+                    return datetime.min
+            return datetime.min
+        
+        try:
+            trades.sort(key=get_sort_key, reverse=True)
+        except Exception as e:
+            logger.error(f"Sorting error: {e}")
+            # Fallback: no sorting
         
         # Convert timestamps
         for trade in trades:
