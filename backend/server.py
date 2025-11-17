@@ -2044,6 +2044,90 @@ async def reset_settings_to_default():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/bot/status")
+async def get_bot_status():
+    """Hole Bot-Status"""
+    global ai_trading_bot_instance, bot_task
+    
+    if not ai_trading_bot_instance:
+        return {
+            "running": False,
+            "message": "Bot ist nicht initialisiert"
+        }
+    
+    is_running = ai_trading_bot_instance.running if ai_trading_bot_instance else False
+    task_alive = bot_task and not bot_task.done() if bot_task else False
+    
+    return {
+        "running": is_running and task_alive,
+        "instance_running": is_running,
+        "task_alive": task_alive,
+        "trade_count": len(ai_trading_bot_instance.trade_history) if ai_trading_bot_instance else 0,
+        "last_trades": ai_trading_bot_instance.trade_history[-5:] if ai_trading_bot_instance else []
+    }
+
+@api_router.post("/bot/start")
+async def start_bot():
+    """Starte AI Trading Bot manuell"""
+    global ai_trading_bot_instance, bot_task
+    
+    try:
+        # Prüfe ob auto_trading aktiviert ist
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if not settings or not settings.get('auto_trading', False):
+            raise HTTPException(
+                status_code=400, 
+                detail="Auto-Trading muss in den Einstellungen aktiviert sein"
+            )
+        
+        # Prüfe ob Bot bereits läuft
+        if ai_trading_bot_instance and ai_trading_bot_instance.running:
+            return {"success": False, "message": "Bot läuft bereits"}
+        
+        # Importiere und starte Bot
+        from ai_trading_bot import AITradingBot
+        
+        ai_trading_bot_instance = AITradingBot()
+        if await ai_trading_bot_instance.initialize():
+            bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
+            logger.info("✅ AI Trading Bot manuell gestartet")
+            return {"success": True, "message": "AI Trading Bot gestartet"}
+        else:
+            raise HTTPException(status_code=500, detail="Bot-Initialisierung fehlgeschlagen")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Fehler beim Bot-Start: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/bot/stop")
+async def stop_bot():
+    """Stoppe AI Trading Bot"""
+    global ai_trading_bot_instance, bot_task
+    
+    try:
+        if not ai_trading_bot_instance or not ai_trading_bot_instance.running:
+            return {"success": False, "message": "Bot läuft nicht"}
+        
+        # Stoppe Bot
+        ai_trading_bot_instance.stop()
+        
+        # Warte auf Task-Ende (max 5 Sekunden)
+        if bot_task:
+            try:
+                await asyncio.wait_for(bot_task, timeout=5.0)
+            except asyncio.TimeoutError:
+                logger.warning("Bot-Task konnte nicht rechtzeitig beendet werden")
+                bot_task.cancel()
+        
+        logger.info("✅ AI Trading Bot gestoppt")
+        return {"success": True, "message": "AI Trading Bot gestoppt"}
+        
+    except Exception as e:
+        logger.error(f"Fehler beim Bot-Stopp: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/market/refresh")
 async def refresh_market_data():
     """Manually refresh market data"""
