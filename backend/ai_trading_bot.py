@@ -41,6 +41,10 @@ class AITradingBot:
         """Initialisiere Bot"""
         logger.info("🤖 AI Trading Bot wird initialisiert...")
         
+        # Reload .env für API-Keys
+        from dotenv import load_dotenv
+        load_dotenv(override=True)
+        
         # DB Connection
         self.client = AsyncIOMotorClient(self.mongo_url)
         self.db = self.client[self.db_name]
@@ -51,7 +55,7 @@ class AITradingBot:
             logger.error("❌ Settings nicht gefunden!")
             return False
         
-        # Market Analyzer initialisieren
+        # Market Analyzer initialisieren (mit neu geladenen ENV vars)
         from market_analysis import MarketAnalyzer
         self.market_analyzer = MarketAnalyzer()
         
