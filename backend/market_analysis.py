@@ -369,11 +369,15 @@ class MarketAnalyzer:
             "current_price": 0.0
         }
     
-    def generate_multi_strategy_signal(self, indicators: Dict, news: Dict) -> Dict:
-        """Multi-Strategie-Analyse: Kombiniere alle Signale"""
+    def generate_multi_strategy_signal(self, indicators: Dict, news: Dict, economic: Dict = None, market_sentiment: Dict = None, sr_levels: Dict = None) -> Dict:
+        """Multi-Strategie-Analyse: Kombiniere ALLE verfügbaren Signale"""
         
         signals = []
         scores = []
+        
+        economic = economic or {"total_events": 0, "high_impact": 0}
+        market_sentiment = market_sentiment or {"sentiment": "neutral"}
+        sr_levels = sr_levels or {"support": 0, "resistance": 0, "current_price": 0}
         
         # 1. RSI Strategy
         rsi = indicators.get('rsi', 50)
