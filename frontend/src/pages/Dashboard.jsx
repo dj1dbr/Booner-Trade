@@ -482,11 +482,14 @@ const Dashboard = () => {
     try {
       console.log('Executing trade:', { trade_type: type, price: market.price, commodity: commodityId });
       
+      // Erhöhtes Timeout für SDK-Verbindung (45 Sekunden)
       const response = await axios.post(`${API}/trades/execute`, {
         trade_type: type,
         price: market.price,
         quantity: null,  // Auto-berechnet
         commodity: commodityId
+      }, {
+        timeout: 45000  // 45 Sekunden Timeout für Trade-Execution
       });
       
       console.log('Trade response:', response.data);
