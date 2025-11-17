@@ -670,6 +670,12 @@ async def process_commodity_market_data(commodity_id: str, settings):
                     {"$set": market_data},
                     upsert=True
                 )
+                
+                # Store in history
+                history_entry = market_data.copy()
+                history_entry['commodity_id'] = commodity_id
+                await db.market_data_history.insert_one(history_entry)
+                
                 latest_market_data[commodity_id] = market_data
                 logger.info(f"✅ Updated market data for {commodity_id}: ${live_price:.2f}, Signal: HOLD (live only)")
                 return
