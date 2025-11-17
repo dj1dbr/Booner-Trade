@@ -1144,6 +1144,42 @@ const Dashboard = () => {
                               {pl >= 0 ? '+' : ''}{pl.toFixed(2)} €
                             </td>
                             <td className="px-4 py-3 text-center">
+                              {(() => {
+                                // Berechne Fortschritt zum Ziel (basierend auf Take Profit)
+                                if (trade.status === 'OPEN' && trade.entry_price && trade.take_profit && settings) {
+                                  const currentPrice = trade.price || trade.entry_price;
+                                  const entryPrice = trade.entry_price;
+                                  const takeProfitPrice = trade.take_profit;
+                                  
+                                  // Wenn kein TP gesetzt, nutze settings (z.B. 0.2%)
+                                  const tpPercent = settings.take_profit_percent || 0.2;
+                                  const targetPrice = trade.type === 'BUY' 
+                                    ? entryPrice * (1 + tpPercent / 100)
+                                    : entryPrice * (1 - tpPercent / 100);
+                                  
+                                  // Berechne Distanz
+                                  const totalDistance = Math.abs(targetPrice - entryPrice);
+                                  const currentDistance = Math.abs(currentPrice - entryPrice);
+                                  const progressPercent = (currentDistance / totalDistance) * 100;
+                                  
+                                  const remaining = Math.max(0, 100 - progressPercent);
+                                  
+                                  return (
+                                    <div className="text-xs">
+                                      {progressPercent >= 100 ? (
+                                        <span className="text-green-400 font-semibold">✅ Ziel erreicht!</span>
+                                      ) : progressPercent > 50 ? (
+                                        <span className="text-cyan-400">Noch {remaining.toFixed(0)}% zum Ziel 🎯</span>
+                                      ) : (
+                                        <span className="text-slate-400">Noch {remaining.toFixed(0)}% zum Ziel</span>
+                                      )}
+                                    </div>
+                                  );
+                                }
+                                return <span className="text-xs text-slate-500">-</span>;
+                              })()}
+                            </td>
+                            <td className="px-4 py-3 text-center">
                               <Badge className={
                                 trade.platform === 'MT5_LIBERTEX' ? 'bg-blue-600' :
                                 trade.platform === 'MT5_ICMARKETS' ? 'bg-purple-600' :
