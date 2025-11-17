@@ -70,6 +70,140 @@ class MarketAnalyzer:
             logger.error(f"News fetch error für {commodity}: {e}")
             return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "error"}
     
+    async def _fetch_finnhub_news(self, commodity: str) -> Dict:
+        """Hole News von Finnhub.io (kostenlos, 60 calls/min)"""
+        try:
+            # Map commodity to Finnhub categories
+            category_map = {
+                "GOLD": "forex",
+                "SILVER": "forex",
+                "WTI_CRUDE": "forex",
+                "BRENT_CRUDE": "forex",
+                "PLATINUM": "forex",
+                "PALLADIUM": "forex",
+                "WHEAT": "general",
+                "CORN": "general",
+                "SOYBEANS": "general",
+                "COFFEE": "general"
+            }
+            
+            category = category_map.get(commodity, "general")
+            
+            # Finnhub Market News API
+            url = f"https://finnhub.io/api/v1/news?category={category}&token={self.finnhub_key}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        articles = await response.json()
+                        
+                        if not articles:
+                            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "finnhub"}
+                        
+                        # Sentiment-Analyse basierend auf Headlines
+                        positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar']
+                        negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble']
+                        
+                        sentiment_score = 0
+                        relevant_count = 0
+                        
+                        for article in articles[:20]:  # Top 20
+                            headline = article.get('headline', '').lower()
+                            summary = article.get('summary', '').lower()
+                            text = headline + " " + summary
+                            
+                            # Prüfe ob relevant für Commodity
+                            if commodity.lower().replace('_', ' ') in text or any(word in text for word in ['commodit', 'metal', 'oil', 'gold', 'silver']):
+                                relevant_count += 1
+                                for word in positive_words:
+                                    if word in text:
+                                        sentiment_score += 1
+                                for word in negative_words:
+                                    if word in text:
+                                        sentiment_score -= 1
+                        
+                        if relevant_count == 0:
+                            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "finnhub"}
+                        
+                        # Normalisiere Score
+                        normalized_score = sentiment_score / max(relevant_count, 1)
+                        sentiment = "bullish" if normalized_score > 0.3 else "bearish" if normalized_score < -0.3 else "neutral"
+                        
+                        logger.info(f"📰 Finnhub News für {commodity}: {relevant_count} relevante Artikel, Sentiment: {sentiment} ({normalized_score:.2f})")
+                        
+                        return {
+                            "sentiment": sentiment,
+                            "score": normalized_score,
+                            "articles": relevant_count,
+                            "source": "finnhub"
+                        }
+                    else:
+                        logger.warning(f"Finnhub returned status {response.status}")
+                        return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "finnhub_error"}
+                        
+        except Exception as e:
+            logger.error(f"Finnhub error: {e}")
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "finnhub_error"}
+    
+    async def _fetch_alpha_vantage_sentiment(self, commodity: str) -> Dict:
+        """Hole News Sentiment von Alpha Vantage"""
+        try:
+            # Map commodity to tickers/topics
+            ticker_map = {
+                "GOLD": "GOLD",
+                "SILVER": "SILVER",
+                "WTI_CRUDE": "USO",  # US Oil Fund
+                "BRENT_CRUDE": "BNO",  # Brent Oil ETF
+                "WHEAT": "WEAT",
+                "CORN": "CORN"
+            }
+            
+            ticker = ticker_map.get(commodity, commodity)
+            
+            url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={ticker}&apikey={self.alpha_vantage_key}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        
+                        feed = data.get('feed', [])
+                        if not feed:
+                            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "alphavantage"}
+                        
+                        # Alpha Vantage hat bereits Sentiment-Scores
+                        total_sentiment = 0
+                        count = 0
+                        
+                        for article in feed[:20]:
+                            ticker_sentiment = article.get('ticker_sentiment', [])
+                            for ts in ticker_sentiment:
+                                if ts.get('ticker') == ticker:
+                                    sentiment_score = float(ts.get('ticker_sentiment_score', 0))
+                                    total_sentiment += sentiment_score
+                                    count += 1
+                        
+                        if count == 0:
+                            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "alphavantage"}
+                        
+                        avg_sentiment = total_sentiment / count
+                        sentiment = "bullish" if avg_sentiment > 0.15 else "bearish" if avg_sentiment < -0.15 else "neutral"
+                        
+                        logger.info(f"📰 Alpha Vantage Sentiment für {commodity}: {count} Artikel, Sentiment: {sentiment} ({avg_sentiment:.2f})")
+                        
+                        return {
+                            "sentiment": sentiment,
+                            "score": avg_sentiment,
+                            "articles": count,
+                            "source": "alphavantage"
+                        }
+                    else:
+                        return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "alphavantage_error"}
+                        
+        except Exception as e:
+            logger.error(f"Alpha Vantage error: {e}")
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "alphavantage_error"}
+    
     async def _fetch_newsapi(self, commodity: str) -> Dict:
         """Hole News von NewsAPI.org"""
         try:
