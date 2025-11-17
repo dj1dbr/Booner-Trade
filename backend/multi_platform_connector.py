@@ -284,6 +284,43 @@ class MultiPlatformConnector:
             for name, platform in self.platforms.items()
             if name in actual_platforms
         }
+    
+    async def close_position(self, platform_name: str, position_id: str) -> bool:
+        """Schließe Position auf Platform"""
+        try:
+            # Handle legacy names
+            if platform_name == 'MT5_LIBERTEX':
+                platform_name = 'MT5_LIBERTEX_DEMO'
+            elif platform_name == 'MT5_ICMARKETS':
+                platform_name = 'MT5_ICMARKETS_DEMO'
+            
+            if platform_name not in self.platforms:
+                logger.error(f"Unknown platform: {platform_name}")
+                return False
+            
+            platform = self.platforms[platform_name]
+            
+            # Connect if needed
+            if not platform['active'] or not platform['connector']:
+                await self.connect_platform(platform_name)
+            
+            if not platform['connector']:
+                logger.error(f"Platform {platform_name} not connected")
+                return False
+            
+            # Close via SDK
+            success = await platform['connector'].close_position(position_id)
+            
+            if success:
+                logger.info(f"✅ Position {position_id} geschlossen auf {platform_name}")
+            else:
+                logger.error(f"❌ Position {position_id} konnte nicht geschlossen werden")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error closing position on {platform_name}: {e}")
+            return False
 
 # Global instance
 multi_platform = MultiPlatformConnector()
