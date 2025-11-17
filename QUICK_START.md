@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://tradinghelm.preview.emergentagent.com
+https://smart-trader-201.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.

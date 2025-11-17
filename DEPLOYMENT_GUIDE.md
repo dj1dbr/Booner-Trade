@@ -5,7 +5,7 @@
 Die App ist jetzt in **zwei Versionen** verfügbar:
 
 ### 1. 🌐 Web-Version (Browser)
-- **URL**: https://tradinghelm.preview.emergentagent.com
+- **URL**: https://smart-trader-201.preview.emergentagent.com
 - **Zugriff**: Über jeden modernen Browser (Chrome, Safari, Firefox)
 - **Vorteil**: Keine Installation nötig, immer aktuell
 - **Nutzung**: Überall verfügbar mit Internetverbindung
@@ -92,7 +92,7 @@ Ausgabe: `/app/electron/dist/`
 ## 🌐 Web-Version nutzen (Browser)
 
 Die Web-Version läuft bereits auf:
-**https://tradinghelm.preview.emergentagent.com**
+**https://smart-trader-201.preview.emergentagent.com**
 
 ### Lokale Entwicklung
 
