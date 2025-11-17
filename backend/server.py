@@ -1873,15 +1873,12 @@ async def get_trade_stats():
         
         total_profit_loss = open_pl + closed_pl
         
-        # Calculate P&L
-        closed_trades = [t for t in db_trades if t['status'] == 'CLOSED' and t.get('profit_loss') is not None]
-        db_profit_loss = sum([t['profit_loss'] for t in closed_trades])
-        total_profit_loss = db_profit_loss + total_mt5_pl
+        # Calculate win/loss stats (only from closed trades)
+        closed_with_pl = [t for t in closed_positions if t.get('profit_loss') is not None]
+        winning_trades = len([t for t in closed_with_pl if t['profit_loss'] > 0])
+        losing_trades = len([t for t in closed_with_pl if t['profit_loss'] <= 0])
         
-        winning_trades = len([t for t in closed_trades if t['profit_loss'] > 0])
-        losing_trades = len([t for t in closed_trades if t['profit_loss'] <= 0])
-        
-        win_rate = (winning_trades / len(closed_trades) * 100) if len(closed_trades) > 0 else 0
+        win_rate = (winning_trades / len(closed_with_pl) * 100) if len(closed_with_pl) > 0 else 0
         
         return TradeStats(
             total_trades=total_trades,
