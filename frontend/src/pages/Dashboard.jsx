@@ -1147,21 +1147,22 @@ const Dashboard = () => {
                             <td className="px-4 py-3 text-center">
                               {(() => {
                                 // Berechne Fortschritt zum Ziel (basierend auf Take Profit)
-                                if (trade.status === 'OPEN' && trade.entry_price && trade.take_profit && settings) {
+                                if (trade.status === 'OPEN' && trade.entry_price && settings) {
                                   const currentPrice = trade.price || trade.entry_price;
                                   const entryPrice = trade.entry_price;
-                                  const takeProfitPrice = trade.take_profit;
                                   
-                                  // Wenn kein TP gesetzt, nutze settings (z.B. 0.2%)
+                                  // Nutze TP vom Trade ODER berechne aus Settings
                                   const tpPercent = settings.take_profit_percent || 0.2;
-                                  const targetPrice = trade.type === 'BUY' 
-                                    ? entryPrice * (1 + tpPercent / 100)
-                                    : entryPrice * (1 - tpPercent / 100);
+                                  const targetPrice = trade.take_profit || (
+                                    trade.type === 'BUY' 
+                                      ? entryPrice * (1 + tpPercent / 100)
+                                      : entryPrice * (1 - tpPercent / 100)
+                                  );
                                   
-                                  // Berechne Distanz
+                                  // Berechne Distanz zum Ziel
                                   const totalDistance = Math.abs(targetPrice - entryPrice);
                                   const currentDistance = Math.abs(currentPrice - entryPrice);
-                                  const progressPercent = (currentDistance / totalDistance) * 100;
+                                  const progressPercent = totalDistance > 0 ? (currentDistance / totalDistance) * 100 : 0;
                                   
                                   const remaining = Math.max(0, 100 - progressPercent);
                                   
