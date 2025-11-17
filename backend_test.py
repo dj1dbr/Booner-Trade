@@ -1208,9 +1208,20 @@ class RohstoffTraderTester:
         platform_success, platform_data = await self.make_request("GET", "/api/platforms/status")
         platforms_ok = False
         if platform_success:
-            platforms = platform_data.get("platforms", {})
-            libertex_active = platforms.get("MT5_LIBERTEX_DEMO", {}).get("active", False) or platforms.get("MT5_LIBERTEX", {}).get("active", False)
-            icmarkets_active = platforms.get("MT5_ICMARKETS_DEMO", {}).get("active", False) or platforms.get("MT5_ICMARKETS", {}).get("active", False)
+            platforms = platform_data.get("platforms", [])
+            libertex_active = False
+            icmarkets_active = False
+            
+            # Check if platforms is a list of platform objects
+            for platform in platforms:
+                if isinstance(platform, dict):
+                    platform_name = platform.get("platform", "")
+                    connected = platform.get("connected", False)
+                    if "LIBERTEX" in platform_name and connected:
+                        libertex_active = True
+                    elif "ICMARKETS" in platform_name and connected:
+                        icmarkets_active = True
+            
             platforms_ok = libertex_active or icmarkets_active
         
         # 2. Market Data
