@@ -1485,11 +1485,13 @@ async def execute_trade(request: TradeExecuteRequest):
                 )
                 
                 if result and result.get('success'):
-                    platform_ticket = result.get('ticket')
+                    # SDK gibt orderId/positionId zurück
+                    platform_ticket = result.get('orderId') or result.get('positionId')
                     logger.info(f"✅ Order an {default_platform} gesendet: Ticket #{platform_ticket}")
                 else:
-                    logger.error(f"❌ {default_platform} Order fehlgeschlagen!")
-                    raise HTTPException(status_code=500, detail=f"{default_platform} Order konnte nicht platziert werden")
+                    error_msg = result.get('error', 'Unknown error') if result else 'No response'
+                    logger.error(f"❌ {default_platform} Order fehlgeschlagen: {error_msg}")
+                    raise HTTPException(status_code=500, detail=f"{default_platform} Order failed: {error_msg}")
                     
             except HTTPException:
                 raise
