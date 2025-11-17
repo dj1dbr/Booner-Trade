@@ -29,17 +29,46 @@ class MarketAnalyzer:
         self.sentiment_cache = {}
     
     async def fetch_news_sentiment(self, commodity: str) -> Dict:
-        """Hole News und analysiere Sentiment"""
+        """Hole News und analysiere Sentiment - MULTI-SOURCE"""
         try:
-            # Verwende NewsAPI wenn verfügbar
+            # Cache Check (5 Minuten)
+            cache_key = f"news_{commodity}"
+            if cache_key in self.news_cache:
+                cache_time, cache_data = self.news_cache[cache_key]
+                if (datetime.now() - cache_time).seconds < 300:
+                    return cache_data
+            
+            # Priorität: Finnhub > NewsAPI > Alpha Vantage
+            result = None
+            
+            # 1. Finnhub (beste kostenlose Option)
+            if self.finnhub_key:
+                result = await self._fetch_finnhub_news(commodity)
+                if result and result.get('articles', 0) > 0:
+                    self.news_cache[cache_key] = (datetime.now(), result)
+                    return result
+            
+            # 2. NewsAPI (falls konfiguriert)
             if self.news_api_key:
-                return await self._fetch_newsapi(commodity)
-            else:
-                logger.info("Kein NEWS_API_KEY - überspringe News-Analyse")
-                return {"sentiment": "neutral", "score": 0, "articles": 0}
+                result = await self._fetch_newsapi(commodity)
+                if result and result.get('articles', 0) > 0:
+                    self.news_cache[cache_key] = (datetime.now(), result)
+                    return result
+            
+            # 3. Alpha Vantage News Sentiment
+            if self.alpha_vantage_key:
+                result = await self._fetch_alpha_vantage_sentiment(commodity)
+                if result and result.get('articles', 0) > 0:
+                    self.news_cache[cache_key] = (datetime.now(), result)
+                    return result
+            
+            # Fallback: Neutral
+            logger.info(f"Keine News-Daten für {commodity} verfügbar")
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "none"}
+            
         except Exception as e:
             logger.error(f"News fetch error für {commodity}: {e}")
-            return {"sentiment": "neutral", "score": 0, "articles": 0}
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "error"}
     
     async def _fetch_newsapi(self, commodity: str) -> Dict:
         """Hole News von NewsAPI.org"""
