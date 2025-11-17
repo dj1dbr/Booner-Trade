@@ -233,36 +233,59 @@ class AITradingBot:
         
         try:
             # Prüfe Portfolio-Risiko
-            max_risk = self.settings.get('max_portfolio_risk_percent', 20.0)
+            max_portfolio_risk = self.settings.get('max_portfolio_risk_percent', 20.0)
             
-            # TODO: Hier könnte die echte KI-Analyse kommen
-            # Für jetzt: Konservativ - öffne nur bei sehr starken Signalen
+            # Prüfe aktuelles Portfolio-Risiko
+            current_risk = await self.calculate_portfolio_risk()
+            if current_risk >= max_portfolio_risk:
+                logger.warning(f"⚠️  Portfolio-Risiko zu hoch: {current_risk:.1f}% >= {max_portfolio_risk}% - keine neuen Trades")
+                return
             
-            for commodity_id, market in self.market_data.items():
-                signal = market.get('signal', 'HOLD')
-                price = market.get('price')
-                rsi = market.get('rsi', 50)
-                
-                if not price:
+            # Hole aktivierte Commodities aus Settings
+            enabled_commodities = self.settings.get('enabled_commodities', [])
+            if not enabled_commodities:
+                logger.info("ℹ️  Keine aktivierten Commodities in Settings")
+                return
+            
+            # Analysiere jeden Commodity
+            for commodity_id in enabled_commodities:
+                # Rate Limiting: Max 1 Analyse alle 5 Minuten pro Commodity
+                last_check = self.last_analysis_time.get(commodity_id)
+                if last_check and (datetime.now() - last_check).seconds < 300:
                     continue
                 
-                # KI-Logik: Nur bei starken Signalen handeln
-                should_open = False
-                trade_type = None
+                self.last_analysis_time[commodity_id] = datetime.now()
                 
-                if signal == 'BUY' and rsi < 40:  # Überverkauft + BUY Signal
-                    should_open = True
-                    trade_type = 'BUY'
-                    logger.info(f"🎯 KI-Signal: {commodity_id} BUY (RSI={rsi:.1f})")
-                elif signal == 'SELL' and rsi > 60:  # Überkauft + SELL Signal
-                    should_open = True
-                    trade_type = 'SELL'
-                    logger.info(f"🎯 KI-Signal: {commodity_id} SELL (RSI={rsi:.1f})")
+                # Hole Preishistorie
+                price_history = await self.get_price_history(commodity_id)
+                if len(price_history) < 50:
+                    logger.warning(f"⚠️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)})")
+                    continue
                 
-                if should_open:
-                    logger.info(f"🤖 KI plant Trade: {commodity_id} {trade_type}")
-                    # TODO: Trade-Execution hier implementieren
-                    # await self.execute_ai_trade(commodity_id, trade_type, price)
+                # Vollständige Marktanalyse
+                analysis = await self.market_analyzer.analyze_commodity(commodity_id, price_history)
+                
+                signal = analysis.get('signal', 'HOLD')
+                confidence = analysis.get('confidence', 0)
+                
+                # Nur bei hoher Konfidenz handeln
+                min_confidence = self.settings.get('min_confidence_percent', 60.0)
+                
+                if signal in ['BUY', 'SELL'] and confidence >= min_confidence:
+                    logger.info(f"🎯 Starkes Signal: {commodity_id} {signal} (Konfidenz: {confidence}%)")
+                    
+                    # Optional: LLM Final Decision
+                    if self.llm_chat and self.settings.get('use_llm_confirmation', False):
+                        llm_decision = await self.ask_llm_for_decision(commodity_id, analysis)
+                        if not llm_decision:
+                            logger.info(f"🤖 LLM lehnt Trade ab: {commodity_id}")
+                            continue
+                    
+                    # Trade ausführen!
+                    await self.execute_ai_trade(commodity_id, signal, analysis)
+                else:
+                    if signal != 'HOLD':
+                        logger.info(f"ℹ️  {commodity_id}: {signal} aber Konfidenz zu niedrig ({confidence}% < {min_confidence}%)")
             
         except Exception as e:
             logger.error(f"Fehler bei der KI-Analyse: {e}", exc_info=True)
