@@ -373,29 +373,83 @@ class AITradingBot:
             return 0.0
     
     async def ask_llm_for_decision(self, commodity_id: str, analysis: Dict) -> bool:
-        """Frage LLM ob Trade ausgeführt werden soll"""
+        """Frage LLM ob Trade ausgeführt werden soll - MIT VOLLSTÄNDIGEM KONTEXT"""
         try:
             if not self.llm_chat:
                 return True  # Default: Ja, wenn LLM nicht verfügbar
             
+            # Extrahiere alle verfügbaren Daten
+            indicators = analysis.get('indicators', {})
+            news = analysis.get('news', {})
+            economic = analysis.get('economic_events', {})
+            market_sentiment = analysis.get('market_sentiment', {})
+            sr_levels = analysis.get('support_resistance', {})
+            
             prompt = f"""
-Basierend auf folgender Marktanalyse für {commodity_id}, soll der Trade ausgeführt werden?
+Du bist ein professioneller Commodities Trading Analyst. Analysiere folgende KOMPLETTE Marktlage für {commodity_id}:
 
-Signal: {analysis.get('signal')}
-Konfidenz: {analysis.get('confidence')}%
-Score: {analysis.get('total_score')}
+═══════════════════════════════════════════════
+TRADING SIGNAL ANFRAGE
+═══════════════════════════════════════════════
 
-Indikatoren:
-- RSI: {analysis.get('indicators', {}).get('rsi', 0):.1f}
-- MACD: {analysis.get('indicators', {}).get('macd_diff', 0):.3f}
-- Preis vs SMA20: {analysis.get('indicators', {}).get('current_price', 0):.2f} vs {analysis.get('indicators', {}).get('sma_20', 0):.2f}
+📊 SIGNAL-ZUSAMMENFASSUNG:
+• Signal: {analysis.get('signal')}
+• Konfidenz: {analysis.get('confidence')}%
+• Multi-Strategie Score: {analysis.get('total_score')}
 
-News Sentiment: {analysis.get('news', {}).get('sentiment', 'neutral')}
+📈 TECHNISCHE INDIKATOREN:
+• RSI: {indicators.get('rsi', 0):.1f} (Überverkauft <30, Überkauft >70)
+• MACD: {indicators.get('macd_diff', 0):.3f} (Positiv=Bullish, Negativ=Bearish)
+• Aktueller Preis: ${indicators.get('current_price', 0):.2f}
+• SMA 20: ${indicators.get('sma_20', 0):.2f}
+• SMA 50: ${indicators.get('sma_50', 0):.2f}
+• EMA 12: ${indicators.get('ema_12', 0):.2f}
+• Bollinger Bands: ${indicators.get('bb_lower', 0):.2f} - ${indicators.get('bb_upper', 0):.2f}
+• ATR (Volatilität): {indicators.get('atr', 0):.2f}
+• Stochastic: {indicators.get('stoch_k', 0):.1f}
 
-Strategie-Signale:
-{chr(10).join(analysis.get('signals', []))}
+📰 NEWS & SENTIMENT:
+• News-Sentiment: {news.get('sentiment', 'neutral')}
+• Sentiment Score: {news.get('score', 0):.2f}
+• Anzahl Artikel: {news.get('articles', 0)}
+• Quelle: {news.get('source', 'none')}
 
-Antworte nur mit JA oder NEIN.
+📅 ECONOMIC CALENDAR (heute):
+• Gesamt Events: {economic.get('total_events', 0)}
+• High-Impact Events: {economic.get('high_impact', 0)}
+{"• ⚠️ WICHTIGE EVENTS HEUTE - Vorsicht!" if economic.get('high_impact', 0) > 0 else "• Keine kritischen Events"}
+
+🌍 MARKT-STIMMUNG:
+• Sentiment: {market_sentiment.get('sentiment', 'neutral')}
+• SPY RSI: {market_sentiment.get('rsi', 50):.1f}
+
+📊 SUPPORT & RESISTANCE:
+• Support Level: ${sr_levels.get('support', 0):.2f}
+• Resistance Level: ${sr_levels.get('resistance', 0):.2f}
+• Aktueller Preis: ${sr_levels.get('current_price', 0):.2f}
+
+🎯 STRATEGIE-SIGNALE:
+{chr(10).join(['• ' + sig for sig in analysis.get('signals', [])])}
+
+═══════════════════════════════════════════════
+DEINE AUFGABE
+═══════════════════════════════════════════════
+
+Analysiere ALLE oben genannten Faktoren und entscheide:
+• Sind die technischen Signale stark genug?
+• Unterstützt das News-Sentiment den Trade?
+• Gibt es Economic Events die dagegen sprechen?
+• Ist die Markt-Stimmung günstig?
+• Sind wir nahe Support/Resistance Levels?
+
+WICHTIG:
+• Nur bei SEHR STARKEN und KLAREN Signalen JA sagen
+• Bei Zweifeln oder gemischten Signalen NEIN sagen
+• Economic Events mit hohem Impact = eher NEIN
+• Konfidenz unter 70% = genau prüfen
+
+Antworte NUR mit: JA oder NEIN
+(Optional: kurze Begründung in 1 Satz)
 """
             
             from emergentintegrations.llm.chat import UserMessage
@@ -404,6 +458,7 @@ Antworte nur mit JA oder NEIN.
             
             decision = 'ja' in response.lower() or 'yes' in response.lower()
             logger.info(f"🤖 LLM Entscheidung für {commodity_id}: {'✅ JA' if decision else '❌ NEIN'}")
+            logger.info(f"   LLM Begründung: {response[:200]}")
             
             return decision
             
