@@ -16,11 +16,17 @@ from ta.volatility import BollingerBands, AverageTrueRange
 logger = logging.getLogger(__name__)
 
 class MarketAnalyzer:
-    """Erweiterte Marktanalyse mit technischen Indikatoren und News"""
+    """Erweiterte Marktanalyse mit technischen Indikatoren, News, Economic Data und mehr"""
     
     def __init__(self):
         self.news_api_key = os.getenv('NEWS_API_KEY')
-        self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_KEY')
+        self.alpha_vantage_key = os.getenv('ALPHA_VANTAGE_KEY', 'demo')
+        self.finnhub_key = os.getenv('FINNHUB_API_KEY', 'ctgaq59r01qhe52cugn0ctgaq59r01qhe52cugng')
+        
+        # Cache für API-Calls (Rate Limiting)
+        self.news_cache = {}
+        self.economic_cache = {}
+        self.sentiment_cache = {}
     
     async def fetch_news_sentiment(self, commodity: str) -> Dict:
         """Hole News und analysiere Sentiment"""
