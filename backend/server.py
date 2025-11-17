@@ -140,6 +140,8 @@ scheduler = BackgroundScheduler()
 auto_trading_enabled = False
 trade_count_per_hour = 0
 ai_chat = None  # AI chat instance for market analysis
+ai_trading_bot_instance = None  # AI Trading Bot instance
+bot_task = None  # Bot background task
 
 # AI System Message
 AI_SYSTEM_MESSAGE = """You are an expert commodities trading analyst specializing in WTI crude oil. 
