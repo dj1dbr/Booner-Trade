@@ -338,30 +338,9 @@ const Dashboard = () => {
         try {
           const libertexRes = await axios.get(`${API}/platforms/MT5_LIBERTEX/positions`);
           // ... würde die gleichen Positionen nochmal hinzufügen!
-              mt5Positions.push({
-                id: `MT5_ICMARKETS_${pos.ticket}`,
-                timestamp: pos.time,
-                commodity: pos.symbol,
-                type: pos.type === 'POSITION_TYPE_BUY' ? 'BUY' : 'SELL',
-                price: pos.price_current,
-                quantity: pos.volume,
-                status: 'OPEN',
-                platform: 'MT5_ICMARKETS',
-                entry_price: pos.price_open,
-                profit_loss: pos.profit,
-                stop_loss: pos.sl,
-                take_profit: pos.tp,
-                mt5_ticket: pos.ticket
-              });
-            });
-          }
-        } catch (err) {
-          console.error('Error fetching MT5 ICMarkets positions:', err);
-        }
-      }
+      */
       
-      // Combine database trades with MT5 positions
-      const allTrades = [...dbTrades, ...mt5Positions];
+      // Setze die Trades (bereits komplett vom unified endpoint)
       setTrades(allTrades);
       
       // Calculate exposure PER PLATFORM after loading trades
