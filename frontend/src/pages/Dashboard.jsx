@@ -1077,6 +1077,7 @@ const Dashboard = () => {
                             <th className="px-4 py-3 text-right text-slate-300">Aktuell</th>
                             <th className="px-4 py-3 text-right text-slate-300">Menge</th>
                             <th className="px-4 py-3 text-right text-slate-300">P&L</th>
+                            <th className="px-4 py-3 text-center text-slate-300">Fortschritt</th>
                             <th className="px-4 py-3 text-center text-slate-300">Plattform</th>
                             <th className="px-4 py-3 text-center text-slate-300">Aktion</th>
                           </tr>
