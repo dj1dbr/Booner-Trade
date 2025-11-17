@@ -1,6 +1,13 @@
 """
 AI Trading Bot - Vollautomatische KI-gesteuerte Trading-Plattform
 Überwacht, analysiert, öffnet und schließt Positionen AUTOMATISCH
+
+Features:
+- Multi-Strategie-Analyse (RSI, MACD, MA, Bollinger Bands, Stochastic)
+- News-Integration & Sentiment-Analyse
+- LLM-basierte Entscheidungsfindung (GPT-5)
+- Automatisches Position-Management
+- Risk Management & Portfolio-Balance
 """
 import asyncio
 import logging
@@ -8,6 +15,7 @@ from datetime import datetime, timedelta
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
+from typing import Dict, List, Optional
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
