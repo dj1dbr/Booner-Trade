@@ -83,8 +83,14 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", se
             # Ollama support for local AI
             import aiohttp
             
+            # Get Ollama base URL from settings
+            ollama_base_url = settings.get('ollama_base_url', 'http://localhost:11434')
+            ollama_model = settings.get('ollama_model', 'llama3')
+            
+            logger.info(f"🏠 Initializing Ollama: {ollama_base_url} with model {ollama_model}")
+            
             class OllamaChat:
-                def __init__(self, base_url="http://localhost:11434"):
+                def __init__(self, base_url, model):
                     self.base_url = base_url
                     self.model = model or "llama3"
                     self.history = []
@@ -92,22 +98,39 @@ async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", se
                 async def send_message(self, message):
                     self.history.append({"role": "user", "content": message})
                     
-                    async with aiohttp.ClientSession() as session:
-                        payload = {
-                            "model": self.model,
-                            "messages": self.history,
-                            "stream": False
-                        }
-                        async with session.post(f"{self.base_url}/api/chat", json=payload) as response:
-                            if response.status == 200:
-                                result = await response.json()
-                                assistant_msg = result.get('message', {}).get('content', '')
-                                self.history.append({"role": "assistant", "content": assistant_msg})
-                                return assistant_msg
-                            else:
-                                return "Fehler: Ollama nicht erreichbar. Bitte starten Sie Ollama lokal."
+                    try:
+                        async with aiohttp.ClientSession() as session:
+                            payload = {
+                                "model": self.model,
+                                "messages": self.history,
+                                "stream": False
+                            }
+                            
+                            logger.info(f"🔄 Sending request to Ollama: {self.base_url}/api/chat")
+                            
+                            async with session.post(
+                                f"{self.base_url}/api/chat", 
+                                json=payload,
+                                timeout=aiohttp.ClientTimeout(total=60)
+                            ) as response:
+                                if response.status == 200:
+                                    result = await response.json()
+                                    assistant_msg = result.get('message', {}).get('content', '')
+                                    self.history.append({"role": "assistant", "content": assistant_msg})
+                                    logger.info(f"✅ Ollama response received")
+                                    return assistant_msg
+                                else:
+                                    error_text = await response.text()
+                                    logger.error(f"❌ Ollama error: {response.status} - {error_text}")
+                                    return f"Fehler: Ollama Server antwortet mit Fehler {response.status}. Bitte prüfen Sie, ob Ollama läuft: `ollama serve`"
+                    except aiohttp.ClientConnectorError:
+                        logger.error(f"❌ Ollama nicht erreichbar: {self.base_url}")
+                        return f"❌ Fehler: Ollama nicht erreichbar unter {self.base_url}.\n\n🔧 Lösungen:\n1. Starten Sie Ollama: `ollama serve`\n2. Prüfen Sie, ob Ollama läuft: `ollama list`\n3. Testen Sie manuell: `curl {self.base_url}/api/tags`"
+                    except Exception as e:
+                        logger.error(f"❌ Ollama Fehler: {e}")
+                        return f"Fehler bei Ollama-Anfrage: {str(e)}"
             
-            return OllamaChat()
+            return OllamaChat(ollama_base_url, ollama_model)
         
         else:
             # Use Emergentintegrations for GPT-5/Claude (with fallback)
