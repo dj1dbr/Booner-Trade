@@ -1936,12 +1936,21 @@ async def get_settings():
 @api_router.post("/settings", response_model=TradingSettings)
 async def update_settings(settings: TradingSettings):
     """Update trading settings and reinitialize AI if needed"""
+    global ai_trading_bot_instance, bot_task
+    
     try:
         # Only update provided fields, keep existing values for others
         doc = settings.model_dump(exclude_unset=False, exclude_none=False)
         
         # Get existing settings first to preserve API keys
         existing = await db.trading_settings.find_one({"id": "trading_settings"})
+        
+        # Check if auto_trading status changed
+        auto_trading_changed = False
+        if existing:
+            old_auto_trading = existing.get('auto_trading', False)
+            new_auto_trading = settings.auto_trading
+            auto_trading_changed = old_auto_trading != new_auto_trading
         
         # Merge: Keep existing values for fields that weren't explicitly set
         if existing:
@@ -1973,10 +1982,42 @@ async def update_settings(settings: TradingSettings):
             ollama_model = settings.ollama_model or "llama2"
             init_ai_chat(provider="ollama", model=ollama_model, ollama_base_url=ollama_base_url)
             logger.info(f"Settings updated and AI reinitialized: Provider={provider}, Model={ollama_model}, URL={ollama_base_url}")
-            return settings
+        else:
+            init_ai_chat(provider=provider, api_key=api_key, model=model)
+            logger.info(f"Settings updated and AI reinitialized: Provider={provider}, Model={model}")
         
-        init_ai_chat(provider=provider, api_key=api_key, model=model)
-        logger.info(f"Settings updated and AI reinitialized: Provider={provider}, Model={model}")
+        # Auto-Trading Bot Management
+        if auto_trading_changed:
+            if settings.auto_trading:
+                # Start Bot wenn aktiviert
+                logger.info("🤖 Auto-Trading aktiviert - starte Bot...")
+                from ai_trading_bot import AITradingBot
+                
+                # Stoppe alten Bot falls vorhanden
+                if ai_trading_bot_instance and ai_trading_bot_instance.running:
+                    ai_trading_bot_instance.stop()
+                    if bot_task:
+                        try:
+                            await asyncio.wait_for(bot_task, timeout=2.0)
+                        except:
+                            pass
+                
+                # Starte neuen Bot
+                ai_trading_bot_instance = AITradingBot()
+                if await ai_trading_bot_instance.initialize():
+                    bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
+                    logger.info("✅ AI Trading Bot gestartet (via Settings)")
+            else:
+                # Stop Bot wenn deaktiviert
+                logger.info("🛑 Auto-Trading deaktiviert - stoppe Bot...")
+                if ai_trading_bot_instance and ai_trading_bot_instance.running:
+                    ai_trading_bot_instance.stop()
+                    if bot_task:
+                        try:
+                            await asyncio.wait_for(bot_task, timeout=2.0)
+                        except:
+                            pass
+                    logger.info("✅ AI Trading Bot gestoppt (via Settings)")
         
         return settings
     except Exception as e:
