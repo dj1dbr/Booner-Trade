@@ -73,21 +73,8 @@ class MarketAnalyzer:
     async def _fetch_finnhub_news(self, commodity: str) -> Dict:
         """Hole News von Finnhub.io (kostenlos, 60 calls/min)"""
         try:
-            # Map commodity to Finnhub categories
-            category_map = {
-                "GOLD": "forex",
-                "SILVER": "forex",
-                "WTI_CRUDE": "forex",
-                "BRENT_CRUDE": "forex",
-                "PLATINUM": "forex",
-                "PALLADIUM": "forex",
-                "WHEAT": "general",
-                "CORN": "general",
-                "SOYBEANS": "general",
-                "COFFEE": "general"
-            }
-            
-            category = category_map.get(commodity, "general")
+            # Verwende "general" Kategorie für alle Commodities (breiter)
+            category = "general"
             
             # Finnhub Market News API
             url = f"https://finnhub.io/api/v1/news?category={category}&token={self.finnhub_key}"
