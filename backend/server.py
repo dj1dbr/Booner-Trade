@@ -1423,19 +1423,22 @@ async def execute_trade(request: TradeExecuteRequest):
             
             logger.info(f"📊 [{default_platform}] Auto Position Size: {quantity:.4f} lots (Balance: {balance:.2f}, Free Margin: {free_margin}, Price: {price:.2f})")
         
-        # Stop Loss und Take Profit richtig berechnen für BUY und SELL
-        # WICHTIG: SL/TP erstmal auf None setzen, um "Invalid stops" zu vermeiden
-        # Broker akzeptiert oft keine zu engen Stops bei manuellem Trading
-        stop_loss = None
-        take_profit = None
+        # Stop Loss und Take Profit MIT ausreichendem Abstand berechnen
+        # WICHTIG: Minimum 10 Pips / 0.1% Abstand für Broker-Akzeptanz
         
-        # Optional: Berechne SL/TP für später (können nach Trade-Platzierung gesetzt werden)
-        # if trade_type.upper() == 'BUY':
-        #     stop_loss = price * (1 - settings.get('stop_loss_percent', 2.0) / 100)
-        #     take_profit = price * (1 + settings.get('take_profit_percent', 4.0) / 100)
-        # else:  # SELL
-        #     stop_loss = price * (1 + settings.get('stop_loss_percent', 2.0) / 100)
-        #     take_profit = price * (1 - settings.get('take_profit_percent', 4.0) / 100)
+        sl_percent = max(settings.get('stop_loss_percent', 2.0), 0.1)  # Min 0.1%
+        tp_percent = max(settings.get('take_profit_percent', 0.2), 0.1)  # Min 0.1%
+        
+        if trade_type.upper() == 'BUY':
+            # BUY: SL unter Entry, TP über Entry
+            stop_loss = round(price * (1 - sl_percent / 100), 2)
+            take_profit = round(price * (1 + tp_percent / 100), 2)
+        else:  # SELL
+            # SELL: SL über Entry, TP unter Entry
+            stop_loss = round(price * (1 + sl_percent / 100), 2)
+            take_profit = round(price * (1 - tp_percent / 100), 2)
+        
+        logger.info(f"💡 SL/TP calculated: Price={price}, SL={stop_loss}, TP={take_profit}")
         
         # WICHTIG: Order an Trading-Plattform senden!
         platform_ticket = None
