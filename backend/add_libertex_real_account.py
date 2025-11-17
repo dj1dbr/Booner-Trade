@@ -80,7 +80,8 @@ async def add_libertex_real_account():
         # If account already exists, try to find it
         logger.info("🔍 Checking if account already exists...")
         try:
-            accounts = await api.metatrader_account_api.get_accounts()
+            # Use correct method for SDK
+            accounts = await api.metatrader_account_api.get_accounts_with_infinite_scroll_pagination()
             for acc in accounts:
                 if acc.login == '560031700':
                     logger.info(f"✅ Found existing account!")
@@ -92,7 +93,21 @@ async def add_libertex_real_account():
                     logger.info(f"METAAPI_LIBERTEX_REAL_ACCOUNT_ID={acc.id}")
                     return acc.id
             
-            logger.error("Account not found in existing accounts")
+            logger.error("❌ Account not found in existing accounts")
+            logger.info("\n💡 Das Problem könnte sein:")
+            logger.info("   1. Falsche Zugangsdaten (Login/Password/Server)")
+            logger.info("   2. Server-Name ist nicht exakt (z.B. Leerzeichen)")
+            logger.info("   3. Account ist nicht für API-Zugriff freigegeben")
+            logger.info("\n🔧 Lösung: Fügen Sie den Account MANUELL hinzu:")
+            logger.info("   1. Öffnen Sie: https://app.metaapi.cloud/accounts")
+            logger.info("   2. Klicken Sie 'Add Account'")
+            logger.info("   3. Geben Sie ein:")
+            logger.info("      - Login: 560031700")
+            logger.info("      - Password: uIYTxb1{")
+            logger.info("      - Server: LibertexCom-MT5 Real Server")
+            logger.info("      - Platform: MT5")
+            logger.info("   4. Nach Erstellung: Account ID kopieren")
+            logger.info("   5. In .env eintragen: METAAPI_LIBERTEX_REAL_ACCOUNT_ID=<UUID>")
             return None
             
         except Exception as e2:
