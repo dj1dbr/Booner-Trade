@@ -290,6 +290,263 @@ class AITradingBot:
         except Exception as e:
             logger.error(f"Fehler bei der KI-Analyse: {e}", exc_info=True)
     
+    async def get_price_history(self, commodity_id: str, days: int = 7) -> List[Dict]:
+        """Hole Preishistorie für technische Analyse"""
+        try:
+            # Hole die letzten N Tage aus market_data_history Collection
+            cutoff_date = datetime.now() - timedelta(days=days)
+            
+            history = await self.db.market_data_history.find({
+                "commodity_id": commodity_id,
+                "timestamp": {"$gte": cutoff_date}
+            }).sort("timestamp", 1).to_list(length=None)
+            
+            if not history:
+                logger.warning(f"Keine Preishistorie für {commodity_id}")
+                return []
+            
+            # Konvertiere zu Format für Indikatoren
+            price_data = []
+            for item in history:
+                price_data.append({
+                    'timestamp': item.get('timestamp'),
+                    'price': item.get('price', 0),
+                    'close': item.get('price', 0),
+                    'high': item.get('high', item.get('price', 0)),
+                    'low': item.get('low', item.get('price', 0)),
+                })
+            
+            return price_data
+            
+        except Exception as e:
+            logger.error(f"Fehler beim Laden der Preishistorie: {e}")
+            return []
+    
+    async def calculate_portfolio_risk(self) -> float:
+        """Berechne aktuelles Portfolio-Risiko in Prozent"""
+        try:
+            from multi_platform_connector import multi_platform
+            
+            # Hole alle offenen Positionen
+            all_positions = []
+            for platform in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+                if platform in self.settings.get('active_platforms', []):
+                    positions = await multi_platform.get_open_positions(platform)
+                    all_positions.extend(positions)
+            
+            if not all_positions:
+                return 0.0
+            
+            # Hole Account-Balance
+            total_balance = 0.0
+            for platform in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+                if platform in self.settings.get('active_platforms', []):
+                    account_info = await multi_platform.get_account_info(platform)
+                    if account_info:
+                        total_balance += account_info.get('balance', 0)
+            
+            if total_balance <= 0:
+                return 100.0  # Safety: Wenn keine Balance, maximales Risiko
+            
+            # Berechne offenes Risiko (basierend auf Stop Loss)
+            total_risk = 0.0
+            for pos in all_positions:
+                volume = pos.get('volume', 0)
+                entry_price = pos.get('openPrice') or pos.get('price_open') or pos.get('entry_price', 0)
+                stop_loss = pos.get('stopLoss') or pos.get('sl', 0)
+                
+                if entry_price and stop_loss:
+                    # Risiko = Differenz * Volume
+                    risk_per_unit = abs(entry_price - stop_loss)
+                    position_risk = risk_per_unit * volume
+                    total_risk += position_risk
+            
+            # Risiko in Prozent der Balance
+            risk_percent = (total_risk / total_balance) * 100
+            
+            return min(risk_percent, 100.0)
+            
+        except Exception as e:
+            logger.error(f"Fehler bei Portfolio-Risiko-Berechnung: {e}")
+            return 0.0
+    
+    async def ask_llm_for_decision(self, commodity_id: str, analysis: Dict) -> bool:
+        """Frage LLM ob Trade ausgeführt werden soll"""
+        try:
+            if not self.llm_chat:
+                return True  # Default: Ja, wenn LLM nicht verfügbar
+            
+            prompt = f"""
+Basierend auf folgender Marktanalyse für {commodity_id}, soll der Trade ausgeführt werden?
+
+Signal: {analysis.get('signal')}
+Konfidenz: {analysis.get('confidence')}%
+Score: {analysis.get('total_score')}
+
+Indikatoren:
+- RSI: {analysis.get('indicators', {}).get('rsi', 0):.1f}
+- MACD: {analysis.get('indicators', {}).get('macd_diff', 0):.3f}
+- Preis vs SMA20: {analysis.get('indicators', {}).get('current_price', 0):.2f} vs {analysis.get('indicators', {}).get('sma_20', 0):.2f}
+
+News Sentiment: {analysis.get('news', {}).get('sentiment', 'neutral')}
+
+Strategie-Signale:
+{chr(10).join(analysis.get('signals', []))}
+
+Antworte nur mit JA oder NEIN.
+"""
+            
+            from emergentintegrations.llm.chat import UserMessage
+            response_obj = await self.llm_chat.send_message(UserMessage(text=prompt))
+            response = response_obj.text if hasattr(response_obj, 'text') else str(response_obj)
+            
+            decision = 'ja' in response.lower() or 'yes' in response.lower()
+            logger.info(f"🤖 LLM Entscheidung für {commodity_id}: {'✅ JA' if decision else '❌ NEIN'}")
+            
+            return decision
+            
+        except Exception as e:
+            logger.error(f"LLM Entscheidung fehlgeschlagen: {e}")
+            return True  # Default: Ja bei Fehler
+    
+    async def execute_ai_trade(self, commodity_id: str, direction: str, analysis: Dict):
+        """Führe Trade aus mit Risk Management"""
+        try:
+            from multi_platform_connector import multi_platform
+            from commodity_processor import commodity_processor
+            
+            logger.info(f"🚀 Führe AI-Trade aus: {commodity_id} {direction}")
+            
+            # Hole Commodity-Info
+            commodity = commodity_processor.get_commodity_by_id(commodity_id)
+            if not commodity:
+                logger.error(f"Commodity {commodity_id} nicht gefunden")
+                return
+            
+            # Bestimme Platform
+            active_platforms = self.settings.get('active_platforms', [])
+            if not active_platforms:
+                logger.error("Keine aktiven Plattformen")
+                return
+            
+            # Wähle erste verfügbare Platform für diesen Commodity
+            platform = None
+            for p in active_platforms:
+                if p in commodity.get('platforms', []):
+                    platform = p
+                    break
+            
+            if not platform:
+                logger.error(f"Keine verfügbare Platform für {commodity_id}")
+                return
+            
+            # Risk Management: Positionsgröße berechnen
+            account_info = await multi_platform.get_account_info(platform)
+            if not account_info:
+                logger.error(f"Account-Info nicht verfügbar für {platform}")
+                return
+            
+            balance = account_info.get('balance', 0)
+            if balance <= 0:
+                logger.error("Balance ist 0 oder negativ")
+                return
+            
+            # Positionsgröße = (Balance * RisikoProTrade%) / (StopLoss * ContractSize)
+            risk_per_trade = self.settings.get('risk_per_trade_percent', 2.0)
+            risk_amount = balance * (risk_per_trade / 100)
+            
+            # Stop Loss und Take Profit basierend auf ATR
+            atr = analysis.get('indicators', {}).get('atr', 0)
+            current_price = analysis.get('indicators', {}).get('current_price', 0)
+            
+            if not current_price or not atr:
+                logger.error("Preis oder ATR nicht verfügbar")
+                return
+            
+            # Stop Loss: 2 x ATR
+            sl_distance = atr * 2
+            # Take Profit: 3 x ATR (Risk:Reward = 1:1.5)
+            tp_distance = atr * 3
+            
+            if direction == 'BUY':
+                stop_loss = current_price - sl_distance
+                take_profit = current_price + tp_distance
+            else:  # SELL
+                stop_loss = current_price + sl_distance
+                take_profit = current_price - tp_distance
+            
+            # Positionsgröße (konservativ)
+            volume = min(0.01, risk_amount / (sl_distance * 100))  # Beginne mit Mini-Lots
+            volume = max(0.01, volume)  # Mindestens 0.01
+            
+            # Bestimme Symbol für Platform
+            symbol = None
+            if platform == 'MT5_LIBERTEX_DEMO':
+                symbol = commodity.get('mt5_libertex_symbol')
+            elif platform == 'MT5_ICMARKETS_DEMO':
+                symbol = commodity.get('mt5_icmarkets_symbol')
+            
+            if not symbol:
+                logger.error(f"Kein Symbol für {commodity_id} auf {platform}")
+                return
+            
+            logger.info(f"📊 Trade-Parameter:")
+            logger.info(f"   Platform: {platform}")
+            logger.info(f"   Symbol: {symbol}")
+            logger.info(f"   Direction: {direction}")
+            logger.info(f"   Volume: {volume}")
+            logger.info(f"   Entry: {current_price:.2f}")
+            logger.info(f"   Stop Loss: {stop_loss:.2f}")
+            logger.info(f"   Take Profit: {take_profit:.2f}")
+            logger.info(f"   Risk: €{risk_amount:.2f} ({risk_per_trade}%)")
+            
+            # Trade ausführen!
+            result = await multi_platform.execute_trade(
+                platform_name=platform,
+                symbol=symbol,
+                action=direction,
+                volume=volume,
+                stop_loss=stop_loss,
+                take_profit=take_profit
+            )
+            
+            if result and result.get('success'):
+                logger.info(f"✅ AI-Trade erfolgreich ausgeführt: {commodity_id} {direction}")
+                logger.info(f"   Ticket: {result.get('ticket')}")
+                
+                # Speichere in DB
+                await self.db.trades.insert_one({
+                    "commodity_id": commodity_id,
+                    "commodity_name": commodity.get('name'),
+                    "platform": platform,
+                    "type": direction,
+                    "quantity": volume,
+                    "entry_price": current_price,
+                    "stop_loss": stop_loss,
+                    "take_profit": take_profit,
+                    "mt5_ticket": result.get('ticket'),
+                    "status": "OPEN",
+                    "opened_at": datetime.now(),
+                    "opened_by": "AI_BOT",
+                    "analysis": analysis,  # Speichere komplette Analyse
+                    "confidence": analysis.get('confidence', 0)
+                })
+                
+                # Für Lernzwecke
+                self.trade_history.append({
+                    "commodity": commodity_id,
+                    "direction": direction,
+                    "timestamp": datetime.now(),
+                    "confidence": analysis.get('confidence', 0)
+                })
+                
+            else:
+                error = result.get('error', 'Unknown error') if result else 'No result'
+                logger.error(f"❌ Trade fehlgeschlagen: {error}")
+            
+        except Exception as e:
+            logger.error(f"Fehler bei Trade-Execution: {e}", exc_info=True)
+    
     def stop(self):
         """Stoppe Bot"""
         logger.info("🛑 Bot wird gestoppt...")
