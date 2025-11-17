@@ -147,35 +147,52 @@ class MetaAPISDKConnector:
     
     async def create_market_order(self, symbol: str, order_type: str, volume: float, 
                                    sl: float = None, tp: float = None) -> Dict[str, Any]:
-        """Platziere Market Order"""
+        """Platziere Market Order mit Timeout-Handling"""
         try:
             if not self.connection:
-                return {'success': False, 'error': 'Not connected'}
+                logger.error("SDK not connected!")
+                return {'success': False, 'error': 'Not connected to trading platform'}
             
-            # Order ausführen
-            result = await self.connection.create_market_buy_order(
-                symbol=symbol,
-                volume=volume,
-                stop_loss=sl,
-                take_profit=tp
-            ) if order_type == 'BUY' else await self.connection.create_market_sell_order(
-                symbol=symbol,
-                volume=volume,
-                stop_loss=sl,
-                take_profit=tp
-            )
+            logger.info(f"🔄 Placing order: {symbol} {order_type} {volume} lots (SL: {sl}, TP: {tp})")
+            
+            # Order ausführen mit asyncio.wait_for für Timeout
+            import asyncio
+            
+            try:
+                if order_type.upper() == 'BUY':
+                    order_coro = self.connection.create_market_buy_order(
+                        symbol=symbol,
+                        volume=volume,
+                        stop_loss=sl,
+                        take_profit=tp
+                    )
+                else:
+                    order_coro = self.connection.create_market_sell_order(
+                        symbol=symbol,
+                        volume=volume,
+                        stop_loss=sl,
+                        take_profit=tp
+                    )
+                
+                # Warte max 30 Sekunden auf Antwort
+                result = await asyncio.wait_for(order_coro, timeout=30.0)
+                
+            except asyncio.TimeoutError:
+                logger.error(f"❌ Order timeout after 30 seconds")
+                return {'success': False, 'error': 'Order timeout - Platform nicht erreichbar (30s)'}
             
             logger.info(f"✅ Order platziert: {symbol} {order_type} {volume} Lots")
             
             return {
                 'success': True,
-                'orderId': result.orderId if hasattr(result, 'orderId') else result['orderId'],
-                'positionId': result.positionId if hasattr(result, 'positionId') else result.get('positionId')
+                'orderId': result.orderId if hasattr(result, 'orderId') else result.get('orderId'),
+                'positionId': result.positionId if hasattr(result, 'positionId') else result.get('positionId'),
+                'message': f'Order executed: {symbol} {order_type} {volume} lots'
             }
             
         except Exception as e:
-            logger.error(f"Order execution error: {e}")
-            return {'success': False, 'error': str(e)}
+            logger.error(f"❌ Order execution error: {e}", exc_info=True)
+            return {'success': False, 'error': f'Trade execution failed: {str(e)}'}
     
     async def close_position(self, position_id: str) -> bool:
         """Schließe Position"""
