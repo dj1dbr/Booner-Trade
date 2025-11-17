@@ -319,45 +319,25 @@ const Dashboard = () => {
 
   const fetchTrades = async () => {
     try {
-      // Fetch database trades
+      // Der neue /trades/list Endpoint gibt bereits ALLE Trades zurück:
+      // - Offene Positionen DIREKT von MT5 (live sync)
+      // - Geschlossene Trades aus DB
+      // Wir brauchen KEINE separaten /platforms/.../positions Calls mehr!
+      
       const response = await axios.get(`${API}/trades/list`);
-      const dbTrades = response.data.trades || [];
+      const allTrades = response.data.trades || [];
       
-      // Fetch MT5 positions from active platforms
-      const mt5Positions = [];
+      console.log(`✅ Fetched ${allTrades.length} trades from unified endpoint`);
       
+      // ALTE LOGIK ENTFERNT - würde Duplikate erzeugen!
+      // Die separaten MT5 Position Calls sind nicht mehr nötig,
+      // da /trades/list bereits live MT5-Daten enthält
+      
+      /* ENTFERNT - verursachte Duplikate:
       if (settings?.active_platforms?.includes('MT5_LIBERTEX')) {
         try {
           const libertexRes = await axios.get(`${API}/platforms/MT5_LIBERTEX/positions`);
-          if (libertexRes.data.success && libertexRes.data.positions) {
-            libertexRes.data.positions.forEach(pos => {
-              mt5Positions.push({
-                id: `MT5_LIBERTEX_${pos.ticket}`,
-                timestamp: pos.time,
-                commodity: pos.symbol,
-                type: pos.type === 'POSITION_TYPE_BUY' ? 'BUY' : 'SELL',
-                price: pos.price_current,
-                quantity: pos.volume,
-                status: 'OPEN',
-                platform: 'MT5_LIBERTEX',
-                entry_price: pos.price_open,
-                profit_loss: pos.profit,
-                stop_loss: pos.sl,
-                take_profit: pos.tp,
-                mt5_ticket: pos.ticket
-              });
-            });
-          }
-        } catch (err) {
-          console.error('Error fetching MT5 Libertex positions:', err);
-        }
-      }
-      
-      if (settings?.active_platforms?.includes('MT5_ICMARKETS')) {
-        try {
-          const icmarketsRes = await axios.get(`${API}/platforms/MT5_ICMARKETS/positions`);
-          if (icmarketsRes.data.success && icmarketsRes.data.positions) {
-            icmarketsRes.data.positions.forEach(pos => {
+          // ... würde die gleichen Positionen nochmal hinzufügen!
               mt5Positions.push({
                 id: `MT5_ICMARKETS_${pos.ticket}`,
                 timestamp: pos.time,
