@@ -525,7 +525,9 @@ const Dashboard = () => {
       console.log('Request body:', requestBody);
       
       // Use new unified endpoint (API already includes /api prefix)
-      const response = await axios.post(`${API}/trades/close`, requestBody);
+      const response = await axios.post(`${API}/trades/close`, requestBody, {
+        timeout: 45000  // 45 Sekunden Timeout für Trade-Close
+      });
       
       console.log('Close response:', response.data);
       
