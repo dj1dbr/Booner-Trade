@@ -1247,21 +1247,49 @@ async def ai_chat_endpoint(
         
         logger.info(f"AI Chat: Using provider={final_ai_provider}, model={final_model} (from {'params' if ai_provider else 'settings'})")
         
-        # Get open trades (from MetaAPI via trades/list endpoint, not DB!)
-        # DB only has manually created trades, MT5 trades come from MetaAPI
+        # Get open trades - Use the same logic as /trades/list endpoint
         from multi_platform_connector import multi_platform
+        from commodity_processor import commodity_processor
         
         open_trades = []
         
-        # Get trades from all active platforms
-        active_platforms = settings.get('active_platforms', ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO'])
-        for platform in active_platforms:
+        # Get all active platforms from settings
+        active_platforms = settings.get('active_platforms', [])
+        
+        # Fetch positions from all active platforms
+        all_mt5_positions = {}
+        for platform_name in active_platforms:
             try:
-                platform_trades = await multi_platform.get_open_positions(platform)
-                if platform_trades:
-                    open_trades.extend(platform_trades)
+                positions = await multi_platform.get_open_positions(platform_name)
+                if positions:
+                    all_mt5_positions[platform_name] = positions
             except Exception as e:
-                logger.warning(f"Could not fetch trades from {platform}: {e}")
+                logger.warning(f"Could not fetch positions from {platform_name}: {e}")
+        
+        # Convert MT5 positions to trade format (same as /trades/list)
+        for platform_name, positions in all_mt5_positions.items():
+            for pos in positions:
+                # Map position to trade format
+                symbol = pos.get('symbol', '')
+                commodity = None
+                
+                # Find commodity by symbol
+                for comm in commodity_processor.commodities:
+                    if (comm.get('mt5_libertex_symbol') == symbol or 
+                        comm.get('mt5_icmarkets_symbol') == symbol):
+                        commodity = comm.get('id')
+                        break
+                
+                if commodity:
+                    trade = {
+                        'commodity': commodity,
+                        'type': pos.get('type', 'UNKNOWN'),
+                        'quantity': pos.get('volume', 0),
+                        'entry_price': pos.get('openPrice', pos.get('price', 0)),
+                        'profit_loss': pos.get('profit', pos.get('unrealizedProfit', 0)),
+                        'platform': platform_name
+                    }
+                    open_trades.append(trade)
         
         logger.info(f"AI Chat: Found {len(open_trades)} open trades from MT5")
         
