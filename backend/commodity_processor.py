@@ -172,6 +172,18 @@ COMMODITIES = {
         "category": "Agrar", 
         "unit": "USD/ton", 
         "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]
+    },
+    
+    # Forex - Major Currency Pairs
+    "EURUSD": {
+        "name": "EUR/USD", 
+        "symbol": "EURUSD=X", 
+        "mt5_libertex_symbol": "EURUSD",
+        "mt5_icmarkets_symbol": "EURUSD", 
+        "bitpanda_symbol": None,
+        "category": "Forex", 
+        "unit": "Exchange Rate", 
+        "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS"]
     }
 }
 
