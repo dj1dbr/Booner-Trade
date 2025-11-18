@@ -242,10 +242,19 @@ COMMODITIES = {
     "PLATINUM": {"name": "Platin", "symbol": "PL=F", "mt5_libertex_symbol": "PL", "mt5_icmarkets_symbol": "XPTUSD", "bitpanda_symbol": "PLATINUM", "category": "Edelmetalle", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
     "PALLADIUM": {"name": "Palladium", "symbol": "PA=F", "mt5_libertex_symbol": "PA", "mt5_icmarkets_symbol": "XPDUSD", "bitpanda_symbol": "PALLADIUM", "category": "Edelmetalle", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
     
-    # Energy - Libertex: ✅ USOILCash, CL, NGASCash | ICMarkets: ✅ WTI_F6, BRENT_F6 | Bitpanda: ✅ Alle
-    "WTI_CRUDE": {"name": "WTI Crude Oil", "symbol": "CL=F", "mt5_libertex_symbol": "USOILCash", "mt5_icmarkets_symbol": "WTI_F6", "bitpanda_symbol": "OIL_WTI", "category": "Energie", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
-    "BRENT_CRUDE": {"name": "Brent Crude Oil", "symbol": "BZ=F", "mt5_libertex_symbol": "CL", "mt5_icmarkets_symbol": "BRENT_F6", "bitpanda_symbol": "OIL_BRENT", "category": "Energie", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
-    "NATURAL_GAS": {"name": "Natural Gas", "symbol": "NG=F", "mt5_libertex_symbol": "NGASCash", "mt5_icmarkets_symbol": None, "bitpanda_symbol": "NATURAL_GAS", "category": "Energie", "platforms": ["MT5_LIBERTEX", "BITPANDA"]},
+    # Energy - Libertex: ✅ CL (WTI), BRN (Brent), NG (Gas) | ICMarkets: ✅ | Bitpanda: ✅
+    "WTI_CRUDE": {"name": "WTI Crude Oil", "symbol": "CL=F", "mt5_libertex_symbol": "CL", "mt5_icmarkets_symbol": "WTI_F6", "bitpanda_symbol": "OIL_WTI", "category": "Energie", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "BRENT_CRUDE": {"name": "Brent Crude Oil", "symbol": "BZ=F", "mt5_libertex_symbol": "BRN", "mt5_icmarkets_symbol": "BRENT_F6", "bitpanda_symbol": "OIL_BRENT", "category": "Energie", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "NATURAL_GAS": {"name": "Natural Gas", "symbol": "NG=F", "mt5_libertex_symbol": "NG", "mt5_icmarkets_symbol": None, "bitpanda_symbol": "NATURAL_GAS", "category": "Energie", "platforms": ["MT5_LIBERTEX", "BITPANDA"]},
+    
+    # Agricultural - Libertex: ✅ WHEAT, SOYBEAN, COFFEE, SUGAR, COCOA, CORN | ICMarkets: teilweise
+    "WHEAT": {"name": "Weizen", "symbol": "ZW=F", "mt5_libertex_symbol": "WHEAT", "mt5_icmarkets_symbol": "Wheat_H6", "bitpanda_symbol": "WHEAT", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "CORN": {"name": "Mais", "symbol": "ZC=F", "mt5_libertex_symbol": "CORN", "mt5_icmarkets_symbol": "Corn_H6", "bitpanda_symbol": "CORN", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "SOYBEANS": {"name": "Sojabohnen", "symbol": "ZS=F", "mt5_libertex_symbol": "SOYBEAN", "mt5_icmarkets_symbol": "Sbean_F6", "bitpanda_symbol": "SOYBEANS", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "COFFEE": {"name": "Kaffee", "symbol": "KC=F", "mt5_libertex_symbol": "COFFEE", "mt5_icmarkets_symbol": "Coffee_H6", "bitpanda_symbol": "COFFEE", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "SUGAR": {"name": "Zucker", "symbol": "SB=F", "mt5_libertex_symbol": "SUGAR", "mt5_icmarkets_symbol": "Sugar_H6", "bitpanda_symbol": "SUGAR", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    "COTTON": {"name": "Baumwolle", "symbol": "CT=F", "mt5_libertex_symbol": "COTTON", "mt5_icmarkets_symbol": "Cotton_H6", "bitpanda_symbol": "COTTON", "category": "Agrar", "platforms": ["MT5_ICMARKETS", "BITPANDA"]},
+    "COCOA": {"name": "Kakao", "symbol": "CC=F", "mt5_libertex_symbol": "COCOA", "mt5_icmarkets_symbol": "Cocoa_H6", "bitpanda_symbol": "COCOA", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
     
     # Agricultural - Libertex: ✅ | ICMarkets: teilweise | Bitpanda: ✅
     "WHEAT": {"name": "Weizen", "symbol": "ZW=F", "mt5_libertex_symbol": "WHEAT", "mt5_icmarkets_symbol": "Wheat_H6", "bitpanda_symbol": "WHEAT", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
