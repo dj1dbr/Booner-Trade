@@ -2458,25 +2458,24 @@ class Booner_TradeTester:
         logger.info("="*80)
 
     async def run_critical_manual_trade_tests(self):
-        """Run CRITICAL tests focused on Manual Trade Execution Bug Fix"""
-        logger.info("🔥 CRITICAL TESTING: Manual Trade Execution Bug Fix")
+        """FINAL BACKEND TESTING - Manual Trade Bug Fix & Platform Connections"""
+        logger.info("🔥 FINAL BACKEND TESTING - Manual Trade Bug Fix & Platform Connections")
         logger.info("=" * 80)
         
-        # 1. API Availability Tests
+        # 1. App Name Verification
         await self.test_api_root()
-        await self.test_api_availability()
         
-        # 2. CRITICAL: Manual Trade Execution
+        # 2. Platform Connections (HIGH PRIORITY)
+        await self.test_platform_connections_critical()
+        
+        # 3. Manual Trade Execution (CRITICAL)
         await self.test_manual_trade_execution_critical()
         
-        # 3. Error Handling Improvements
-        await self.test_error_handling_improvements()
-        
-        # 4. Backend Logs Verification
+        # 4. Response Parsing Verification
         await self.test_backend_logs_sdk_response()
         
-        # 5. Platform Status (supporting test)
-        await self.test_platforms_status()
+        # 5. Error Handling Improvements
+        await self.test_error_handling_improvements()
         
         # Print focused summary
         self.print_critical_test_summary()
