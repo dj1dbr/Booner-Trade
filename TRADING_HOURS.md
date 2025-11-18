@@ -98,6 +98,29 @@
 
 ## ⚠️ WICHTIGE HINWEISE
 
+### 🔴 WOCHENENDE: FAST ALLES GESCHLOSSEN!
+
+**Samstag & Sonntag:**
+- ❌ Alle Edelmetalle: GESCHLOSSEN
+- ❌ Alle Energie: GESCHLOSSEN
+- ❌ Alle Agrar-Rohstoffe: GESCHLOSSEN
+- ❌ Bitcoin: GESCHLOSSEN
+- ✅ **EUR/USD: GEÖFFNET** ⭐
+
+**BOT-VERHALTEN AM WOCHENENDE:**
+```
+🤖 Bot analysiert weiter
+🎯 Findet nur EUR/USD Signale
+🚀 Versucht Trades auf anderen Assets → TIMEOUT
+✅ Nur EUR/USD Trades gehen durch
+```
+
+**EMPFEHLUNG:**
+- Aktivieren Sie am Wochenende nur EUR/USD
+- Oder: Lassen Sie Bot laufen, er versucht automatisch neu Montag früh
+
+---
+
 ### 🚨 TRADE TIMEOUTS VERMEIDEN
 
 **Problem:** Trades scheitern wenn außerhalb der Handelszeiten versucht wird
