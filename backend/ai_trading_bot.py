@@ -187,17 +187,39 @@ class AITradingBot:
                         if not entry_price or not current_price or not ticket:
                             continue
                         
-                        # Berechne Targets
-                        if 'BUY' in pos_type:
-                            take_profit_price = entry_price * (1 + tp_percent / 100)
-                            stop_loss_price = entry_price * (1 - sl_percent / 100)
+                        # Prüfe ob Trade aus DB existiert und hole Strategie + gespeicherte SL/TP
+                        db_trade = await self.db.trades.find_one({"mt5_ticket": str(ticket), "status": "OPEN"})
+                        
+                        # Nutze gespeicherte SL/TP aus Trade falls vorhanden, sonst berechne
+                        if db_trade and db_trade.get('stop_loss') and db_trade.get('take_profit'):
+                            # Verwende gespeicherte Werte aus Trade
+                            stop_loss_price = db_trade.get('stop_loss')
+                            take_profit_price = db_trade.get('take_profit')
+                            strategy = db_trade.get('strategy', 'swing')
+                        else:
+                            # Berechne basierend auf Strategie (falls bekannt)
+                            strategy = db_trade.get('strategy', 'swing') if db_trade else 'swing'
                             
+                            if strategy == 'day':
+                                tp_pct = self.settings.get('day_take_profit_percent', 2.5)
+                                sl_pct = self.settings.get('day_stop_loss_percent', 1.5)
+                            else:
+                                tp_pct = self.settings.get('swing_take_profit_percent', 4.0)
+                                sl_pct = self.settings.get('swing_stop_loss_percent', 2.0)
+                            
+                            # Berechne Targets
+                            if 'BUY' in pos_type:
+                                take_profit_price = entry_price * (1 + tp_pct / 100)
+                                stop_loss_price = entry_price * (1 - sl_pct / 100)
+                            else:  # SELL
+                                take_profit_price = entry_price * (1 - tp_pct / 100)
+                                stop_loss_price = entry_price * (1 + sl_pct / 100)
+                        
+                        # Prüfe ob Ziele erreicht
+                        if 'BUY' in pos_type:
                             tp_reached = current_price >= take_profit_price
                             sl_reached = current_price <= stop_loss_price
                         else:  # SELL
-                            take_profit_price = entry_price * (1 - tp_percent / 100)
-                            stop_loss_price = entry_price * (1 + sl_percent / 100)
-                            
                             tp_reached = current_price <= take_profit_price
                             sl_reached = current_price >= stop_loss_price
                         
