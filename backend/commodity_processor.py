@@ -153,16 +153,6 @@ COMMODITIES = {
         "unit": "USD/lb", 
         "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]
     },
-    "COTTON": {
-        "name": "Baumwolle", 
-        "symbol": "CT=F", 
-        "mt5_libertex_symbol": "COTTON",
-        "mt5_icmarkets_symbol": "Cotton_H6", 
-        "bitpanda_symbol": "COTTON",
-        "category": "Agrar", 
-        "unit": "USD/lb", 
-        "platforms": ["MT5_ICMARKETS", "BITPANDA"]
-    },
     "COCOA": {
         "name": "Kakao", 
         "symbol": "CC=F", 
@@ -184,6 +174,18 @@ COMMODITIES = {
         "category": "Forex", 
         "unit": "Exchange Rate", 
         "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS"]
+    },
+    
+    # Crypto - 24/7 Trading!
+    "BITCOIN": {
+        "name": "Bitcoin", 
+        "symbol": "BTC-USD", 
+        "mt5_libertex_symbol": "BTCUSD",
+        "mt5_icmarkets_symbol": "BTCUSD", 
+        "bitpanda_symbol": "BTC",
+        "category": "Crypto", 
+        "unit": "USD", 
+        "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]
     }
 }
 
