@@ -56,8 +56,14 @@ MARKTDATEN (Live):
     context += f"\n\nOFFENE TRADES: {len(open_trades)}"
     if open_trades:
         context += "\n"
-        for trade in open_trades[:5]:  # Limit to 5 most recent
-            context += f"- {trade.get('commodity')}: {trade.get('type')} {trade.get('quantity')} @ ${trade.get('entry_price')}\n"
+        for i, trade in enumerate(open_trades[:10], 1):  # Show up to 10 trades with numbers
+            commodity = trade.get('commodity', trade.get('symbol', 'UNKNOWN'))
+            trade_type = trade.get('type', 'UNKNOWN')
+            quantity = trade.get('quantity', trade.get('volume', 0))
+            entry = trade.get('entry_price', trade.get('openPrice', trade.get('price', 0)))
+            profit = trade.get('profit_loss', trade.get('profit', trade.get('unrealizedProfit', 0)))
+            
+            context += f"{i}. {commodity} {trade_type} - Menge: {quantity}, Entry: ${entry:.2f}, P/L: ${profit:.2f}\n"
     else:
         context += "\n(Keine offenen Trades)"
     
