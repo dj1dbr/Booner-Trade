@@ -56,11 +56,13 @@
 
 ### ₿ KRYPTOWÄHRUNGEN
 
-| Asset | Symbol | Handelszeiten (MEZ) | Täglich handelbar |
-|-------|--------|---------------------|-------------------|
-| **Bitcoin** | BTCUSD | **24/7** | **JA - RUND UM DIE UHR!** |
+| Asset | Symbol | Handelszeiten (MEZ) | Täglich handelbar | Wochenende |
+|-------|--------|---------------------|-------------------|------------|
+| **Bitcoin** | BTCUSD | **24/7** | **JA - RUND UM DIE UHR!** | ❌ GESCHLOSSEN |
 
-**⭐ WICHTIG:** Bitcoin ist das EINZIGE Asset das 24/7 handelbar ist!
+**⚠️ WICHTIG:** 
+- Bitcoin ist Mo-Fr 24/7 handelbar
+- **AM WOCHENENDE: GESCHLOSSEN!** (wie alle anderen Assets außer EUR/USD)
 
 ---
 
