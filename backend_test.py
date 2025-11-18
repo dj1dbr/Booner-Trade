@@ -63,14 +63,230 @@ class Booner_TradeTester:
             return False, {"error": str(e)}
     
     async def test_api_root(self):
-        """Test basic API connectivity"""
-        success, data = await self.make_request("GET", "/api/")
-        expected_message = "Rohstoff Trader API"
+        """Test basic API connectivity and app name change"""
+        success, data = await self.make_request("GET", "/")
+        expected_message = "Booner-Trade API Running"
         
         if success and data.get("message") == expected_message:
-            self.log_test_result("API Root Connectivity", True, f"API responding correctly: {data.get('message')}")
+            self.log_test_result("API Root - App Name Change", True, f"✅ App name updated correctly: {data.get('message')}")
         else:
-            self.log_test_result("API Root Connectivity", False, f"Unexpected response: {data}")
+            self.log_test_result("API Root - App Name Change", False, f"❌ Expected 'Booner-Trade API Running', got: {data}")
+    
+    async def test_api_availability(self):
+        """Test API Availability - Core endpoints required for manual trading"""
+        logger.info("🔍 Testing API Availability for Manual Trading")
+        
+        # Test 1: GET /api/platforms/status
+        platforms_success, platforms_data = await self.make_request("GET", "/api/platforms/status")
+        if platforms_success:
+            platforms = platforms_data.get("platforms", [])
+            mt5_platforms = [p for p in platforms if isinstance(p, dict) and "MT5" in p.get("name", "")]
+            self.log_test_result(
+                "API Availability - Platforms Status", 
+                True, 
+                f"✅ Found {len(platforms)} platforms, {len(mt5_platforms)} MT5 platforms",
+                {"total_platforms": len(platforms), "mt5_platforms": len(mt5_platforms)}
+            )
+        else:
+            self.log_test_result("API Availability - Platforms Status", False, f"❌ Failed: {platforms_data}")
+        
+        # Test 2: GET /api/commodities
+        commodities_success, commodities_data = await self.make_request("GET", "/api/commodities")
+        if commodities_success:
+            commodities = commodities_data if isinstance(commodities_data, list) else []
+            wti_found = any(c.get("id") == "WTI_CRUDE" for c in commodities)
+            self.log_test_result(
+                "API Availability - Commodities", 
+                True, 
+                f"✅ Found {len(commodities)} commodities, WTI_CRUDE available: {wti_found}",
+                {"total_commodities": len(commodities), "wti_available": wti_found}
+            )
+        else:
+            self.log_test_result("API Availability - Commodities", False, f"❌ Failed: {commodities_data}")
+        
+        # Test 3: GET /api/settings
+        settings_success, settings_data = await self.make_request("GET", "/api/settings")
+        if settings_success:
+            default_platform = settings_data.get("default_platform", "")
+            auto_trading = settings_data.get("auto_trading", False)
+            self.log_test_result(
+                "API Availability - Settings", 
+                True, 
+                f"✅ Settings available - Platform: {default_platform}, Auto-trading: {auto_trading}",
+                {"default_platform": default_platform, "auto_trading": auto_trading}
+            )
+        else:
+            self.log_test_result("API Availability - Settings", False, f"❌ Failed: {settings_data}")
+    
+    async def test_manual_trade_execution_critical(self):
+        """CRITICAL TEST: Manual Trade Execution with WTI_CRUDE - Focus on response parsing fix"""
+        logger.info("🔥 CRITICAL TEST: Manual Trade Execution - WTI_CRUDE BUY 0.01")
+        
+        trade_data = {
+            "commodity": "WTI_CRUDE",
+            "trade_type": "BUY", 
+            "quantity": 0.01,
+            "price": 60.0  # Reasonable price for testing
+        }
+        
+        success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
+        
+        if success:
+            # Check for successful trade execution
+            trade_success = data.get("success", False)
+            ticket = data.get("ticket")
+            platform = data.get("platform")
+            trade_info = data.get("trade", {})
+            
+            if trade_success and ticket:
+                self.log_test_result(
+                    "Manual Trade Execution - WTI_CRUDE SUCCESS", 
+                    True, 
+                    f"✅ Trade executed successfully - Ticket: {ticket}, Platform: {platform}",
+                    {
+                        "success": trade_success,
+                        "ticket": ticket,
+                        "platform": platform,
+                        "commodity": trade_info.get("commodity"),
+                        "quantity": trade_info.get("quantity")
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Manual Trade Execution - WTI_CRUDE PARTIAL", 
+                    False, 
+                    f"⚠️ Trade response incomplete - Success: {trade_success}, Ticket: {ticket}",
+                    data
+                )
+        else:
+            # Check error message quality (should be informative, not generic "Broker rejected")
+            error_detail = data.get("detail", str(data))
+            
+            # Good error messages (specific reasons)
+            good_errors = [
+                "market closed", "market is closed", "trading session", 
+                "insufficient margin", "invalid volume", "no money",
+                "TRADE_RETCODE_MARKET_CLOSED", "TRADE_RETCODE_NO_MONEY"
+            ]
+            
+            # Bad error messages (generic)
+            bad_errors = ["broker rejected", "trade konnte nicht ausgeführt werden", "unknown error"]
+            
+            is_informative_error = any(good_err.lower() in error_detail.lower() for good_err in good_errors)
+            is_generic_error = any(bad_err.lower() in error_detail.lower() for bad_err in bad_errors)
+            
+            if is_informative_error:
+                self.log_test_result(
+                    "Manual Trade Execution - Informative Error", 
+                    True, 
+                    f"✅ Trade failed with INFORMATIVE error (not generic): {error_detail}",
+                    {"error_detail": error_detail, "error_type": "informative"}
+                )
+            elif is_generic_error:
+                self.log_test_result(
+                    "Manual Trade Execution - Generic Error", 
+                    False, 
+                    f"❌ Trade failed with GENERIC error (should be more specific): {error_detail}",
+                    {"error_detail": error_detail, "error_type": "generic"}
+                )
+            else:
+                self.log_test_result(
+                    "Manual Trade Execution - Unknown Error", 
+                    False, 
+                    f"❌ Trade failed with unknown error type: {error_detail}",
+                    {"error_detail": error_detail, "error_type": "unknown"}
+                )
+    
+    async def test_backend_logs_sdk_response(self):
+        """Test Backend Logs for SDK Response Details - Verify logging improvements"""
+        logger.info("📋 Checking Backend Logs for SDK Response Details")
+        
+        try:
+            # Check for new SDK response logging
+            result1 = subprocess.run(
+                ["grep", "-i", "SDK Response Type", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            result2 = subprocess.run(
+                ["grep", "-i", "SDK Response:", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            sdk_type_logs = result1.returncode == 0 and result1.stdout
+            sdk_response_logs = result2.returncode == 0 and result2.stdout
+            
+            if sdk_type_logs and sdk_response_logs:
+                # Get recent logs
+                type_lines = result1.stdout.strip().split('\n')[-3:] if result1.stdout else []
+                response_lines = result2.stdout.strip().split('\n')[-3:] if result2.stdout else []
+                
+                self.log_test_result(
+                    "Backend Logs - SDK Response Details", 
+                    True, 
+                    f"✅ SDK response logging found - Type logs: {len(type_lines)}, Response logs: {len(response_lines)}",
+                    {
+                        "sdk_type_logs": len(type_lines),
+                        "sdk_response_logs": len(response_lines),
+                        "recent_type_logs": type_lines,
+                        "recent_response_logs": response_lines
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Backend Logs - SDK Response Details", 
+                    False, 
+                    f"❌ Missing SDK response logs - Type logs: {sdk_type_logs}, Response logs: {sdk_response_logs}",
+                    {"sdk_type_found": sdk_type_logs, "sdk_response_found": sdk_response_logs}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Backend Logs - SDK Response Details", 
+                False, 
+                f"❌ Error checking logs: {str(e)}",
+                {"error": str(e)}
+            )
+    
+    async def test_error_handling_improvements(self):
+        """Test Error Handling Improvements - Verify better error messages"""
+        logger.info("🔧 Testing Error Handling Improvements")
+        
+        # Test with invalid commodity to trigger error handling
+        invalid_trade_data = {
+            "commodity": "INVALID_COMMODITY",
+            "trade_type": "BUY",
+            "quantity": 0.01,
+            "price": 100.0
+        }
+        
+        success, data = await self.make_request("POST", "/api/trades/execute", invalid_trade_data)
+        
+        if not success:
+            error_detail = data.get("detail", str(data))
+            
+            # Check if error message is descriptive
+            if len(error_detail) > 20 and "INVALID_COMMODITY" in error_detail:
+                self.log_test_result(
+                    "Error Handling - Descriptive Messages", 
+                    True, 
+                    f"✅ Descriptive error message for invalid commodity: {error_detail[:100]}...",
+                    {"error_length": len(error_detail), "contains_commodity": "INVALID_COMMODITY" in error_detail}
+                )
+            else:
+                self.log_test_result(
+                    "Error Handling - Descriptive Messages", 
+                    False, 
+                    f"❌ Error message not descriptive enough: {error_detail}",
+                    {"error_detail": error_detail}
+                )
+        else:
+            self.log_test_result(
+                "Error Handling - Descriptive Messages", 
+                False, 
+                f"❌ Expected error for invalid commodity, but got success: {data}",
+                data
+            )
     
     async def test_mt5_account_info(self):
         """Test MT5 account information retrieval"""
