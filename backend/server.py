@@ -351,9 +351,8 @@ class TradingSettings(BaseModel):
     swing_stop_loss_percent: float = 2.0  # 2% Stop Loss
     swing_take_profit_percent: float = 4.0  # 4% Take Profit
     swing_max_positions: int = 5  # Max 5 Swing-Positionen gleichzeitig
-    swing_max_balance_percent: float = 80.0  # Maximal 80% der Balance für Swing Trading
     swing_position_hold_time_hours: int = 168  # Max 7 Tage Haltezeit (optional)
-    swing_analysis_interval_seconds: int = 600  # Alle 10 Minuten analysieren
+    swing_analysis_interval_seconds: int = 60  # Alle 1 Minute analysieren (KORRIGIERT)
     swing_atr_multiplier_sl: float = 2.0  # Stop Loss = 2x ATR
     swing_atr_multiplier_tp: float = 3.0  # Take Profit = 3x ATR
     swing_risk_per_trade_percent: float = 2.0  # 2% Risiko pro Trade
@@ -364,12 +363,14 @@ class TradingSettings(BaseModel):
     day_stop_loss_percent: float = 0.5  # 0.5% Stop Loss (enger als Swing)
     day_take_profit_percent: float = 0.8  # 0.8% Take Profit (enger als Swing)
     day_max_positions: int = 10  # Max 10 Day-Trading-Positionen gleichzeitig
-    day_max_balance_percent: float = 20.0  # Maximal 20% der Balance für Day Trading
     day_position_hold_time_hours: int = 2  # Max 2 Stunden Haltezeit - dann schließen
-    day_analysis_interval_seconds: int = 60  # Jede Minute analysieren (schneller als Swing)
+    day_analysis_interval_seconds: int = 60  # Jede Minute analysieren
     day_atr_multiplier_sl: float = 1.0  # Stop Loss = 1x ATR (enger)
     day_atr_multiplier_tp: float = 1.5  # Take Profit = 1.5x ATR (enger)
     day_risk_per_trade_percent: float = 1.0  # 1% Risiko pro Trade (konservativer)
+    
+    # GESAMTES Balance-Management (Swing + Day zusammen)
+    combined_max_balance_percent_per_platform: float = 20.0  # Max 20% PRO PLATTFORM für BEIDE Strategien zusammen
     
     # MetaAPI Token (shared across all MT5 accounts)
     metaapi_token: Optional[str] = None
