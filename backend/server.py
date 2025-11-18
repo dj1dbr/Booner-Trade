@@ -321,8 +321,8 @@ class TradingSettings(BaseModel):
     anthropic_api_key: Optional[str] = None
     ollama_base_url: Optional[str] = "http://localhost:11434"  # Ollama local URL
     ollama_model: Optional[str] = "llama2"  # Default Ollama model
-    stop_loss_percent: float = 2.0
-    take_profit_percent: float = 4.0
+    stop_loss_percent: float = 2.0  # DEPRECATED - Benutze swing_stop_loss_percent/day_stop_loss_percent
+    take_profit_percent: float = 4.0  # DEPRECATED - Benutze swing_take_profit_percent/day_take_profit_percent
     use_trailing_stop: bool = False  # Enable trailing stop
     trailing_stop_distance: float = 1.5  # Trailing stop distance in %
     max_trades_per_hour: int = 3
