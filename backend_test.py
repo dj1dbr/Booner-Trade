@@ -83,14 +83,17 @@ class Booner_TradeTester:
             logger.error(f"Request failed: {e}")
             return False, {"error": str(e)}
     
-    async def test_platform_connections_critical(self):
-        """CRITICAL TEST: Platform Connections - MT5_LIBERTEX and MT5_ICMARKETS"""
-        logger.info("🔍 CRITICAL TEST: Platform Connections Status")
+    async def test_broker_connection_problem_1(self):
+        """PROBLEM 1: Broker-Verbindung - User says 'Immer noch keine Verbindung zu den Brokern'"""
+        logger.info("🔍 PROBLEM 1: Testing Broker Connection Issues")
         
+        # Test 1: GET /api/platforms/status - Check connection status
+        logger.info("Test 1.1: GET /api/platforms/status")
         success, data = await self.make_request("GET", "/api/platforms/status")
         
         if success:
             platforms = data.get("platforms", [])
+            logger.info(f"Found {len(platforms)} platforms: {[p.get('name') for p in platforms]}")
             
             # Find MT5 platforms
             mt5_libertex_data = None
@@ -111,21 +114,21 @@ class Booner_TradeTester:
                 
                 if libertex_connected and libertex_balance > 0:
                     self.log_test_result(
-                        "Platform Connections - MT5_LIBERTEX", 
+                        "PROBLEM 1 - MT5_LIBERTEX Connection", 
                         True, 
-                        f"✅ MT5_LIBERTEX: connected=true, balance=€{libertex_balance:,.2f}",
+                        f"✅ MT5_LIBERTEX: connected=true, balance=€{libertex_balance:,.2f} (NOT €0.00)",
                         {"connected": libertex_connected, "balance": libertex_balance}
                     )
                 else:
                     self.log_test_result(
-                        "Platform Connections - MT5_LIBERTEX", 
+                        "PROBLEM 1 - MT5_LIBERTEX Connection", 
                         False, 
-                        f"❌ MT5_LIBERTEX: connected={libertex_connected}, balance=€{libertex_balance}",
+                        f"❌ MT5_LIBERTEX: connected={libertex_connected}, balance=€{libertex_balance} (PROBLEM: Balance is €0.00 or not connected)",
                         mt5_libertex_data
                     )
             else:
                 self.log_test_result(
-                    "Platform Connections - MT5_LIBERTEX", 
+                    "PROBLEM 1 - MT5_LIBERTEX Connection", 
                     False, 
                     "❌ MT5_LIBERTEX not found in platforms list",
                     {"available_platforms": [p.get("name") for p in platforms]}
@@ -138,31 +141,202 @@ class Booner_TradeTester:
                 
                 if icmarkets_connected and icmarkets_balance > 0:
                     self.log_test_result(
-                        "Platform Connections - MT5_ICMARKETS", 
+                        "PROBLEM 1 - MT5_ICMARKETS Connection", 
                         True, 
-                        f"✅ MT5_ICMARKETS: connected=true, balance=€{icmarkets_balance:,.2f}",
+                        f"✅ MT5_ICMARKETS: connected=true, balance=€{icmarkets_balance:,.2f} (NOT €0.00)",
                         {"connected": icmarkets_connected, "balance": icmarkets_balance}
                     )
                 else:
                     self.log_test_result(
-                        "Platform Connections - MT5_ICMARKETS", 
+                        "PROBLEM 1 - MT5_ICMARKETS Connection", 
                         False, 
-                        f"❌ MT5_ICMARKETS: connected={icmarkets_connected}, balance=€{icmarkets_balance}",
+                        f"❌ MT5_ICMARKETS: connected={icmarkets_connected}, balance=€{icmarkets_balance} (PROBLEM: Balance is €0.00 or not connected)",
                         mt5_icmarkets_data
                     )
             else:
                 self.log_test_result(
-                    "Platform Connections - MT5_ICMARKETS", 
+                    "PROBLEM 1 - MT5_ICMARKETS Connection", 
                     False, 
                     "❌ MT5_ICMARKETS not found in platforms list",
                     {"available_platforms": [p.get("name") for p in platforms]}
                 )
         else:
             self.log_test_result(
-                "Platform Connections - API Error", 
+                "PROBLEM 1 - Platform Status API", 
                 False, 
                 f"❌ Failed to get platforms status: {data}",
                 data
+            )
+        
+        # Test 1.2: GET /api/platforms/MT5_LIBERTEX/account - Get Libertex account balance
+        logger.info("Test 1.2: GET /api/platforms/MT5_LIBERTEX/account")
+        libertex_success, libertex_data = await self.make_request("GET", "/api/platforms/MT5_LIBERTEX/account")
+        
+        if libertex_success:
+            account = libertex_data.get("account", {})
+            balance = account.get("balance", 0)
+            leverage = account.get("leverage", 0)
+            currency = account.get("currency", "")
+            
+            if balance > 0:
+                self.log_test_result(
+                    "PROBLEM 1 - Libertex Account Balance", 
+                    True, 
+                    f"✅ Libertex Balance: {balance} {currency}, Leverage: {leverage} (Balance NOT €0.00)",
+                    {"balance": balance, "leverage": leverage, "currency": currency}
+                )
+            else:
+                self.log_test_result(
+                    "PROBLEM 1 - Libertex Account Balance", 
+                    False, 
+                    f"❌ Libertex Balance: {balance} {currency} (PROBLEM: Balance is €0.00)",
+                    libertex_data
+                )
+        else:
+            error_msg = libertex_data.get("detail", str(libertex_data))
+            self.log_test_result(
+                "PROBLEM 1 - Libertex Account Balance", 
+                False, 
+                f"❌ Failed to get Libertex account: {error_msg}",
+                libertex_data
+            )
+        
+        # Test 1.3: GET /api/platforms/MT5_ICMARKETS/account - Get ICMarkets account balance
+        logger.info("Test 1.3: GET /api/platforms/MT5_ICMARKETS/account")
+        icmarkets_success, icmarkets_data = await self.make_request("GET", "/api/platforms/MT5_ICMARKETS/account")
+        
+        if icmarkets_success:
+            account = icmarkets_data.get("account", {})
+            balance = account.get("balance", 0)
+            leverage = account.get("leverage", 0)
+            currency = account.get("currency", "")
+            
+            if balance > 0:
+                self.log_test_result(
+                    "PROBLEM 1 - ICMarkets Account Balance", 
+                    True, 
+                    f"✅ ICMarkets Balance: {balance} {currency}, Leverage: {leverage} (Balance NOT €0.00)",
+                    {"balance": balance, "leverage": leverage, "currency": currency}
+                )
+            else:
+                self.log_test_result(
+                    "PROBLEM 1 - ICMarkets Account Balance", 
+                    False, 
+                    f"❌ ICMarkets Balance: {balance} {currency} (PROBLEM: Balance is €0.00)",
+                    icmarkets_data
+                )
+        else:
+            error_msg = icmarkets_data.get("detail", str(icmarkets_data))
+            self.log_test_result(
+                "PROBLEM 1 - ICMarkets Account Balance", 
+                False, 
+                f"❌ Failed to get ICMarkets account: {error_msg}",
+                icmarkets_data
+            )
+
+    async def test_day_swing_settings_problem_2(self):
+        """PROBLEM 2: Day/Swing Settings nicht änderbar - User says 'Day und Swift Einstellungen sind plötzlich nicht mehr änderbar'"""
+        logger.info("🔍 PROBLEM 2: Testing Day/Swing Settings Issues")
+        
+        # Test 2.1: GET /api/settings - Check if swing_trading_enabled and day_trading_enabled are present
+        logger.info("Test 2.1: GET /api/settings - Check for swing_trading_enabled and day_trading_enabled")
+        settings_success, settings_data = await self.make_request("GET", "/api/settings")
+        
+        if settings_success:
+            swing_trading_enabled = settings_data.get("swing_trading_enabled")
+            day_trading_enabled = settings_data.get("day_trading_enabled")
+            
+            # Check if both fields are present
+            if swing_trading_enabled is not None and day_trading_enabled is not None:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Fields Present", 
+                    True, 
+                    f"✅ Both fields present: swing_trading_enabled={swing_trading_enabled}, day_trading_enabled={day_trading_enabled}",
+                    {"swing_trading_enabled": swing_trading_enabled, "day_trading_enabled": day_trading_enabled}
+                )
+            else:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Fields Present", 
+                    False, 
+                    f"❌ Missing fields: swing_trading_enabled={swing_trading_enabled}, day_trading_enabled={day_trading_enabled}",
+                    settings_data
+                )
+        else:
+            self.log_test_result(
+                "PROBLEM 2 - Settings API", 
+                False, 
+                f"❌ Failed to get settings: {settings_data}",
+                settings_data
+            )
+            return
+        
+        # Test 2.2: POST /api/settings - Try to update day_trading_enabled to true
+        logger.info("Test 2.2: POST /api/settings - Try to update day_trading_enabled to true")
+        
+        # Get current settings first to preserve other values
+        current_settings = settings_data.copy()
+        current_settings["day_trading_enabled"] = True  # Change this to true
+        
+        update_success, update_data = await self.make_request("POST", "/api/settings", current_settings)
+        
+        if update_success:
+            success_flag = update_data.get("success", False)
+            message = update_data.get("message", "")
+            
+            if success_flag:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Update", 
+                    True, 
+                    f"✅ Settings update successful: {message}",
+                    {"success": success_flag, "message": message}
+                )
+            else:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Update", 
+                    False, 
+                    f"❌ Settings update failed: success={success_flag}, message={message}",
+                    update_data
+                )
+        else:
+            error_msg = update_data.get("detail", str(update_data))
+            self.log_test_result(
+                "PROBLEM 2 - Settings Update", 
+                False, 
+                f"❌ Failed to update settings: {error_msg}",
+                update_data
+            )
+            return
+        
+        # Test 2.3: GET /api/settings again - Verify the change persisted
+        logger.info("Test 2.3: GET /api/settings again - Verify day_trading_enabled=true persisted")
+        await asyncio.sleep(1)  # Wait a moment for the change to persist
+        
+        verify_success, verify_data = await self.make_request("GET", "/api/settings")
+        
+        if verify_success:
+            new_day_trading_enabled = verify_data.get("day_trading_enabled")
+            new_swing_trading_enabled = verify_data.get("swing_trading_enabled")
+            
+            if new_day_trading_enabled is True:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Persistence", 
+                    True, 
+                    f"✅ Change persisted: day_trading_enabled={new_day_trading_enabled}, swing_trading_enabled={new_swing_trading_enabled}",
+                    {"day_trading_enabled": new_day_trading_enabled, "swing_trading_enabled": new_swing_trading_enabled}
+                )
+            else:
+                self.log_test_result(
+                    "PROBLEM 2 - Settings Persistence", 
+                    False, 
+                    f"❌ Change NOT persisted: day_trading_enabled={new_day_trading_enabled} (expected True)",
+                    {"day_trading_enabled": new_day_trading_enabled, "swing_trading_enabled": new_swing_trading_enabled}
+                )
+        else:
+            self.log_test_result(
+                "PROBLEM 2 - Settings Verification", 
+                False, 
+                f"❌ Failed to verify settings: {verify_data}",
+                verify_data
             )
 
     async def test_api_root(self):
