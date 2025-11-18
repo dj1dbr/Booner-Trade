@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Rohstoff Trader Backend API Test Suite
-Tests MT5 connection, symbol mapping, and trade execution after fixes
+Booner-Trade Backend API Test Suite
+CRITICAL FOCUS: Manual Trade Execution Bug Fix Testing
+Tests response parsing logic improvements and error handling
 """
 
 import asyncio
 import aiohttp
 import json
 import logging
+import subprocess
 from datetime import datetime
 from typing import Dict, Any, List
 
