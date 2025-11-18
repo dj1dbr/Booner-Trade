@@ -983,8 +983,6 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500">{commodity.category}</p>
-                    </div>
-                  )}
                 </div>
                 
                 <div className="mb-3">
