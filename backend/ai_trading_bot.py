@@ -297,8 +297,11 @@ class AITradingBot:
             for commodity_id in enabled_commodities:
                 # Rate Limiting: Respektiere analysis_interval
                 last_check = last_analysis_dict.get(commodity_id)
-                if last_check and (datetime.now() - last_check).seconds < analysis_interval:
+                time_since_last = (datetime.now() - last_check).seconds if last_check else 999999
+                
+                if last_check and time_since_last < analysis_interval:
                     skipped_count += 1
+                    logger.debug(f"{strategy_name}: {commodity_id} übersprungen (erst vor {time_since_last}s analysiert, Intervall: {analysis_interval}s)")
                     continue
                 
                 last_analysis_dict[commodity_id] = datetime.now()
