@@ -681,7 +681,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Dual Trading Strategy Implementation Testing"
+    - "Manual Trade Execution Bug Fix"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
