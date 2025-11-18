@@ -744,6 +744,42 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: |
+      MANUAL TRADE EXECUTION BUG FIX TESTING COMPLETED (Nov 18, 2025)
+      
+      🔥 CRITICAL TESTING RESULTS - MIXED SUCCESS:
+      
+      ✅ WORKING COMPONENTS (5/8 tests passed - 62.5%):
+      1. API Availability: All core endpoints working (platforms, commodities, settings)
+      2. App Name Change: "Booner-Trade" correctly implemented in backend logs
+      3. Error Handling: Descriptive error messages working (no generic "Broker rejected")
+      4. Trade Request Processing: Receives and validates trade requests correctly
+      5. SL/TP Calculation: Working correctly (Price=60.0, SL=58.8, TP=62.4)
+      
+      ❌ CRITICAL ISSUES BLOCKING FULL TESTING (3/8 tests failed):
+      
+      1. METAAPI ACCOUNT CONFIGURATION BROKEN:
+         - Account ID "aistrategy-1" returns 404 Not Found
+         - Both MT5_LIBERTEX and MT5_ICMARKETS failing authentication
+         - Error: "Trading account with id aistrategy-1 not found"
+         - This blocks ALL manual trade execution
+      
+      2. SDK RESPONSE LOGGING NOT TESTABLE:
+         - The response parsing fix (lines 1609-1645) cannot be tested
+         - No SDK calls reach the improved logging code
+         - Connection fails before SDK response parsing
+      
+      3. PLATFORM CONNECTIONS FAILING:
+         - Both platforms showing connected=false
+         - Authentication issues prevent trade execution testing
+      
+      🎯 ASSESSMENT:
+      The manual trade execution bug fix is IMPLEMENTED but CANNOT BE FULLY TESTED due to MetaAPI account configuration issues. The response parsing improvements are in place but unreachable due to connection failures.
+      
+      🔧 IMMEDIATE ACTION NEEDED:
+      Fix MetaAPI account configuration before the bug fix can be properly validated.
+  
   - agent: "main"
     message: |
       DUAL TRADING STRATEGY IMPLEMENTATION COMPLETED (Nov 18, 2025)
