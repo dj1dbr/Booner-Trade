@@ -1595,13 +1595,30 @@ async def execute_trade(request: TradeExecuteRequest):
                     raise HTTPException(status_code=503, detail=f"{default_platform} Connector nicht verfügbar")
                 
                 # Verwende create_market_order (SDK-Methode)
-                result = await connector.create_market_order(
-                    symbol=mt5_symbol,
-                    order_type=trade_type.upper(),
-                    volume=quantity,
-                    sl=stop_loss,
-                    tp=take_profit
-                )
+                # ERST mit SL/TP versuchen, dann ohne falls fehlschlägt
+                result = None
+                try:
+                    result = await connector.create_market_order(
+                        symbol=mt5_symbol,
+                        order_type=trade_type.upper(),
+                        volume=quantity,
+                        sl=stop_loss,
+                        tp=take_profit
+                    )
+                except Exception as e:
+                    if "Invalid stops" in str(e) or "TRADE_RETCODE" in str(e):
+                        logger.warning(f"⚠️  Invalid stops - versuche OHNE SL/TP...")
+                        # Versuche ohne SL/TP
+                        result = await connector.create_market_order(
+                            symbol=mt5_symbol,
+                            order_type=trade_type.upper(),
+                            volume=quantity,
+                            sl=None,
+                            tp=None
+                        )
+                        logger.info(f"✅ Trade OHNE SL/TP geöffnet - KI überwacht SL/TP!")
+                    else:
+                        raise
                 
                 if result and result.get('success'):
                     # SDK gibt orderId/positionId zurück
