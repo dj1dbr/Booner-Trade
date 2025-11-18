@@ -637,13 +637,13 @@ Antworte NUR mit: JA oder NEIN
         """
         try:
             from multi_platform_connector import multi_platform
-            from commodity_processor import commodity_processor
+            import commodity_processor
             
             strategy_name = "Swing Trading" if strategy == "swing" else "Day Trading"
             logger.info(f"🚀 Führe {strategy_name} Trade aus: {commodity_id} {direction}")
             
-            # Hole Commodity-Info
-            commodity = commodity_processor.get_commodity_by_id(commodity_id)
+            # Hole Commodity-Info aus dem COMMODITIES dict
+            commodity = commodity_processor.COMMODITIES.get(commodity_id)
             if not commodity:
                 logger.error(f"Commodity {commodity_id} nicht gefunden")
                 return
