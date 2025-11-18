@@ -495,52 +495,84 @@ class Booner_TradeTester:
                     {"error_detail": error_detail, "error_type": "other"}
                 )
     
-    async def test_backend_logs_sdk_response(self):
-        """Test Backend Logs for SDK Response Details - Verify logging improvements"""
-        logger.info("📋 Checking Backend Logs for SDK Response Details")
+    async def test_backend_logs_connection_errors(self):
+        """Check Backend Logs for Connection Errors - Why are platform balances showing €0?"""
+        logger.info("📋 Checking Backend Logs for Connection Errors")
         
         try:
-            # Check for new SDK response logging
+            # Check for MetaAPI connection errors
             result1 = subprocess.run(
-                ["grep", "-i", "SDK Response Type", "/var/log/supervisor/backend.err.log"],
+                ["grep", "-i", "error", "/var/log/supervisor/backend.err.log"],
                 capture_output=True, text=True, timeout=5
             )
             
+            # Check for MetaAPI quota/rate limit issues
             result2 = subprocess.run(
-                ["grep", "-i", "SDK Response:", "/var/log/supervisor/backend.err.log"],
+                ["grep", "-i", "quota\|rate limit\|too many requests", "/var/log/supervisor/backend.err.log"],
                 capture_output=True, text=True, timeout=5
             )
             
-            sdk_type_logs = result1.returncode == 0 and result1.stdout
-            sdk_response_logs = result2.returncode == 0 and result2.stdout
+            # Check for platform connection issues
+            result3 = subprocess.run(
+                ["grep", "-i", "platform\|connection\|connect", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
             
-            if sdk_type_logs and sdk_response_logs:
-                # Get recent logs
-                type_lines = result1.stdout.strip().split('\n')[-3:] if result1.stdout else []
-                response_lines = result2.stdout.strip().split('\n')[-3:] if result2.stdout else []
-                
+            error_logs = result1.returncode == 0 and result1.stdout
+            quota_logs = result2.returncode == 0 and result2.stdout
+            connection_logs = result3.returncode == 0 and result3.stdout
+            
+            # Get recent error logs (last 5 lines)
+            recent_errors = []
+            if error_logs:
+                recent_errors = result1.stdout.strip().split('\n')[-5:]
+            
+            recent_quota = []
+            if quota_logs:
+                recent_quota = result2.stdout.strip().split('\n')[-3:]
+            
+            recent_connections = []
+            if connection_logs:
+                recent_connections = result3.stdout.strip().split('\n')[-3:]
+            
+            # Analyze the logs
+            critical_issues = []
+            if quota_logs:
+                critical_issues.append("MetaAPI quota/rate limit exceeded")
+            if any("TooManyRequestsException" in line for line in recent_errors):
+                critical_issues.append("TooManyRequestsException detected")
+            if any("account not found" in line.lower() for line in recent_errors):
+                critical_issues.append("Account not found errors")
+            if any("connection" in line.lower() and "failed" in line.lower() for line in recent_errors):
+                critical_issues.append("Connection failures detected")
+            
+            if critical_issues:
                 self.log_test_result(
-                    "Backend Logs - SDK Response Details", 
-                    True, 
-                    f"✅ SDK response logging found - Type logs: {len(type_lines)}, Response logs: {len(response_lines)}",
+                    "Backend Logs - Connection Errors", 
+                    False, 
+                    f"❌ Critical issues found: {', '.join(critical_issues)}",
                     {
-                        "sdk_type_logs": len(type_lines),
-                        "sdk_response_logs": len(response_lines),
-                        "recent_type_logs": type_lines,
-                        "recent_response_logs": response_lines
+                        "critical_issues": critical_issues,
+                        "recent_errors": recent_errors[-3:],  # Last 3 errors
+                        "recent_quota": recent_quota,
+                        "recent_connections": recent_connections[-2:]  # Last 2 connection logs
                     }
                 )
             else:
                 self.log_test_result(
-                    "Backend Logs - SDK Response Details", 
-                    False, 
-                    f"❌ Missing SDK response logs - Type logs: {sdk_type_logs}, Response logs: {sdk_response_logs}",
-                    {"sdk_type_found": sdk_type_logs, "sdk_response_found": sdk_response_logs}
+                    "Backend Logs - Connection Errors", 
+                    True, 
+                    f"✅ No critical connection errors found in recent logs",
+                    {
+                        "error_logs_found": len(recent_errors),
+                        "quota_logs_found": len(recent_quota),
+                        "connection_logs_found": len(recent_connections)
+                    }
                 )
                 
         except Exception as e:
             self.log_test_result(
-                "Backend Logs - SDK Response Details", 
+                "Backend Logs - Connection Errors", 
                 False, 
                 f"❌ Error checking logs: {str(e)}",
                 {"error": str(e)}
