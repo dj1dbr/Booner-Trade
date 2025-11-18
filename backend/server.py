@@ -357,17 +357,17 @@ class TradingSettings(BaseModel):
     swing_atr_multiplier_tp: float = 3.0  # Take Profit = 3x ATR
     swing_risk_per_trade_percent: float = 2.0  # 2% Risiko pro Trade
     
-    # DAY TRADING Konfiguration (Kurzfristig / Hochfrequenz)
+    # DAY TRADING Konfiguration (Kurzfristig / Hochfrequenz) - AGGRESSIV!
     day_trading_enabled: bool = False  # Day Trading aktiviert (default: aus)
-    day_min_confidence_score: float = 0.4  # 40% Mindest-Konfidenz (niedriger als Swing)
-    day_stop_loss_percent: float = 0.5  # 0.5% Stop Loss (enger als Swing)
-    day_take_profit_percent: float = 0.8  # 0.8% Take Profit (enger als Swing)
-    day_max_positions: int = 10  # Max 10 Day-Trading-Positionen gleichzeitig
-    day_position_hold_time_hours: int = 2  # Max 2 Stunden Haltezeit - dann schließen
-    day_analysis_interval_seconds: int = 60  # Jede Minute analysieren
-    day_atr_multiplier_sl: float = 1.0  # Stop Loss = 1x ATR (enger)
-    day_atr_multiplier_tp: float = 1.5  # Take Profit = 1.5x ATR (enger)
-    day_risk_per_trade_percent: float = 1.0  # 1% Risiko pro Trade (konservativer)
+    day_min_confidence_score: float = 0.25  # 25% Mindest-Konfidenz (SEHR niedrig für schnelles Einsteigen!)
+    day_stop_loss_percent: float = 1.5  # 1.5% Stop Loss (Broker-kompatibel)
+    day_take_profit_percent: float = 2.5  # 2.5% Take Profit (Broker-kompatibel)
+    day_max_positions: int = 15  # Max 15 Day-Trading-Positionen gleichzeitig (mehr!)
+    day_position_hold_time_hours: int = 1  # Max 1 Stunde Haltezeit - dann schließen (schneller!)
+    day_analysis_interval_seconds: int = 30  # Alle 30 Sekunden analysieren (schneller!)
+    day_atr_multiplier_sl: float = 1.5  # Stop Loss = 1.5x ATR
+    day_atr_multiplier_tp: float = 2.0  # Take Profit = 2.0x ATR
+    day_risk_per_trade_percent: float = 0.5  # 0.5% Risiko pro Trade (kleinere Positionen)
     
     # GESAMTES Balance-Management (Swing + Day zusammen)
     combined_max_balance_percent_per_platform: float = 20.0  # Max 20% PRO PLATTFORM für BEIDE Strategien zusammen
