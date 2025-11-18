@@ -730,15 +730,37 @@ Antworte NUR mit: JA oder NEIN
             logger.info(f"   Take Profit: {take_profit:.2f}")
             logger.info(f"   Risk: €{risk_amount:.2f} ({risk_per_trade}%)")
             
-            # Trade ausführen!
-            result = await multi_platform.execute_trade(
-                platform_name=platform,
-                symbol=symbol,
-                action=direction,
-                volume=volume,
-                stop_loss=stop_loss,
-                take_profit=take_profit
-            )
+            # Trade ausführen - Erst mit SL/TP versuchen, dann ohne
+            result = None
+            try:
+                result = await multi_platform.execute_trade(
+                    platform_name=platform,
+                    symbol=symbol,
+                    action=direction,
+                    volume=volume,
+                    stop_loss=stop_loss,
+                    take_profit=take_profit
+                )
+            except Exception as e:
+                if "Invalid stops" in str(e):
+                    logger.warning(f"⚠️  Invalid stops - versuche Trade OHNE SL/TP...")
+                    # Versuche nochmal OHNE SL/TP
+                    try:
+                        result = await multi_platform.execute_trade(
+                            platform_name=platform,
+                            symbol=symbol,
+                            action=direction,
+                            volume=volume,
+                            stop_loss=None,
+                            take_profit=None
+                        )
+                        # Merke dass wir SL/TP manuell setzen müssen
+                        logger.info(f"✅ Trade OHNE SL/TP geöffnet - bitte manuell setzen!")
+                    except Exception as e2:
+                        logger.error(f"❌ Trade auch ohne SL/TP fehlgeschlagen: {e2}")
+                        return
+                else:
+                    raise
             
             if result and result.get('success'):
                 logger.info(f"✅ AI-Trade erfolgreich ausgeführt: {commodity_id} {direction}")
