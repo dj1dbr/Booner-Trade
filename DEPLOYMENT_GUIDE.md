@@ -5,7 +5,7 @@
 Die App ist jetzt in **zwei Versionen** verfügbar:
 
 ### 1. 🌐 Web-Version (Browser)
-- **URL**: https://smart-trader-201.preview.emergentagent.com
+- **URL**: https://autotradeai-8.preview.emergentagent.com
 - **Zugriff**: Über jeden modernen Browser (Chrome, Safari, Firefox)
 - **Vorteil**: Keine Installation nötig, immer aktuell
 - **Nutzung**: Überall verfügbar mit Internetverbindung
@@ -92,7 +92,7 @@ Ausgabe: `/app/electron/dist/`
 ## 🌐 Web-Version nutzen (Browser)
 
 Die Web-Version läuft bereits auf:
-**https://smart-trader-201.preview.emergentagent.com**
+**https://autotradeai-8.preview.emergentagent.com**
 
 ### Lokale Entwicklung
 

@@ -53,7 +53,7 @@ http://localhost:3000
 
 ODER für Production:
 ```
-https://smart-trader-201.preview.emergentagent.com
+https://autotradeai-8.preview.emergentagent.com
 ```
 
 ---

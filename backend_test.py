@@ -1894,7 +1894,7 @@ class RohstoffTraderTester:
 async def main():
     """Main test execution"""
     # Backend URL from environment
-    backend_url = "https://smart-trader-201.preview.emergentagent.com"
+    backend_url = "https://autotradeai-8.preview.emergentagent.com"
     
     async with RohstoffTraderTester(backend_url) as tester:
         await tester.run_all_tests()
