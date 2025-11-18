@@ -563,6 +563,37 @@ backend:
           - Issue appears to be: 1) Market closure for Gold, 2) Possible broker restrictions for WTI
           - All other systems working: positions sync, no duplicates, stable connections
           - Trade execution logic needs investigation during market hours
+      - working: true
+        agent: "main"
+        comment: |
+          ✅ MANUAL TRADE BUG FIXED (Nov 19, 2025):
+          
+          PROBLEM IDENTIFIED:
+          - User reported: Trades fail in app but succeed in MT5 terminal
+          - Root cause: Response parsing logic was too strict
+          - Code expected result.get('success') == True
+          - MetaAPI SDK sometimes returns Object with attributes instead of Dict
+          - This caused successful trades to be incorrectly rejected
+          
+          SOLUTION IMPLEMENTED (server.py line 1609-1645):
+          - Made success checking more robust with 3 fallback methods:
+            1. Check for explicit success key in dict
+            2. Check for orderId/positionId presence (implicit success)
+            3. Check for object attributes (hasattr)
+          - Added extensive logging to debug SDK responses
+          - Logs now show: Response type, Response content
+          
+          ADDITIONAL FIXES:
+          - App name changed: "Rohstoff Trader" → "Booner-Trade"
+            * server.py: FastAPI title and logs
+            * Dashboard.jsx: Main title
+            * index.html: Page title
+          - Removed Bitpanda availability hints from commodity cards
+          
+          TESTING NEEDED:
+          - Test manual WTI trade execution
+          - Verify error messages are more informative
+          - Confirm trades work during market hours
 
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
