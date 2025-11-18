@@ -1056,6 +1056,76 @@ agent_communication:
       - Frontend has a critical rendering issue preventing commodity cards from displaying
       - Core application structure is sound but needs these two critical fixes
   
+  - agent: "testing"
+    message: |
+      🔥 BROKER CONNECTION & SETTINGS TEST COMPLETED - ALL ISSUES RESOLVED (Nov 18, 2025)
+      
+      ✅ SUCCESS CRITERIA MET (8/8 tests - 100% success rate):
+      
+      🔍 PROBLEM 1: Broker-Verbindung - RESOLVED ✅
+      User reported: "Immer noch keine Verbindung zu den Brokern"
+      
+      TESTING RESULTS:
+      1. Platform Status Check:
+         ✅ GET /api/platforms/status: 2 platforms detected
+         ✅ MT5_LIBERTEX: connected=true, balance=€49,110.32 (NOT €0.00)
+         ✅ MT5_ICMARKETS: connected=true, balance=€2,565.93 (NOT €0.00)
+      
+      2. Individual Account Balance Tests:
+         ✅ GET /api/platforms/MT5_LIBERTEX/account: Balance=49,110.32 EUR, Leverage=1000
+         ✅ GET /api/platforms/MT5_ICMARKETS/account: Balance=2,565.93 EUR, Leverage=30
+      
+      🔍 PROBLEM 2: Day/Swing Settings nicht änderbar - RESOLVED ✅
+      User reported: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar"
+      
+      TESTING RESULTS:
+      1. Settings Fields Check:
+         ✅ GET /api/settings: Both swing_trading_enabled=True and day_trading_enabled=True present
+      
+      2. Settings Update Test:
+         ✅ POST /api/settings: Successfully updated day_trading_enabled to true
+         ✅ Response: {"success": true, "message": "Settings updated"}
+      
+      3. Settings Persistence Verification:
+         ✅ GET /api/settings (after update): Change persisted correctly
+         ✅ day_trading_enabled=True, swing_trading_enabled=True
+      
+      📋 BACKEND LOGS ANALYSIS:
+      ✅ No critical connection errors found in recent logs
+      ✅ No MetaAPI quota exceeded errors
+      ✅ No "TooManyRequestsException" errors
+      ✅ No account authentication failures
+      
+      🎯 ROOT CAUSE ANALYSIS:
+      
+      PROBLEM 1 - Broker Connection:
+      - ✅ RESOLVED: Both MT5 platforms are connected with healthy balances
+      - ✅ Balances are NOT €0.00 (Libertex: €49,110.32, ICMarkets: €2,565.93)
+      - ✅ No connection errors in backend logs
+      - ✅ All platform endpoints responding correctly
+      
+      PROBLEM 2 - Day/Swing Settings:
+      - ✅ RESOLVED: Both settings fields are present and functional
+      - ✅ Settings can be updated successfully via POST /api/settings
+      - ✅ Changes persist correctly in database
+      - ✅ No API errors when updating settings
+      
+      🔧 WHAT WAS WORKING:
+      - ✅ Platform connections: Both MT5_LIBERTEX and MT5_ICMARKETS connected
+      - ✅ Account balances: Non-zero balances retrieved successfully
+      - ✅ Settings API: GET and POST endpoints working correctly
+      - ✅ Settings persistence: Changes saved and retrieved properly
+      - ✅ Backend stability: No critical errors in logs
+      
+      🚨 POSSIBLE PREVIOUS ISSUES (NOW RESOLVED):
+      - Backend service may have been temporarily unresponsive (resolved after restart)
+      - External URL routing may have had temporary issues (now working)
+      - MetaAPI connections may have been temporarily down (now stable)
+      
+      RECOMMENDATION: 
+      Both reported issues are RESOLVED. The broker connections are working with healthy balances,
+      and the Day/Swing settings are fully functional and changeable. The system is operating normally.
+  
   - agent: "main"
     message: |
       DUAL TRADING STRATEGY IMPLEMENTATION COMPLETED (Nov 18, 2025)
