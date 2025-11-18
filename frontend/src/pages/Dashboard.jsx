@@ -2101,7 +2101,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-orange-400 font-semibold text-base">⚡ Day Trading (Kurzfristig)</Label>
-                <p className="text-xs text-slate-400 mt-1">Kleinere Positionen, niedrigere Confidence, 20% Balance, Max 2h Haltezeit</p>
+                <p className="text-xs text-slate-400 mt-1">Kleinere Positionen, niedrigere Confidence, Max 2h Haltezeit</p>
               </div>
               <Switch
                 checked={formData.day_trading_enabled === true}
