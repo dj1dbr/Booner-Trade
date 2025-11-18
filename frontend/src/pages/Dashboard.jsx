@@ -200,7 +200,14 @@ const Dashboard = () => {
   const fetchCommodities = async () => {
     try {
       const response = await axios.get(`${API}/commodities`);
-      setCommodities(response.data.commodities || {});
+      // Backend returns array directly, convert to object keyed by id
+      const commoditiesArray = response.data || [];
+      const commoditiesObject = {};
+      commoditiesArray.forEach(commodity => {
+        commoditiesObject[commodity.id] = commodity;
+      });
+      setCommodities(commoditiesObject);
+      console.log(`✅ Loaded ${commoditiesArray.length} commodities:`, Object.keys(commoditiesObject));
     } catch (error) {
       console.error('Error fetching commodities:', error);
     }
