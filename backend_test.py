@@ -2211,13 +2211,13 @@ class RohstoffTraderTester:
         logger.info("="*80)
 
     async def run_all_tests(self):
-        """Run all backend tests in sequence - COMPREHENSIVE AI TRADING BOT & AI CHAT TESTING"""
-        logger.info("🚀 COMPREHENSIVE AI TRADING BOT & AI CHAT TESTING")
-        logger.info("ZIEL: Teste ALLE Funktionen des vollautonomen AI Trading Bots und AI Chats")
+        """Run all backend tests in sequence - DUAL TRADING STRATEGY TESTING"""
+        logger.info("🚀 DUAL TRADING STRATEGY IMPLEMENTATION TESTING")
+        logger.info("ZIEL: Teste neue Dual-Strategy Features (Swing + Day Trading)")
         logger.info(f"Testing against: {self.base_url}")
         
-        # Run the comprehensive test suite as requested in the review
-        await self.run_comprehensive_ai_trading_bot_tests()
+        # Run the dual trading strategy test suite as requested in the review
+        await self.run_dual_trading_strategy_tests()
         
         # Summary
         self.print_test_summary()
