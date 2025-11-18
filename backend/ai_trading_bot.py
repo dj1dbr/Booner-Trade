@@ -650,8 +650,16 @@ Antworte NUR mit: JA oder NEIN
                 logger.error("Balance ist 0 oder negativ")
                 return
             
-            # Positionsgröße = (Balance * RisikoProTrade%) / (StopLoss * ContractSize)
-            risk_per_trade = self.settings.get('risk_per_trade_percent', 2.0)
+            # Strategie-spezifische Parameter
+            if strategy == "swing":
+                risk_per_trade = self.settings.get('swing_risk_per_trade_percent', 2.0)
+                atr_multiplier_sl = self.settings.get('swing_atr_multiplier_sl', 2.0)
+                atr_multiplier_tp = self.settings.get('swing_atr_multiplier_tp', 3.0)
+            else:  # day trading
+                risk_per_trade = self.settings.get('day_risk_per_trade_percent', 1.0)
+                atr_multiplier_sl = self.settings.get('day_atr_multiplier_sl', 1.0)
+                atr_multiplier_tp = self.settings.get('day_atr_multiplier_tp', 1.5)
+            
             risk_amount = balance * (risk_per_trade / 100)
             
             # Stop Loss und Take Profit basierend auf ATR
@@ -662,10 +670,9 @@ Antworte NUR mit: JA oder NEIN
                 logger.error("Preis oder ATR nicht verfügbar")
                 return
             
-            # Stop Loss: 2 x ATR
-            sl_distance = atr * 2
-            # Take Profit: 3 x ATR (Risk:Reward = 1:1.5)
-            tp_distance = atr * 3
+            # Stop Loss und Take Profit mit Strategie-spezifischen Multiplikatoren
+            sl_distance = atr * atr_multiplier_sl
+            tp_distance = atr * atr_multiplier_tp
             
             if direction == 'BUY':
                 stop_loss = current_price - sl_distance
