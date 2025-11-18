@@ -255,6 +255,9 @@ COMMODITIES = {
     "SUGAR": {"name": "Zucker", "symbol": "SB=F", "mt5_libertex_symbol": "SUGAR", "mt5_icmarkets_symbol": "Sugar_H6", "bitpanda_symbol": "SUGAR", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
     "COTTON": {"name": "Baumwolle", "symbol": "CT=F", "mt5_libertex_symbol": "COTTON", "mt5_icmarkets_symbol": "Cotton_H6", "bitpanda_symbol": "COTTON", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
     "COCOA": {"name": "Kakao", "symbol": "CC=F", "mt5_libertex_symbol": "COCOA", "mt5_icmarkets_symbol": "Cocoa_H6", "bitpanda_symbol": "COCOA", "category": "Agrar", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]},
+    
+    # Forex - Major Currency Pairs
+    "EURUSD": {"name": "EUR/USD", "symbol": "EURUSD=X", "mt5_libertex_symbol": "EURUSD", "mt5_icmarkets_symbol": "EURUSD", "bitpanda_symbol": None, "category": "Forex", "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS"]},
 }
 
 # Models
