@@ -654,15 +654,22 @@ Antworte NUR mit: JA oder NEIN
                 logger.error("Keine aktiven Plattformen")
                 return
             
-            # Wähle erste verfügbare Platform für diesen Commodity
+            # Wähle Platform mit verfügbarem Symbol
             platform = None
+            symbol = None
+            
             for p in active_platforms:
-                if p in commodity.get('platforms', []):
+                if 'MT5_LIBERTEX' in p and commodity.get('mt5_libertex_symbol'):
                     platform = p
+                    symbol = commodity.get('mt5_libertex_symbol')
+                    break
+                elif 'MT5_ICMARKETS' in p and commodity.get('mt5_icmarkets_symbol'):
+                    platform = p
+                    symbol = commodity.get('mt5_icmarkets_symbol')
                     break
             
-            if not platform:
-                logger.error(f"Keine verfügbare Platform für {commodity_id}")
+            if not platform or not symbol:
+                logger.error(f"Kein verfügbares Symbol für {commodity_id} auf aktiven Plattformen")
                 return
             
             # Risk Management: Positionsgröße berechnen
