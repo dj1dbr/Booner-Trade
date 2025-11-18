@@ -2006,6 +2006,152 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
           )}
         </div>
 
+        {/* Dual Trading Strategy Section */}
+        <div className="space-y-4 pb-4 border-b border-slate-700">
+          <h4 className="font-semibold text-lg flex items-center gap-2">
+            <Activity className="w-5 h-5 text-green-400" />
+            Trading Strategien
+          </h4>
+          
+          {/* Swing Trading */}
+          <div className="space-y-3 p-4 bg-green-900/10 rounded-lg border border-green-700/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-green-400 font-semibold text-base">📈 Swing Trading (Langfristig)</Label>
+                <p className="text-xs text-slate-400 mt-1">Größere Positionen, höhere Confidence, 80% Balance</p>
+              </div>
+              <Switch
+                checked={formData.swing_trading_enabled !== false}
+                onCheckedChange={(checked) => setFormData({ ...formData, swing_trading_enabled: checked })}
+              />
+            </div>
+            {formData.swing_trading_enabled !== false && (
+              <div className="grid grid-cols-2 gap-3 mt-3 pl-4 border-l-2 border-green-700/30">
+                <div>
+                  <Label className="text-xs text-slate-400">Min. Confidence</Label>
+                  <Input
+                    type="number"
+                    step="0.05"
+                    min="0"
+                    max="1"
+                    value={formData.swing_min_confidence_score || 0.6}
+                    onChange={(e) => setFormData({ ...formData, swing_min_confidence_score: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 0.6 (60%)</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Max Positionen</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={formData.swing_max_positions || 5}
+                    onChange={(e) => setFormData({ ...formData, swing_max_positions: parseInt(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 5</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Stop Loss %</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="10"
+                    value={formData.swing_stop_loss_percent || 2.0}
+                    onChange={(e) => setFormData({ ...formData, swing_stop_loss_percent: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 2.0%</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Take Profit %</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="20"
+                    value={formData.swing_take_profit_percent || 4.0}
+                    onChange={(e) => setFormData({ ...formData, swing_take_profit_percent: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 4.0%</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Day Trading */}
+          <div className="space-y-3 p-4 bg-orange-900/10 rounded-lg border border-orange-700/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-orange-400 font-semibold text-base">⚡ Day Trading (Kurzfristig)</Label>
+                <p className="text-xs text-slate-400 mt-1">Kleinere Positionen, niedrigere Confidence, 20% Balance, Max 2h Haltezeit</p>
+              </div>
+              <Switch
+                checked={formData.day_trading_enabled === true}
+                onCheckedChange={(checked) => setFormData({ ...formData, day_trading_enabled: checked })}
+              />
+            </div>
+            {formData.day_trading_enabled === true && (
+              <div className="grid grid-cols-2 gap-3 mt-3 pl-4 border-l-2 border-orange-700/30">
+                <div>
+                  <Label className="text-xs text-slate-400">Min. Confidence</Label>
+                  <Input
+                    type="number"
+                    step="0.05"
+                    min="0"
+                    max="1"
+                    value={formData.day_min_confidence_score || 0.4}
+                    onChange={(e) => setFormData({ ...formData, day_min_confidence_score: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 0.4 (40%)</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Max Positionen</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="30"
+                    value={formData.day_max_positions || 10}
+                    onChange={(e) => setFormData({ ...formData, day_max_positions: parseInt(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 10</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Stop Loss %</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="5"
+                    value={formData.day_stop_loss_percent || 0.5}
+                    onChange={(e) => setFormData({ ...formData, day_stop_loss_percent: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 0.5%</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-slate-400">Take Profit %</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    max="5"
+                    value={formData.day_take_profit_percent || 0.8}
+                    onChange={(e) => setFormData({ ...formData, day_take_profit_percent: parseFloat(e.target.value) })}
+                    className="bg-slate-800 border-slate-700 text-sm"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Default: 0.8%</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Platform Credentials */}
         <div className="space-y-4 pb-4 border-b border-slate-700">
           <h4 className="font-semibold text-lg">Plattform-Zugangsdaten</h4>
