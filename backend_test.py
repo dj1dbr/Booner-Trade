@@ -1,18 +1,29 @@
 #!/usr/bin/env python3
 """
 Booner-Trade Backend API Test Suite
-FINAL BACKEND TESTING - Manual Trade Bug Fix & Platform Connections
+BROKER CONNECTION & SETTINGS TEST
 
-CRITICAL FOCUS:
-- Fixed manual trade execution response parsing (more robust)
-- Updated MetaAPI Account IDs to correct values
-- Backend restarted with new configuration
+PROBLEM 1: Broker-Verbindung
+User sagt: "Immer noch keine Verbindung zu den Brokern"
 
-CRITICAL TESTS:
-1. Platform Connections (HIGH PRIORITY)
-2. Manual Trade Execution (CRITICAL) 
-3. Response Parsing Verification
-4. App Name Verification
+Test:
+1. GET /api/platforms/status - Check connection status
+2. GET /api/platforms/MT5_LIBERTEX/account - Get Libertex account balance
+3. GET /api/platforms/MT5_ICMARKETS/account - Get ICMarkets account balance
+4. Verify balances are NOT €0.00
+
+PROBLEM 2: Day/Swing Settings nicht änderbar
+User sagt: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar"
+
+Test:
+1. GET /api/settings - Check if swing_trading_enabled and day_trading_enabled are present
+2. POST /api/settings - Try to update day_trading_enabled to true
+3. GET /api/settings again - Verify the change persisted
+
+FOCUS:
+- Why are platform balances showing €0?
+- Why can't user change Day/Swing settings?
+- Check backend logs for connection errors
 """
 
 import asyncio
