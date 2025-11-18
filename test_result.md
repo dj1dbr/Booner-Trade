@@ -1194,6 +1194,64 @@ agent_communication:
          ✅ Settings retrieval working ✅
          ✅ Settings update to "ALL" platform successful ✅
          
+
+  - agent: "main"
+    message: |
+      MANUAL TRADE BUG FIX + UI IMPROVEMENTS COMPLETED (Nov 19, 2025)
+      
+      ═══════════════════════════════════════════════════════════════
+      BUG FIX: Manual Trade Execution
+      ═══════════════════════════════════════════════════════════════
+      
+      PROBLEM:
+      - User reported: Manual trades fail in app with "Broker rejected" error
+      - Same trades succeed directly in MT5 terminal
+      - Issue: Response parsing logic was too strict
+      
+      ROOT CAUSE:
+      - Code expected: result.get('success') == True
+      - MetaAPI SDK sometimes returns:
+        * Object with attributes (result.orderId) instead of Dict
+        * Dict with orderId but no explicit 'success' key
+      - This caused successful trades to be marked as failures
+      
+      SOLUTION (server.py line 1609-1645):
+      1. Made success checking more robust with 3 methods:
+         - Check explicit success key in dict: result.get('success') == True
+         - Check implicit success via orderId/positionId presence
+         - Check object attributes: hasattr(result, 'orderId')
+      2. Added extensive logging:
+         - Log response type: Dict vs Object
+         - Log full response content for debugging
+      3. More informative error messages
+      
+      ═══════════════════════════════════════════════════════════════
+      UI IMPROVEMENTS:
+      ═══════════════════════════════════════════════════════════════
+      
+      1. ✅ APP NAME CHANGED: "Rohstoff Trader" → "Booner-Trade"
+         - server.py: FastAPI title, logs
+         - Dashboard.jsx: Main title (line 651)
+         - index.html: Page title
+      
+      2. ✅ BITPANDA HINTS REMOVED
+         - Removed "✓ Auf Bitpanda handelbar" badges from commodity cards
+         - Cleaner UI without unused platform references
+      
+      ═══════════════════════════════════════════════════════════════
+      TESTING REQUIRED:
+      ═══════════════════════════════════════════════════════════════
+      
+      Backend:
+      - Test manual trade execution (WTI, GOLD)
+      - Verify error messages are informative
+      - Check logs show correct response parsing
+      
+      Frontend:
+      - Verify "Booner-Trade" title displays correctly
+      - Confirm Bitpanda hints are removed
+      - Test overall UI functionality
+
       5. Stability Test:
          ✅ 5x consecutive platform status checks - ALL STABLE ✅
          ✅ No timeouts, connections remain stable ✅
