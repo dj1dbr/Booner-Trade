@@ -161,7 +161,7 @@ COMMODITIES = {
         "bitpanda_symbol": "COTTON",
         "category": "Agrar", 
         "unit": "USD/lb", 
-        "platforms": ["MT5_LIBERTEX", "MT5_ICMARKETS", "BITPANDA"]
+        "platforms": ["MT5_ICMARKETS", "BITPANDA"]
     },
     "COCOA": {
         "name": "Kakao", 
