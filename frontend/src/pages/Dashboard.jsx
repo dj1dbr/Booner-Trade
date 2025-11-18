@@ -2032,7 +2032,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-green-400 font-semibold text-base">📈 Swing Trading (Langfristig)</Label>
-                <p className="text-xs text-slate-400 mt-1">Größere Positionen, höhere Confidence, 80% Balance</p>
+                <p className="text-xs text-slate-400 mt-1">Größere Positionen, höhere Confidence</p>
               </div>
               <Switch
                 checked={formData.swing_trading_enabled !== false}
