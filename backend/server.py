@@ -1247,8 +1247,23 @@ async def ai_chat_endpoint(
         
         logger.info(f"AI Chat: Using provider={final_ai_provider}, model={final_model} (from {'params' if ai_provider else 'settings'})")
         
-        # Get open trades
-        open_trades = await db.trades.find({"status": "OPEN"}).to_list(100)
+        # Get open trades (from MetaAPI via trades/list endpoint, not DB!)
+        # DB only has manually created trades, MT5 trades come from MetaAPI
+        from multi_platform_connector import multi_platform
+        
+        open_trades = []
+        
+        # Get trades from all active platforms
+        active_platforms = settings.get('active_platforms', ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO'])
+        for platform in active_platforms:
+            try:
+                platform_trades = await multi_platform.get_open_positions(platform)
+                if platform_trades:
+                    open_trades.extend(platform_trades)
+            except Exception as e:
+                logger.warning(f"Could not fetch trades from {platform}: {e}")
+        
+        logger.info(f"AI Chat: Found {len(open_trades)} open trades from MT5")
         
         # Send message to AI with session_id and db for function calling
         result = await send_chat_message(
