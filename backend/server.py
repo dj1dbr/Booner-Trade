@@ -1698,7 +1698,8 @@ async def execute_trade(request: TradeExecuteRequest):
                 stop_loss=stop_loss,
                 take_profit=take_profit,
                 strategy_signal=f"Manual - {default_platform} #{platform_ticket}",
-                mt5_ticket=str(platform_ticket)  # ← WICHTIG!
+                mt5_ticket=str(platform_ticket),  # ← WICHTIG!
+                status="OPEN"  # Explizit setzen
             )
             
             doc = trade.model_dump()
@@ -1712,7 +1713,8 @@ async def execute_trade(request: TradeExecuteRequest):
             
             return {"success": True, "trade": doc, "ticket": platform_ticket, "platform": default_platform}
         else:
-            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden")
+            logger.error(f"❌ Trade fehlgeschlagen: platform_ticket ist None")
+            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden - Broker hat Order abgelehnt. Prüfen Sie ob der Markt geöffnet ist.")
             
     except HTTPException:
         raise
