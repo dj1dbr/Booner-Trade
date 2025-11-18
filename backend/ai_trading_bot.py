@@ -261,16 +261,17 @@ class AITradingBot:
             # Strategie-spezifische Parameter laden
             if strategy == "swing":
                 max_positions = self.settings.get('swing_max_positions', 5)
-                max_balance_percent = self.settings.get('swing_max_balance_percent', 80.0)
                 min_confidence = self.settings.get('swing_min_confidence_score', 0.6) * 100
-                analysis_interval = self.settings.get('swing_analysis_interval_seconds', 600)
+                analysis_interval = self.settings.get('swing_analysis_interval_seconds', 60)
                 last_analysis_dict = self.last_analysis_time_swing
             else:  # day trading
                 max_positions = self.settings.get('day_max_positions', 10)
-                max_balance_percent = self.settings.get('day_max_balance_percent', 20.0)
                 min_confidence = self.settings.get('day_min_confidence_score', 0.4) * 100
                 analysis_interval = self.settings.get('day_analysis_interval_seconds', 60)
                 last_analysis_dict = self.last_analysis_time_day
+            
+            # KORRIGIERT: 20% PRO PLATTFORM für BEIDE Strategien ZUSAMMEN
+            combined_max_balance_percent = self.settings.get('combined_max_balance_percent_per_platform', 20.0)
             
             # Prüfe aktuelle Positionen für diese Strategie
             current_positions = await self.get_strategy_positions(strategy)
@@ -278,10 +279,10 @@ class AITradingBot:
                 logger.info(f"ℹ️  {strategy_name}: Max Positionen erreicht ({len(current_positions)}/{max_positions})")
                 return
             
-            # Prüfe Balance-Auslastung für diese Strategie
-            balance_usage = await self.calculate_strategy_balance_usage(strategy)
-            if balance_usage >= max_balance_percent:
-                logger.warning(f"⚠️  {strategy_name}: Balance-Limit erreicht ({balance_usage:.1f}% >= {max_balance_percent}%)")
+            # Prüfe GESAMTE Balance-Auslastung (Swing + Day zusammen) PRO Plattform
+            total_balance_usage = await self.calculate_combined_balance_usage_per_platform()
+            if total_balance_usage >= combined_max_balance_percent:
+                logger.warning(f"⚠️  {strategy_name}: GESAMT Balance-Limit erreicht ({total_balance_usage:.1f}% >= {combined_max_balance_percent}% PRO Plattform)")
                 return
             
             # Hole aktivierte Commodities aus Settings
