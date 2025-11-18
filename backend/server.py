@@ -1165,10 +1165,14 @@ async def startup_event():
         logger.info("✅ Default settings initialized")
     
     # Start AI Trading Bot if auto_trading is enabled
-    if settings and settings.get('auto_trading', False):
-        from ai_trading_bot import bot_manager
-        await bot_manager.start()
-        logger.info("🤖 AI Trading Bot auto-started (auto_trading=True)")
+    # Note: Bot manager temporarily disabled for stability
+    # if settings and settings.get('auto_trading', False):
+    #     try:
+    #         from ai_trading_bot import bot_manager
+    #         await bot_manager.start()
+    #         logger.info("🤖 AI Trading Bot auto-started (auto_trading=True)")
+    #     except Exception as e:
+    #         logger.warning(f"Could not start bot manager: {e}")
     
     logger.info("✅ Booner-Trade API Ready")
 
@@ -1178,8 +1182,11 @@ async def shutdown_event():
     logger.info("🛑 Shutting down Booner-Trade API...")
     
     # Stop bot
-    from ai_trading_bot import bot_manager
-    if bot_manager.is_running():
-        await bot_manager.stop()
+    # try:
+    #     from ai_trading_bot import bot_manager
+    #     if bot_manager.is_running():
+    #         await bot_manager.stop()
+    # except Exception as e:
+    #     logger.warning(f"Could not stop bot manager: {e}")
     
     logger.info("✅ Shutdown complete")
