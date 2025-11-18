@@ -347,15 +347,15 @@ class TradingSettings(BaseModel):
     
     # SWING TRADING Konfiguration (Langfristig)
     swing_trading_enabled: bool = True  # Swing Trading aktiviert
-    swing_min_confidence_score: float = 0.6  # 60% Mindest-Konfidenz
+    swing_min_confidence_score: float = 0.45  # 45% Mindest-Konfidenz (niedriger für mehr Trades)
     swing_stop_loss_percent: float = 2.0  # 2% Stop Loss
     swing_take_profit_percent: float = 4.0  # 4% Take Profit
-    swing_max_positions: int = 5  # Max 5 Swing-Positionen gleichzeitig
+    swing_max_positions: int = 8  # Max 8 Swing-Positionen gleichzeitig (mehr!)
     swing_position_hold_time_hours: int = 168  # Max 7 Tage Haltezeit (optional)
-    swing_analysis_interval_seconds: int = 60  # Alle 1 Minute analysieren (KORRIGIERT)
+    swing_analysis_interval_seconds: int = 30  # Alle 30 Sekunden analysieren (schneller!)
     swing_atr_multiplier_sl: float = 2.0  # Stop Loss = 2x ATR
     swing_atr_multiplier_tp: float = 3.0  # Take Profit = 3x ATR
-    swing_risk_per_trade_percent: float = 2.0  # 2% Risiko pro Trade
+    swing_risk_per_trade_percent: float = 1.5  # 1.5% Risiko pro Trade
     
     # DAY TRADING Konfiguration (Kurzfristig / Hochfrequenz) - AGGRESSIV!
     day_trading_enabled: bool = False  # Day Trading aktiviert (default: aus)
