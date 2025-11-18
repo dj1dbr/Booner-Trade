@@ -2026,6 +2026,9 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             <Activity className="w-5 h-5 text-green-400" />
             Trading Strategien
           </h4>
+          <p className="text-sm text-amber-400 bg-amber-900/20 p-3 rounded border border-amber-700/30">
+            ⚠️ Beide Strategien zusammen nutzen maximal 20% der Balance <strong>PRO Plattform</strong>
+          </p>
           
           {/* Swing Trading */}
           <div className="space-y-3 p-4 bg-green-900/10 rounded-lg border border-green-700/30">
