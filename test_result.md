@@ -594,6 +594,63 @@ backend:
           - Test manual WTI trade execution
           - Verify error messages are more informative
           - Confirm trades work during market hours
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ MANUAL TRADE EXECUTION BUG FIX TESTING RESULTS (Nov 18, 2025):
+          
+          🔍 CRITICAL TESTING COMPLETED - MIXED RESULTS:
+          
+          ✅ SUCCESS CRITERIA MET (5/8 tests - 62.5% success rate):
+          
+          1. API Availability Tests:
+             ✅ GET /api/platforms/status: 2 platforms detected (MT5_LIBERTEX, MT5_ICMARKETS)
+             ✅ GET /api/commodities: 15 commodities available, WTI_CRUDE present
+             ✅ GET /api/settings: Settings accessible, default_platform=MT5_LIBERTEX
+          
+          2. App Name Change:
+             ✅ Backend logs show "Booner-Trade API Starting" and "Booner-Trade API Ready"
+             ✅ API endpoints working correctly (platforms endpoint accessible)
+          
+          3. Error Handling Improvements:
+             ✅ Descriptive error messages working: "INVALID_COMMODITY ist auf MT5 nicht verfügbar"
+             ✅ No generic "Broker rejected" errors - specific error messages provided
+          
+          ❌ CRITICAL ISSUES IDENTIFIED (3/8 tests failed):
+          
+          1. Manual Trade Execution FAILING:
+             ❌ WTI_CRUDE BUY 0.01 fails with "MT5_LIBERTEX Connector nicht verfügbar"
+             ❌ Root cause: MetaAPI account "aistrategy-1" not found (404 error)
+             ❌ Backend logs show: "Trading account with id aistrategy-1 not found"
+          
+          2. SDK Response Logging NOT WORKING:
+             ❌ No "📥 SDK Response Type" logs found
+             ❌ No "📥 SDK Response:" logs found
+             ❌ The response parsing fix cannot be tested because trades fail at connection level
+          
+          3. Platform Status Issues:
+             ❌ Platform connections showing as disconnected (connected=false)
+             ❌ Both MT5_LIBERTEX and MT5_ICMARKETS showing connection failures
+          
+          🎯 ROOT CAUSE ANALYSIS:
+          The manual trade execution bug fix CANNOT BE FULLY TESTED because:
+          - MetaAPI account configuration is incorrect ("aistrategy-1" not found)
+          - Platform connections are failing at the authentication level
+          - SDK response parsing improvements are not reached due to connection failures
+          
+          🔧 WHAT'S WORKING:
+          - ✅ Trade execution request processing (receives and validates requests)
+          - ✅ SL/TP calculation logic working correctly
+          - ✅ Error message improvements (descriptive, not generic)
+          - ✅ App name change implemented correctly
+          - ✅ API endpoints accessible and responding
+          
+          🚨 WHAT NEEDS FIXING:
+          - ❌ MetaAPI account configuration (account ID "aistrategy-1" invalid)
+          - ❌ Platform connection authentication
+          - ❌ SDK response logging not triggered due to connection failures
+          
+          RECOMMENDATION: Fix MetaAPI account configuration before the response parsing improvements can be properly tested.
 
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
