@@ -720,7 +720,7 @@ Antworte NUR mit: JA oder NEIN
                 logger.info(f"✅ AI-Trade erfolgreich ausgeführt: {commodity_id} {direction}")
                 logger.info(f"   Ticket: {result.get('ticket')}")
                 
-                # Speichere in DB
+                # Speichere in DB mit Strategy-Tag
                 await self.db.trades.insert_one({
                     "commodity_id": commodity_id,
                     "commodity_name": commodity.get('name'),
@@ -734,6 +734,7 @@ Antworte NUR mit: JA oder NEIN
                     "status": "OPEN",
                     "opened_at": datetime.now(),
                     "opened_by": "AI_BOT",
+                    "strategy": strategy,  # WICHTIG: Tag für Dual-Strategy-Tracking!
                     "analysis": analysis,  # Speichere komplette Analyse
                     "confidence": analysis.get('confidence', 0)
                 })
