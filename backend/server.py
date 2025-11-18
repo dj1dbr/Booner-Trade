@@ -189,15 +189,18 @@ async def update_settings(settings: TradingSettings):
     )
     
     # Bot automatisch starten/stoppen basierend auf auto_trading
-    from ai_trading_bot import bot_manager
-    if settings.auto_trading:
-        if not bot_manager.is_running():
-            await bot_manager.start()
-            logger.info("🤖 Bot automatisch gestartet (auto_trading=True)")
-    else:
-        if bot_manager.is_running():
-            await bot_manager.stop()
-            logger.info("🛑 Bot automatisch gestoppt (auto_trading=False)")
+    try:
+        from ai_trading_bot import bot_manager
+        if settings.auto_trading:
+            if not bot_manager.is_running():
+                await bot_manager.start()
+                logger.info("🤖 Bot automatisch gestartet (auto_trading=True)")
+        else:
+            if bot_manager.is_running():
+                await bot_manager.stop()
+                logger.info("🛑 Bot automatisch gestoppt (auto_trading=False)")
+    except ImportError:
+        logger.warning("Bot Manager nicht verfügbar - auto_trading ignoriert")
     
     return {"success": True, "message": "Settings updated"}
 
