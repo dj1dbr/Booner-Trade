@@ -26,7 +26,7 @@ def set_platform_connector(connector):
 # Bitpanda: Alle Rohstoffe verfügbar
 COMMODITIES = {
     # Precious Metals (Spot prices)
-    # Libertex: ✅ | ICMarkets: ✅ | Bitpanda: ✅
+    # Libertex: ✅ XAUUSD, XAGUSD, PL, PA | ICMarkets: ✅ | Bitpanda: ✅
     "GOLD": {
         "name": "Gold", 
         "symbol": "GC=F", 
