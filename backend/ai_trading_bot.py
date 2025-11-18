@@ -22,7 +22,12 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 class AITradingBot:
-    """KI-gesteuerter Trading Bot - übernimmt ALLE Trading-Entscheidungen"""
+    """KI-gesteuerter Trading Bot - übernimmt ALLE Trading-Entscheidungen
+    
+    DUAL TRADING STRATEGY:
+    - Swing Trading: Langfristig, größere Positionen, 80% Balance
+    - Day Trading: Kurzfristig, kleinere Positionen, 20% Balance
+    """
     
     def __init__(self):
         self.running = False
@@ -35,7 +40,8 @@ class AITradingBot:
         self.market_analyzer = None
         self.llm_chat = None
         self.trade_history = []  # Für Lernzwecke
-        self.last_analysis_time = {}  # Pro Commodity
+        self.last_analysis_time_swing = {}  # Pro Commodity für Swing Trading
+        self.last_analysis_time_day = {}  # Pro Commodity für Day Trading
         
     async def initialize(self):
         """Initialisiere Bot"""
