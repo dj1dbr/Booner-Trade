@@ -218,6 +218,96 @@ async def get_all_market_data():
     
     return latest_data
 
+@api_router.get("/market/live-ticks")
+async def get_live_ticks():
+    """Get live tick prices from MetaAPI platforms"""
+    try:
+        from multi_platform_connector import multi_platform
+        from commodity_processor import COMMODITIES
+        
+        live_prices = {}
+        
+        # Try to get live prices from connected platforms
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            try:
+                await multi_platform.connect_platform(platform_name)
+                
+                if platform_name in multi_platform.platforms:
+                    connector = multi_platform.platforms[platform_name].get('connector')
+                    if connector:
+                        # Get prices for each commodity
+                        for commodity_id, commodity_info in COMMODITIES.items():
+                            # Get the right symbol for this platform
+                            if platform_name == 'MT5_LIBERTEX':
+                                symbol = commodity_info.get('mt5_libertex_symbol')
+                            else:
+                                symbol = commodity_info.get('mt5_icmarkets_symbol')
+                            
+                            if symbol:
+                                try:
+                                    price_info = await connector.get_symbol_price(symbol)
+                                    if price_info:
+                                        live_prices[commodity_id] = {
+                                            'price': price_info.get('ask', price_info.get('price', 0)),
+                                            'bid': price_info.get('bid', 0),
+                                            'ask': price_info.get('ask', 0),
+                                            'time': price_info.get('time', datetime.now(timezone.utc).isoformat()),
+                                            'symbol': symbol,
+                                            'platform': platform_name
+                                        }
+                                        break  # Found price, no need to check other platforms
+                                except:
+                                    continue
+            except:
+                continue
+        
+        return {"live_prices": live_prices}
+    
+    except Exception as e:
+        logger.error(f"Error getting live ticks: {e}")
+        return {"live_prices": {}}
+
+@api_router.get("/market/current")
+async def get_current_market_data():
+    """Get current market data (alias for /market/all)"""
+    return await get_all_market_data()
+
+@api_router.get("/market/history")
+async def get_market_history(limit: int = 50):
+    """Get historical market data entries"""
+    try:
+        cursor = db.market_data.find().sort("timestamp", -1).limit(limit)
+        history = await cursor.to_list(length=limit)
+        
+        for item in history:
+            item.pop('_id', None)
+        
+        return history
+    except Exception as e:
+        logger.error(f"Error getting market history: {e}")
+        return []
+
+@api_router.post("/market/refresh")
+async def refresh_market_data():
+    """Manually refresh market data for all commodities"""
+    try:
+        from commodity_processor import COMMODITIES
+        
+        refreshed = []
+        for commodity_id in COMMODITIES.keys():
+            try:
+                # Trigger analysis which updates market data
+                result = await analyze_commodity(commodity_id)
+                refreshed.append(commodity_id)
+            except:
+                continue
+        
+        return {"success": True, "refreshed": refreshed}
+    except Exception as e:
+        logger.error(f"Error refreshing market data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.get("/market/{commodity_id}")
 async def get_market_data(commodity_id: str, period: str = "1d"):
     """Get market data for a specific commodity"""
