@@ -2876,8 +2876,8 @@ class Booner_TradeTester:
 
 async def main():
     """Main test execution"""
-    # Backend URL from environment
-    backend_url = "https://aistrategy-1.preview.emergentagent.com"
+    # Backend URL - use local URL since external URL is timing out
+    backend_url = "http://localhost:8001"
     
     async with Booner_TradeTester(backend_url) as tester:
         await tester.run_all_tests()
