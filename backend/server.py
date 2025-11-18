@@ -900,6 +900,58 @@ async def list_trades():
     
     return trades
 
+@api_router.get("/trades/stats")
+async def get_trade_stats():
+    """Get trading statistics"""
+    try:
+        # Get all trades
+        all_trades = await db.trades.find().to_list(length=None)
+        
+        # Calculate stats
+        total_trades = len(all_trades)
+        open_trades = [t for t in all_trades if t.get('status') == 'OPEN']
+        closed_trades = [t for t in all_trades if t.get('status') == 'CLOSED']
+        
+        # Calculate P&L for closed trades
+        total_pnl = sum([t.get('pnl', 0) for t in closed_trades if t.get('pnl')])
+        
+        # Win rate
+        winning_trades = [t for t in closed_trades if t.get('pnl', 0) > 0]
+        win_rate = (len(winning_trades) / len(closed_trades) * 100) if closed_trades else 0
+        
+        # Platform breakdown
+        platform_stats = {}
+        for trade in all_trades:
+            platform = trade.get('platform', 'UNKNOWN')
+            if platform not in platform_stats:
+                platform_stats[platform] = {'total': 0, 'open': 0, 'closed': 0}
+            platform_stats[platform]['total'] += 1
+            if trade.get('status') == 'OPEN':
+                platform_stats[platform]['open'] += 1
+            else:
+                platform_stats[platform]['closed'] += 1
+        
+        return {
+            'total_trades': total_trades,
+            'open_trades': len(open_trades),
+            'closed_trades': len(closed_trades),
+            'total_pnl': total_pnl,
+            'win_rate': win_rate,
+            'platform_stats': platform_stats
+        }
+    
+    except Exception as e:
+        logger.error(f"Error getting trade stats: {e}")
+        return {
+            'total_trades': 0,
+            'open_trades': 0,
+            'closed_trades': 0,
+            'total_pnl': 0,
+            'win_rate': 0,
+            'platform_stats': {}
+        }
+
+
 # Multi-Platform Endpoints
 @api_router.get("/platforms/status")
 async def get_platforms_status():
