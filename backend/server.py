@@ -1247,49 +1247,46 @@ async def ai_chat_endpoint(
         
         logger.info(f"AI Chat: Using provider={final_ai_provider}, model={final_model} (from {'params' if ai_provider else 'settings'})")
         
-        # Get open trades - Use the same logic as /trades/list endpoint
+        # Get open trades - Same logic as /trades/list endpoint
         from multi_platform_connector import multi_platform
-        import commodity_processor
         
         open_trades = []
+        active_platforms = settings.get('active_platforms', []) if settings else []
         
-        # Get all active platforms from settings
-        active_platforms = settings.get('active_platforms', [])
+        # Symbol mapping (same as /trades/list)
+        symbol_to_commodity = {
+            'XAUUSD': 'GOLD', 'XAGUSD': 'SILVER', 'XPTUSD': 'PLATINUM', 'XPDUSD': 'PALLADIUM',
+            'PL': 'PLATINUM', 'PA': 'PALLADIUM',
+            'USOILCash': 'WTI_CRUDE', 'WTI_F6': 'WTI_CRUDE',
+            'UKOUSD': 'BRENT_CRUDE', 'CL': 'BRENT_CRUDE',
+            'NGASCash': 'NATURAL_GAS', 'NG': 'NATURAL_GAS',
+            'WHEAT': 'WHEAT', 'CORN': 'CORN', 'SOYBEAN': 'SOYBEANS',
+            'COFFEE': 'COFFEE', 'SUGAR': 'SUGAR', 'COTTON': 'COTTON', 'COCOA': 'COCOA'
+        }
         
-        # Fetch positions from all active platforms
-        all_mt5_positions = {}
+        # Fetch positions from active platforms (check without _DEMO/_REAL suffix)
         for platform_name in active_platforms:
-            try:
-                positions = await multi_platform.get_open_positions(platform_name)
-                if positions:
-                    all_mt5_positions[platform_name] = positions
-            except Exception as e:
-                logger.warning(f"Could not fetch positions from {platform_name}: {e}")
-        
-        # Convert MT5 positions to trade format (same as /trades/list)
-        for platform_name, positions in all_mt5_positions.items():
-            for pos in positions:
-                # Map position to trade format
-                symbol = pos.get('symbol', '')
-                commodity = None
-                
-                # Find commodity by symbol
-                for comm_id, comm in commodity_processor.COMMODITIES.items():
-                    if (comm.get('mt5_libertex_symbol') == symbol or 
-                        comm.get('mt5_icmarkets_symbol') == symbol):
-                        commodity = comm.get('id')
-                        break
-                
-                if commodity:
-                    trade = {
-                        'commodity': commodity,
-                        'type': pos.get('type', 'UNKNOWN'),
-                        'quantity': pos.get('volume', 0),
-                        'entry_price': pos.get('openPrice', pos.get('price', 0)),
-                        'profit_loss': pos.get('profit', pos.get('unrealizedProfit', 0)),
-                        'platform': platform_name
-                    }
-                    open_trades.append(trade)
+            # Map _DEMO/_REAL to base name for API calls
+            base_platform = platform_name.replace('_DEMO', '').replace('_REAL', '')
+            if base_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+                try:
+                    positions = await multi_platform.get_open_positions(base_platform)
+                    
+                    for pos in positions:
+                        mt5_symbol = pos.get('symbol', 'UNKNOWN')
+                        commodity_id = symbol_to_commodity.get(mt5_symbol, mt5_symbol)
+                        
+                        trade = {
+                            'commodity': commodity_id,
+                            'type': "BUY" if pos.get('type') == 'POSITION_TYPE_BUY' else "SELL",
+                            'quantity': pos.get('volume', 0),
+                            'entry_price': pos.get('price_open', 0),
+                            'profit_loss': pos.get('profit', 0),
+                            'platform': platform_name
+                        }
+                        open_trades.append(trade)
+                except Exception as e:
+                    logger.warning(f"Could not fetch positions from {platform_name}: {e}")
         
         logger.info(f"AI Chat: Found {len(open_trades)} open trades from MT5")
         
