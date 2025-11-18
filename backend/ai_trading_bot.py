@@ -363,6 +363,104 @@ class AITradingBot:
             logger.error(f"Fehler beim Laden der Preishistorie: {e}")
             return []
     
+    
+    async def get_strategy_positions(self, strategy: str) -> List[Dict]:
+        """Hole alle offenen Positionen für eine bestimmte Strategie"""
+        try:
+            # Suche in DB nach Trades mit strategy-Tag
+            trades = await self.db.trades.find({
+                "status": "OPEN",
+                "strategy": strategy
+            }).to_list(length=100)
+            
+            return trades
+        except Exception as e:
+            logger.error(f"Fehler beim Laden der {strategy} Positionen: {e}")
+            return []
+    
+    async def calculate_strategy_balance_usage(self, strategy: str) -> float:
+        """Berechne aktuelle Balance-Auslastung einer Strategie in Prozent"""
+        try:
+            from multi_platform_connector import multi_platform
+            
+            # Hole Gesamt-Balance
+            total_balance = 0.0
+            for platform in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+                if platform in self.settings.get('active_platforms', []):
+                    account_info = await multi_platform.get_account_info(platform)
+                    if account_info:
+                        total_balance += account_info.get('balance', 0)
+            
+            if total_balance <= 0:
+                return 100.0
+            
+            # Hole alle offenen Positionen dieser Strategie
+            strategy_positions = await self.get_strategy_positions(strategy)
+            
+            # Berechne genutztes Kapital
+            used_capital = 0.0
+            for pos in strategy_positions:
+                entry_price = pos.get('entry_price', 0)
+                quantity = pos.get('quantity', 0)
+                used_capital += (entry_price * quantity)
+            
+            # Prozent der Gesamt-Balance
+            usage_percent = (used_capital / total_balance) * 100
+            
+            logger.debug(f"{strategy} Balance-Nutzung: {usage_percent:.1f}% (€{used_capital:.2f} von €{total_balance:.2f})")
+            
+            return min(usage_percent, 100.0)
+            
+        except Exception as e:
+            logger.error(f"Fehler bei {strategy} Balance-Berechnung: {e}")
+            return 0.0
+    
+    async def close_expired_day_trades(self):
+        """Schließe Day-Trading-Positionen die zu lange offen sind"""
+        try:
+            max_hold_time = self.settings.get('day_position_hold_time_hours', 2)
+            cutoff_time = datetime.now() - timedelta(hours=max_hold_time)
+            
+            # Hole alle Day-Trading-Positionen
+            day_positions = await self.get_strategy_positions("day")
+            
+            closed_count = 0
+            for pos in day_positions:
+                opened_at = pos.get('opened_at')
+                if not opened_at:
+                    continue
+                
+                # Prüfe Alter
+                if opened_at < cutoff_time:
+                    ticket = pos.get('mt5_ticket')
+                    platform = pos.get('platform')
+                    
+                    if ticket and platform:
+                        from multi_platform_connector import multi_platform
+                        
+                        logger.info(f"⏰ Schließe abgelaufenen Day-Trade: {pos.get('commodity_id')} (Ticket: {ticket}, Alter: {(datetime.now() - opened_at).seconds // 60} Min)")
+                        
+                        success = await multi_platform.close_position(platform, str(ticket))
+                        if success:
+                            closed_count += 1
+                            
+                            # Update DB
+                            await self.db.trades.update_one(
+                                {"mt5_ticket": str(ticket)},
+                                {"$set": {
+                                    "status": "CLOSED",
+                                    "closed_at": datetime.now(),
+                                    "close_reason": f"Time-Based Exit: Max {max_hold_time}h erreicht",
+                                    "closed_by": "AI_BOT_TIMER"
+                                }}
+                            )
+            
+            if closed_count > 0:
+                logger.info(f"✅ {closed_count} abgelaufene Day-Trades geschlossen")
+                
+        except Exception as e:
+            logger.error(f"Fehler beim Schließen abgelaufener Day-Trades: {e}")
+
     async def calculate_portfolio_risk(self) -> float:
         """Berechne aktuelles Portfolio-Risiko in Prozent"""
         try:
