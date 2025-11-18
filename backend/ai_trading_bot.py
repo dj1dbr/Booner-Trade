@@ -275,7 +275,10 @@ class AITradingBot:
                 confidence = analysis.get('confidence', 0)
                 
                 # Nur bei hoher Konfidenz handeln
-                min_confidence = self.settings.get('min_confidence_percent', 60.0)
+                # Check both field names for backward compatibility
+                min_confidence = self.settings.get('min_confidence_percent') or \
+                                self.settings.get('min_confidence_score', 0.6) * 100 or \
+                                60.0  # Default 60%
                 
                 if signal in ['BUY', 'SELL'] and confidence >= min_confidence:
                     logger.info(f"🎯 Starkes Signal: {commodity_id} {signal} (Konfidenz: {confidence}%)")
