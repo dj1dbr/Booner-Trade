@@ -2094,6 +2094,41 @@ class RohstoffTraderTester:
         else:
             self.log_test_result("Risk Management Configuration", False, "Failed to get settings for risk management check", settings_data)
     
+    async def run_dual_trading_strategy_tests(self):
+        """Run DUAL TRADING STRATEGY TESTS (as requested in review)"""
+        logger.info("\n" + "="*100)
+        logger.info("🔄 DUAL TRADING STRATEGY IMPLEMENTATION TESTING")
+        logger.info("ZIEL: Teste neue Dual-Strategy Features (Swing + Day Trading)")
+        logger.info("="*100)
+        
+        # 1. SETTINGS ENDPOINTS - Dual Strategy Parameters
+        logger.info("\n=== 1. SETTINGS ENDPOINTS - DUAL STRATEGY PARAMETERS ===")
+        await self.test_dual_strategy_settings_parameters()
+        
+        # 2. COMMODITIES ENDPOINT - EUR/USD Availability
+        logger.info("\n=== 2. COMMODITIES ENDPOINT - EUR/USD AVAILABILITY ===")
+        await self.test_eurusd_commodity_availability()
+        
+        # 3. BOT STATUS - Running Check
+        logger.info("\n=== 3. BOT STATUS - RUNNING CHECK ===")
+        await self.test_bot_status_dual_strategy()
+        
+        # 4. SETTINGS UPDATE - Day Trading Activation
+        logger.info("\n=== 4. SETTINGS UPDATE - DAY TRADING ACTIVATION ===")
+        await self.test_day_trading_activation()
+        
+        # 5. MARKET DATA - EUR/USD in Market Data
+        logger.info("\n=== 5. MARKET DATA - EUR/USD IN MARKET DATA ===")
+        await self.test_eurusd_in_market_data()
+        
+        # 6. BACKEND LOGS - Dual Strategy Messages
+        logger.info("\n=== 6. BACKEND LOGS - DUAL STRATEGY MESSAGES ===")
+        await self.test_backend_logs_dual_strategy()
+        
+        logger.info("\n" + "="*100)
+        logger.info("🎯 DUAL TRADING STRATEGY TESTING COMPLETED")
+        logger.info("="*100)
+
     async def run_comprehensive_ai_trading_bot_tests(self):
         """Run COMPREHENSIVE AI Trading Bot & AI Chat Tests (as requested in review)"""
         logger.info("\n" + "="*100)
