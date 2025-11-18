@@ -248,18 +248,40 @@ class AITradingBot:
         except Exception as e:
             logger.error(f"Fehler beim Monitoring: {e}", exc_info=True)
     
-    async def analyze_and_open_trades(self):
-        """KI analysiert Markt und öffnet neue Positionen"""
-        logger.info("🧠 KI analysiert Markt für neue Trade-Möglichkeiten...")
+    async def analyze_and_open_trades(self, strategy="swing"):
+        """KI analysiert Markt und öffnet neue Positionen - DUAL STRATEGY
+        
+        Args:
+            strategy: "swing" für Swing Trading, "day" für Day Trading
+        """
+        strategy_name = "Swing Trading" if strategy == "swing" else "Day Trading"
+        logger.info(f"🧠 KI analysiert Markt für neue {strategy_name} Möglichkeiten...")
         
         try:
-            # Prüfe Portfolio-Risiko
-            max_portfolio_risk = self.settings.get('max_portfolio_risk_percent', 20.0)
+            # Strategie-spezifische Parameter laden
+            if strategy == "swing":
+                max_positions = self.settings.get('swing_max_positions', 5)
+                max_balance_percent = self.settings.get('swing_max_balance_percent', 80.0)
+                min_confidence = self.settings.get('swing_min_confidence_score', 0.6) * 100
+                analysis_interval = self.settings.get('swing_analysis_interval_seconds', 600)
+                last_analysis_dict = self.last_analysis_time_swing
+            else:  # day trading
+                max_positions = self.settings.get('day_max_positions', 10)
+                max_balance_percent = self.settings.get('day_max_balance_percent', 20.0)
+                min_confidence = self.settings.get('day_min_confidence_score', 0.4) * 100
+                analysis_interval = self.settings.get('day_analysis_interval_seconds', 60)
+                last_analysis_dict = self.last_analysis_time_day
             
-            # Prüfe aktuelles Portfolio-Risiko
-            current_risk = await self.calculate_portfolio_risk()
-            if current_risk >= max_portfolio_risk:
-                logger.warning(f"⚠️  Portfolio-Risiko zu hoch: {current_risk:.1f}% >= {max_portfolio_risk}% - keine neuen Trades")
+            # Prüfe aktuelle Positionen für diese Strategie
+            current_positions = await self.get_strategy_positions(strategy)
+            if len(current_positions) >= max_positions:
+                logger.info(f"ℹ️  {strategy_name}: Max Positionen erreicht ({len(current_positions)}/{max_positions})")
+                return
+            
+            # Prüfe Balance-Auslastung für diese Strategie
+            balance_usage = await self.calculate_strategy_balance_usage(strategy)
+            if balance_usage >= max_balance_percent:
+                logger.warning(f"⚠️  {strategy_name}: Balance-Limit erreicht ({balance_usage:.1f}% >= {max_balance_percent}%)")
                 return
             
             # Hole aktivierte Commodities aus Settings
@@ -270,17 +292,17 @@ class AITradingBot:
             
             # Analysiere jeden Commodity
             for commodity_id in enabled_commodities:
-                # Rate Limiting: Max 1 Analyse alle 5 Minuten pro Commodity
-                last_check = self.last_analysis_time.get(commodity_id)
-                if last_check and (datetime.now() - last_check).seconds < 300:
+                # Rate Limiting: Respektiere analysis_interval
+                last_check = last_analysis_dict.get(commodity_id)
+                if last_check and (datetime.now() - last_check).seconds < analysis_interval:
                     continue
                 
-                self.last_analysis_time[commodity_id] = datetime.now()
+                last_analysis_dict[commodity_id] = datetime.now()
                 
                 # Hole Preishistorie
                 price_history = await self.get_price_history(commodity_id)
-                if len(price_history) < 20:  # Reduziert von 50 auf 20 für schnelleren Start
-                    logger.debug(f"ℹ️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)}), warte auf mehr History...")
+                if len(price_history) < 20:
+                    logger.debug(f"ℹ️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)})")
                     continue
                 
                 # Vollständige Marktanalyse
@@ -290,13 +312,8 @@ class AITradingBot:
                 confidence = analysis.get('confidence', 0)
                 
                 # Nur bei hoher Konfidenz handeln
-                # Check both field names for backward compatibility
-                min_confidence = self.settings.get('min_confidence_percent') or \
-                                self.settings.get('min_confidence_score', 0.6) * 100 or \
-                                60.0  # Default 60%
-                
                 if signal in ['BUY', 'SELL'] and confidence >= min_confidence:
-                    logger.info(f"🎯 Starkes Signal: {commodity_id} {signal} (Konfidenz: {confidence}%)")
+                    logger.info(f"🎯 {strategy_name} Signal: {commodity_id} {signal} (Konfidenz: {confidence}%)")
                     
                     # Optional: LLM Final Decision
                     if self.llm_chat and self.settings.get('use_llm_confirmation', False):
@@ -305,14 +322,14 @@ class AITradingBot:
                             logger.info(f"🤖 LLM lehnt Trade ab: {commodity_id}")
                             continue
                     
-                    # Trade ausführen!
-                    await self.execute_ai_trade(commodity_id, signal, analysis)
+                    # Trade ausführen mit Strategie-Tag!
+                    await self.execute_ai_trade(commodity_id, signal, analysis, strategy=strategy)
                 else:
                     if signal != 'HOLD':
-                        logger.info(f"ℹ️  {commodity_id}: {signal} aber Konfidenz zu niedrig ({confidence}% < {min_confidence}%)")
+                        logger.debug(f"ℹ️  {commodity_id}: {signal} aber Konfidenz zu niedrig ({confidence}% < {min_confidence}%)")
             
         except Exception as e:
-            logger.error(f"Fehler bei der KI-Analyse: {e}", exc_info=True)
+            logger.error(f"Fehler bei der {strategy_name} KI-Analyse: {e}", exc_info=True)
     
     async def get_price_history(self, commodity_id: str, days: int = 7) -> List[Dict]:
         """Hole Preishistorie für technische Analyse"""
