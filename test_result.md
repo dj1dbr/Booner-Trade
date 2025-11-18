@@ -590,7 +590,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Fix min_confidence_percent=None critical bug"
+    - "Dual Trading Strategy Implementation Testing"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
