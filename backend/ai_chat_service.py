@@ -39,11 +39,19 @@ AKTUELLE TRADING-EINSTELLUNGEN:
 MARKTDATEN (Live):
 """
     
-    # Add market data for key commodities
-    for commodity_id in ['GOLD', 'SILVER', 'WTI_CRUDE', 'BRENT_CRUDE']:
-        if commodity_id in latest_market_data:
-            data = latest_market_data[commodity_id]
-            context += f"\n{commodity_id}: ${data.get('price', 0):.2f}, Signal: {data.get('signal', 'HOLD')}, RSI: {data.get('rsi', 50):.1f}"
+    # Add market data for ALL available commodities
+    if latest_market_data:
+        commodity_count = 0
+        for commodity_id, data in latest_market_data.items():
+            if isinstance(data, dict) and 'price' in data:
+                price = data.get('price', 0)
+                signal = data.get('signal', 'HOLD')
+                rsi = data.get('rsi', 50)
+                context += f"\n{commodity_id}: ${price:.2f}, Signal: {signal}, RSI: {rsi:.1f}"
+                commodity_count += 1
+        
+        if commodity_count == 0:
+            context += "\n(Keine Marktdaten verfügbar)"
     
     context += f"\n\nOFFENE TRADES: {len(open_trades)}"
     if open_trades:
