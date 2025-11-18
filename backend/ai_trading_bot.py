@@ -677,22 +677,27 @@ Antworte NUR mit: JA oder NEIN
                 logger.error("Keine aktiven Plattformen")
                 return
             
-            # Wähle Platform mit verfügbarem Symbol
+            # Wähle Platform mit verfügbarem Symbol - BEVORZUGE LIBERTEX (mehr Symbole!)
             platform = None
             symbol = None
             
-            for p in active_platforms:
+            # Sortiere: Libertex zuerst
+            sorted_platforms = sorted(active_platforms, key=lambda x: 0 if 'LIBERTEX' in x else 1)
+            
+            for p in sorted_platforms:
                 if 'MT5_LIBERTEX' in p and commodity.get('mt5_libertex_symbol'):
                     platform = p
                     symbol = commodity.get('mt5_libertex_symbol')
+                    logger.debug(f"✅ {commodity_id} → Libertex (Symbol: {symbol})")
                     break
                 elif 'MT5_ICMARKETS' in p and commodity.get('mt5_icmarkets_symbol'):
                     platform = p
                     symbol = commodity.get('mt5_icmarkets_symbol')
+                    logger.debug(f"✅ {commodity_id} → ICMarkets (Symbol: {symbol})")
                     break
             
             if not platform or not symbol:
-                logger.error(f"Kein verfügbares Symbol für {commodity_id} auf aktiven Plattformen")
+                logger.warning(f"⚠️  {commodity_id}: Kein verfügbares Symbol auf aktiven Plattformen")
                 return
             
             # Risk Management: Positionsgröße berechnen
