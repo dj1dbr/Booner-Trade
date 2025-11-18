@@ -102,7 +102,7 @@ COMMODITIES = {
     },
     
     # Agricultural Commodities
-    # Libertex: ✅ | ICMarkets: teilweise | Bitpanda: ✅
+    # Libertex: ✅ WHEAT, SOYBEAN, COFFEE, SUGAR, COCOA, CORN | ICMarkets: teilweise
     "WHEAT": {
         "name": "Weizen", 
         "symbol": "ZW=F", 
