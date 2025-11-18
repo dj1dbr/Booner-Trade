@@ -72,6 +72,88 @@ class Booner_TradeTester:
             logger.error(f"Request failed: {e}")
             return False, {"error": str(e)}
     
+    async def test_platform_connections_critical(self):
+        """CRITICAL TEST: Platform Connections - MT5_LIBERTEX and MT5_ICMARKETS"""
+        logger.info("🔍 CRITICAL TEST: Platform Connections Status")
+        
+        success, data = await self.make_request("GET", "/api/platforms/status")
+        
+        if success:
+            platforms = data.get("platforms", [])
+            
+            # Find MT5 platforms
+            mt5_libertex_data = None
+            mt5_icmarkets_data = None
+            
+            for platform in platforms:
+                if isinstance(platform, dict):
+                    name = platform.get("name", "")
+                    if "MT5_LIBERTEX" in name:
+                        mt5_libertex_data = platform
+                    elif "MT5_ICMARKETS" in name:
+                        mt5_icmarkets_data = platform
+            
+            # Check MT5_LIBERTEX
+            if mt5_libertex_data:
+                libertex_connected = mt5_libertex_data.get("connected", False)
+                libertex_balance = mt5_libertex_data.get("balance", 0)
+                
+                if libertex_connected and libertex_balance > 0:
+                    self.log_test_result(
+                        "Platform Connections - MT5_LIBERTEX", 
+                        True, 
+                        f"✅ MT5_LIBERTEX: connected=true, balance=€{libertex_balance:,.2f}",
+                        {"connected": libertex_connected, "balance": libertex_balance}
+                    )
+                else:
+                    self.log_test_result(
+                        "Platform Connections - MT5_LIBERTEX", 
+                        False, 
+                        f"❌ MT5_LIBERTEX: connected={libertex_connected}, balance=€{libertex_balance}",
+                        mt5_libertex_data
+                    )
+            else:
+                self.log_test_result(
+                    "Platform Connections - MT5_LIBERTEX", 
+                    False, 
+                    "❌ MT5_LIBERTEX not found in platforms list",
+                    {"available_platforms": [p.get("name") for p in platforms]}
+                )
+            
+            # Check MT5_ICMARKETS
+            if mt5_icmarkets_data:
+                icmarkets_connected = mt5_icmarkets_data.get("connected", False)
+                icmarkets_balance = mt5_icmarkets_data.get("balance", 0)
+                
+                if icmarkets_connected and icmarkets_balance > 0:
+                    self.log_test_result(
+                        "Platform Connections - MT5_ICMARKETS", 
+                        True, 
+                        f"✅ MT5_ICMARKETS: connected=true, balance=€{icmarkets_balance:,.2f}",
+                        {"connected": icmarkets_connected, "balance": icmarkets_balance}
+                    )
+                else:
+                    self.log_test_result(
+                        "Platform Connections - MT5_ICMARKETS", 
+                        False, 
+                        f"❌ MT5_ICMARKETS: connected={icmarkets_connected}, balance=€{icmarkets_balance}",
+                        mt5_icmarkets_data
+                    )
+            else:
+                self.log_test_result(
+                    "Platform Connections - MT5_ICMARKETS", 
+                    False, 
+                    "❌ MT5_ICMARKETS not found in platforms list",
+                    {"available_platforms": [p.get("name") for p in platforms]}
+                )
+        else:
+            self.log_test_result(
+                "Platform Connections - API Error", 
+                False, 
+                f"❌ Failed to get platforms status: {data}",
+                data
+            )
+
     async def test_api_root(self):
         """Test basic API connectivity and app name change"""
         # Try different endpoints to find the API root
