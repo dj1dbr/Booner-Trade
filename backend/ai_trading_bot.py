@@ -230,10 +230,20 @@ class AITradingBot:
                         
                         # Position schließen wenn nötig
                         if should_close:
-                            logger.warning(f"🤖 KI-ENTSCHEIDUNG: Position schließen!")
-                            logger.warning(f"   Symbol: {symbol} | Ticket: {ticket}")
-                            logger.warning(f"   Grund: {close_reason}")
-                            logger.warning(f"   Profit: {profit:.2f}€")
+                            reason = "TAKE PROFIT" if tp_reached else "STOP LOSS"
+                            profit_loss = profit if profit else (current_price - entry_price) * quantity if 'BUY' in pos_type else (entry_price - current_price) * quantity
+                            
+                            logger.info(f"")
+                            logger.info(f"{'='*60}")
+                            logger.info(f"🤖 KI-ÜBERWACHUNG: {reason} ERREICHT!")
+                            logger.info(f"{'='*60}")
+                            logger.info(f"📊 Symbol: {symbol} ({pos_type})")
+                            logger.info(f"📍 Entry: €{entry_price:.2f}")
+                            logger.info(f"📍 Aktuell: €{current_price:.2f}")
+                            logger.info(f"🎯 Target: €{take_profit_price if tp_reached else stop_loss_price:.2f}")
+                            logger.info(f"💰 P&L: €{profit_loss:.2f}")
+                            logger.info(f"🚀 Aktion: Position wird bei MT5 geschlossen...")
+                            logger.info(f"{'='*60}")
                             
                             # SCHLIESSE POSITION!
                             success = await multi_platform.close_position(platform, str(ticket))
