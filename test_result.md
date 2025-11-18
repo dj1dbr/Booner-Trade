@@ -590,7 +590,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Vollautonomer AI Trading Bot - NEEDS COMPREHENSIVE TESTING"
+    - "Fix min_confidence_percent=None critical bug"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
