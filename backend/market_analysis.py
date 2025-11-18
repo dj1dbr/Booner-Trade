@@ -76,6 +76,79 @@ class MarketAnalyzer:
             logger.error(f"News fetch error für {commodity}: {e}")
             return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "error"}
     
+    async def _fetch_yahoo_finance_news(self, commodity: str) -> Dict:
+        """Hole News von Yahoo Finance (KOSTENLOS, keine API-Key nötig!)"""
+        try:
+            import yfinance as yf
+            
+            # Map commodity zu Yahoo Finance Ticker
+            ticker_map = {
+                "GOLD": "GC=F",  # Gold Futures
+                "SILVER": "SI=F",  # Silver Futures
+                "WTI_CRUDE": "CL=F",  # Crude Oil WTI Futures
+                "BRENT_CRUDE": "BZ=F",  # Brent Crude Oil Futures
+                "PLATINUM": "PL=F",  # Platinum Futures
+                "PALLADIUM": "PA=F",  # Palladium Futures
+                "NATURAL_GAS": "NG=F",  # Natural Gas Futures
+                "WHEAT": "ZW=F",  # Wheat Futures
+                "CORN": "ZC=F",  # Corn Futures
+                "SOYBEANS": "ZS=F",  # Soybean Futures
+                "SUGAR": "SB=F",  # Sugar Futures
+                "COFFEE": "KC=F",  # Coffee Futures
+                "COTTON": "CT=F",  # Cotton Futures
+                "COCOA": "CC=F"  # Cocoa Futures
+            }
+            
+            ticker = ticker_map.get(commodity)
+            if not ticker:
+                return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_no_ticker"}
+            
+            # Hole Yahoo Finance Ticker Objekt
+            ticker_obj = yf.Ticker(ticker)
+            
+            # Hole News
+            news = ticker_obj.news if hasattr(ticker_obj, 'news') else []
+            
+            if not news or len(news) == 0:
+                return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_no_news"}
+            
+            # Sentiment-Analyse
+            positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar']
+            negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble']
+            
+            sentiment_score = 0
+            article_count = 0
+            
+            for article in news[:10]:  # Top 10 News
+                title = article.get('title', '').lower()
+                summary = article.get('summary', '').lower()
+                text = title + " " + summary
+                
+                article_count += 1
+                for word in positive_words:
+                    if word in text:
+                        sentiment_score += 1
+                for word in negative_words:
+                    if word in text:
+                        sentiment_score -= 1
+            
+            # Normalisiere Score
+            normalized_score = sentiment_score / max(article_count, 1) if article_count > 0 else 0
+            sentiment = "bullish" if normalized_score > 0.3 else "bearish" if normalized_score < -0.3 else "neutral"
+            
+            logger.info(f"📰 Yahoo Finance News für {commodity}: {article_count} Artikel, Sentiment: {sentiment} ({normalized_score:.2f})")
+            
+            return {
+                "sentiment": sentiment,
+                "score": normalized_score,
+                "articles": article_count,
+                "source": "yahoo_finance"
+            }
+            
+        except Exception as e:
+            logger.error(f"Yahoo Finance News error für {commodity}: {e}")
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_error"}
+    
     async def _fetch_finnhub_news(self, commodity: str) -> Dict:
         """Hole News von Finnhub.io (kostenlos, 60 calls/min)"""
         try:
