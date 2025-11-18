@@ -326,10 +326,10 @@ class TradingSettings(BaseModel):
     position_size: float = 1.0
     max_portfolio_risk_percent: float = 20.0  # Max 20% of balance for all open positions
     default_platform: Optional[Literal["ALL", "MT5_LIBERTEX", "MT5_ICMARKETS", "MT5_LIBERTEX_DEMO", "MT5_ICMARKETS_DEMO", "MT5_LIBERTEX_REAL"]] = None  # Deprecated - all active platforms receive trades
-    # Alle Rohstoffe aktiviert
-    enabled_commodities: List[str] = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM", "WTI_CRUDE", "BRENT_CRUDE", "NATURAL_GAS", "WHEAT", "CORN", "SOYBEANS", "COFFEE", "SUGAR", "COTTON", "COCOA"]
+    # Alle Rohstoffe aktiviert (jetzt erweitert mit EUR/USD und weiteren Assets)
+    enabled_commodities: List[str] = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM", "WTI_CRUDE", "BRENT_CRUDE", "NATURAL_GAS", "WHEAT", "CORN", "SOYBEANS", "COFFEE", "SUGAR", "COTTON", "COCOA", "EURUSD"]
     
-    # KI Trading Strategie-Parameter (anpassbar)
+    # KI Trading Strategie-Parameter (anpassbar) - LEGACY für Backward-Compatibility
     rsi_oversold_threshold: float = 30.0  # RSI Kaufsignal (Standard: 30)
     rsi_overbought_threshold: float = 70.0  # RSI Verkaufssignal (Standard: 70)
     macd_signal_threshold: float = 0.0  # MACD Schwellenwert für Signale
@@ -337,6 +337,36 @@ class TradingSettings(BaseModel):
     min_confidence_score: float = 0.6  # Minimale Konfidenz für automatisches Trading (0-1)
     use_volume_confirmation: bool = True  # Verwende Volumen zur Bestätigung
     risk_per_trade_percent: float = 2.0  # Maximales Risiko pro Trade (% der Balance)
+    
+    # ═══════════════════════════════════════════════════════════════════════════
+    # DUAL TRADING STRATEGY - Swing Trading + Day Trading parallel
+    # ═══════════════════════════════════════════════════════════════════════════
+    
+    # SWING TRADING Konfiguration (Langfristig)
+    swing_trading_enabled: bool = True  # Swing Trading aktiviert
+    swing_min_confidence_score: float = 0.6  # 60% Mindest-Konfidenz
+    swing_stop_loss_percent: float = 2.0  # 2% Stop Loss
+    swing_take_profit_percent: float = 4.0  # 4% Take Profit
+    swing_max_positions: int = 5  # Max 5 Swing-Positionen gleichzeitig
+    swing_max_balance_percent: float = 80.0  # Maximal 80% der Balance für Swing Trading
+    swing_position_hold_time_hours: int = 168  # Max 7 Tage Haltezeit (optional)
+    swing_analysis_interval_seconds: int = 600  # Alle 10 Minuten analysieren
+    swing_atr_multiplier_sl: float = 2.0  # Stop Loss = 2x ATR
+    swing_atr_multiplier_tp: float = 3.0  # Take Profit = 3x ATR
+    swing_risk_per_trade_percent: float = 2.0  # 2% Risiko pro Trade
+    
+    # DAY TRADING Konfiguration (Kurzfristig / Hochfrequenz)
+    day_trading_enabled: bool = False  # Day Trading aktiviert (default: aus)
+    day_min_confidence_score: float = 0.4  # 40% Mindest-Konfidenz (niedriger als Swing)
+    day_stop_loss_percent: float = 0.5  # 0.5% Stop Loss (enger als Swing)
+    day_take_profit_percent: float = 0.8  # 0.8% Take Profit (enger als Swing)
+    day_max_positions: int = 10  # Max 10 Day-Trading-Positionen gleichzeitig
+    day_max_balance_percent: float = 20.0  # Maximal 20% der Balance für Day Trading
+    day_position_hold_time_hours: int = 2  # Max 2 Stunden Haltezeit - dann schließen
+    day_analysis_interval_seconds: int = 60  # Jede Minute analysieren (schneller als Swing)
+    day_atr_multiplier_sl: float = 1.0  # Stop Loss = 1x ATR (enger)
+    day_atr_multiplier_tp: float = 1.5  # Take Profit = 1.5x ATR (enger)
+    day_risk_per_trade_percent: float = 1.0  # 1% Risiko pro Trade (konservativer)
     
     # MetaAPI Token (shared across all MT5 accounts)
     metaapi_token: Optional[str] = None
