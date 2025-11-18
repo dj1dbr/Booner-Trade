@@ -718,16 +718,7 @@ Antworte NUR mit: JA oder NEIN
             volume = min(0.01, risk_amount / (sl_distance * 100))  # Beginne mit Mini-Lots
             volume = max(0.01, volume)  # Mindestens 0.01
             
-            # Bestimme Symbol für Platform
-            symbol = None
-            if platform == 'MT5_LIBERTEX_DEMO':
-                symbol = commodity.get('mt5_libertex_symbol')
-            elif platform == 'MT5_ICMARKETS_DEMO':
-                symbol = commodity.get('mt5_icmarkets_symbol')
-            
-            if not symbol:
-                logger.error(f"Kein Symbol für {commodity_id} auf {platform}")
-                return
+            # Symbol wurde bereits oben ausgewählt
             
             logger.info(f"📊 Trade-Parameter:")
             logger.info(f"   Platform: {platform}")
