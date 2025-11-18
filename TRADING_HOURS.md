@@ -46,11 +46,13 @@
 
 ### 💱 FOREX
 
-| Asset | Symbol | Handelszeiten (MEZ) | Täglich handelbar |
-|-------|--------|---------------------|-------------------|
-| **EUR/USD** | EURUSD | 07:00 - 19:00 | Nein (12h) |
+| Asset | Symbol | Handelszeiten (MEZ) | Täglich handelbar | Wochenende |
+|-------|--------|---------------------|-------------------|------------|
+| **EUR/USD** | EURUSD | 07:00 - 19:00 | Nein (12h) | ✅ GEÖFFNET |
 
-**Hinweis:** Forex hat kürzere Handelszeiten als erwartet!
+**⭐ HINWEIS:** 
+- EUR/USD ist das EINZIGE Asset das am Wochenende handelbar ist!
+- Unter der Woche nur 7-19 Uhr
 
 ---
 
