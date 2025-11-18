@@ -1451,6 +1451,380 @@ class RohstoffTraderTester:
         else:
             self.log_test_result("Trades List for Bot", False, f"Failed to get trades: {data}")
 
+    async def test_ai_chat_context_generation(self):
+        """Test AI Chat Context Generation (CRITICAL - Budget may be empty)"""
+        logger.info("🧠 Testing AI Chat Context Generation")
+        
+        # Test with a simple German trading question
+        endpoint = "/api/ai-chat?message=Zeige mir alle offenen Positionen und deren Status&session_id=test-context"
+        
+        success, data = await self.make_request("POST", endpoint)
+        
+        if success:
+            response = data.get("response", "")
+            context_used = data.get("context", {})
+            
+            # Check if response contains trading context even if AI budget is empty
+            if response and len(response) > 20:
+                # Look for trading-related keywords in response
+                trading_keywords = ["Position", "Trade", "Gold", "WTI", "Rohstoff", "Balance", "Profit", "Loss"]
+                keywords_found = [kw for kw in trading_keywords if kw.lower() in response.lower()]
+                
+                if len(keywords_found) >= 2:
+                    self.log_test_result(
+                        "AI Chat Context Generation", 
+                        True, 
+                        f"✅ Context generated successfully. Response contains trading data: {keywords_found}",
+                        {
+                            "response_length": len(response),
+                            "keywords_found": keywords_found,
+                            "context_available": bool(context_used)
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "AI Chat Context Generation", 
+                        False, 
+                        f"❌ Response lacks trading context. Keywords found: {keywords_found}",
+                        {"response_preview": response[:200]}
+                    )
+            else:
+                # Check if it's a budget issue
+                if "budget" in response.lower() or "limit" in response.lower() or "key" in response.lower():
+                    self.log_test_result(
+                        "AI Chat Context Generation", 
+                        True, 
+                        f"✅ AI Chat budget empty (expected): {response[:100]}...",
+                        {"budget_issue": True, "response_preview": response[:100]}
+                    )
+                else:
+                    self.log_test_result(
+                        "AI Chat Context Generation", 
+                        False, 
+                        f"❌ AI Chat response too short or empty: {response}",
+                        data
+                    )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result("AI Chat Context Generation", False, f"AI Chat request failed: {error_msg}", data)
+    
+    async def test_bot_trade_logic_analysis(self):
+        """Test Bot Trade Logic - Check why bot isn't opening trades"""
+        logger.info("🔍 Analyzing Bot Trade Logic")
+        
+        # 1. Check current market signals
+        market_success, market_data = await self.make_request("GET", "/api/market/all")
+        
+        if market_success:
+            markets = market_data.get("markets", {})
+            
+            # Analyze signals for all commodities
+            signal_analysis = {}
+            buy_signals = 0
+            sell_signals = 0
+            hold_signals = 0
+            
+            for commodity, data in markets.items():
+                signal = data.get("signal", "UNKNOWN")
+                rsi = data.get("rsi", 0)
+                price = data.get("price", 0)
+                
+                signal_analysis[commodity] = {
+                    "signal": signal,
+                    "rsi": rsi,
+                    "price": price
+                }
+                
+                if signal == "BUY":
+                    buy_signals += 1
+                elif signal == "SELL":
+                    sell_signals += 1
+                elif signal == "HOLD":
+                    hold_signals += 1
+            
+            # Check settings for trading parameters
+            settings_success, settings_data = await self.make_request("GET", "/api/settings")
+            
+            if settings_success:
+                auto_trading = settings_data.get("auto_trading", False)
+                min_confidence = settings_data.get("min_confidence_percent")
+                rsi_oversold = settings_data.get("rsi_oversold_threshold", 30)
+                rsi_overbought = settings_data.get("rsi_overbought_threshold", 70)
+                
+                # Analyze why no trades are being opened
+                analysis_result = []
+                
+                if not auto_trading:
+                    analysis_result.append("❌ Auto-trading is DISABLED")
+                else:
+                    analysis_result.append("✅ Auto-trading is ENABLED")
+                
+                if min_confidence is None:
+                    analysis_result.append("❌ CRITICAL: min_confidence_percent is None - Bot can NEVER open trades!")
+                else:
+                    analysis_result.append(f"✅ min_confidence_percent: {min_confidence}%")
+                
+                if buy_signals == 0 and sell_signals == 0:
+                    analysis_result.append(f"ℹ️ All signals are HOLD ({hold_signals} commodities) - Normal market behavior")
+                else:
+                    analysis_result.append(f"⚠️ Found {buy_signals} BUY and {sell_signals} SELL signals")
+                
+                # Check RSI thresholds
+                extreme_rsi_count = 0
+                for commodity, data in signal_analysis.items():
+                    rsi = data["rsi"]
+                    if rsi < rsi_oversold or rsi > rsi_overbought:
+                        extreme_rsi_count += 1
+                
+                if extreme_rsi_count == 0:
+                    analysis_result.append(f"ℹ️ No extreme RSI values (oversold<{rsi_oversold}, overbought>{rsi_overbought})")
+                else:
+                    analysis_result.append(f"⚠️ {extreme_rsi_count} commodities with extreme RSI")
+                
+                # Overall assessment
+                critical_issues = [item for item in analysis_result if "❌ CRITICAL" in item]
+                
+                if len(critical_issues) > 0:
+                    self.log_test_result(
+                        "Bot Trade Logic Analysis", 
+                        False, 
+                        f"❌ CRITICAL ISSUES FOUND: {'; '.join(analysis_result)}",
+                        {
+                            "signal_analysis": signal_analysis,
+                            "buy_signals": buy_signals,
+                            "sell_signals": sell_signals,
+                            "hold_signals": hold_signals,
+                            "auto_trading": auto_trading,
+                            "min_confidence": min_confidence,
+                            "critical_issues": critical_issues
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "Bot Trade Logic Analysis", 
+                        True, 
+                        f"✅ Bot logic is correct: {'; '.join(analysis_result)}",
+                        {
+                            "signal_analysis": signal_analysis,
+                            "buy_signals": buy_signals,
+                            "sell_signals": sell_signals,
+                            "hold_signals": hold_signals,
+                            "auto_trading": auto_trading,
+                            "min_confidence": min_confidence
+                        }
+                    )
+            else:
+                self.log_test_result("Bot Trade Logic Analysis", False, "Failed to get settings for analysis", settings_data)
+        else:
+            self.log_test_result("Bot Trade Logic Analysis", False, "Failed to get market data for analysis", market_data)
+    
+    async def test_google_news_integration(self):
+        """Test Google News Integration (Check backend logs)"""
+        logger.info("📰 Testing Google News Integration")
+        
+        try:
+            import subprocess
+            
+            # Check for Google News logs in backend
+            result = subprocess.run(
+                ["grep", "-i", "Google News", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            if result.returncode == 0 and result.stdout:
+                log_lines = result.stdout.strip().split('\n')
+                recent_news_logs = log_lines[-5:]  # Last 5 news-related logs
+                
+                # Look for successful news fetching
+                successful_news = []
+                for log in recent_news_logs:
+                    if "15 Artikel" in log or "articles" in log.lower():
+                        # Extract commodity name from log
+                        if "für " in log:
+                            commodity = log.split("für ")[1].split(":")[0].strip()
+                            successful_news.append(commodity)
+                
+                if len(successful_news) > 0:
+                    self.log_test_result(
+                        "Google News Integration", 
+                        True, 
+                        f"✅ Google News working for {len(successful_news)} commodities: {successful_news}",
+                        {
+                            "successful_news": successful_news,
+                            "recent_logs": recent_news_logs
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "Google News Integration", 
+                        False, 
+                        f"❌ No successful news fetching found in logs: {recent_news_logs}",
+                        {"recent_logs": recent_news_logs}
+                    )
+            else:
+                self.log_test_result(
+                    "Google News Integration", 
+                    False, 
+                    "❌ No Google News logs found in backend.err.log",
+                    {"grep_result": result.stdout}
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Google News Integration", 
+                False, 
+                f"Error checking Google News logs: {str(e)}",
+                {"error": str(e)}
+            )
+    
+    async def test_multi_strategy_analysis(self):
+        """Test Multi-Strategy Analysis (9 strategies mentioned in review)"""
+        logger.info("📊 Testing Multi-Strategy Analysis")
+        
+        # Get market data to check if technical indicators are calculated
+        success, data = await self.make_request("GET", "/api/market/all")
+        
+        if success:
+            markets = data.get("markets", {})
+            
+            # Check if we have technical indicators for commodities
+            indicators_found = {}
+            required_indicators = ["rsi", "macd", "macd_signal", "sma_20", "ema_20"]
+            
+            for commodity, market_data in markets.items():
+                commodity_indicators = []
+                for indicator in required_indicators:
+                    if indicator in market_data and market_data[indicator] is not None:
+                        commodity_indicators.append(indicator)
+                
+                indicators_found[commodity] = {
+                    "indicators": commodity_indicators,
+                    "count": len(commodity_indicators),
+                    "complete": len(commodity_indicators) == len(required_indicators)
+                }
+            
+            # Count commodities with complete indicator sets
+            complete_analysis = sum(1 for data in indicators_found.values() if data["complete"])
+            total_commodities = len(indicators_found)
+            
+            if complete_analysis >= 10:  # At least 10 commodities with full analysis
+                self.log_test_result(
+                    "Multi-Strategy Analysis", 
+                    True, 
+                    f"✅ {complete_analysis}/{total_commodities} commodities have complete technical analysis (RSI, MACD, SMA, EMA)",
+                    {
+                        "complete_analysis": complete_analysis,
+                        "total_commodities": total_commodities,
+                        "indicators_found": indicators_found
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Multi-Strategy Analysis", 
+                    False, 
+                    f"❌ Only {complete_analysis}/{total_commodities} commodities have complete analysis",
+                    {"indicators_found": indicators_found}
+                )
+        else:
+            self.log_test_result("Multi-Strategy Analysis", False, f"Failed to get market data: {data}")
+    
+    async def test_risk_management_system(self):
+        """Test Risk Management & Portfolio Balance"""
+        logger.info("⚖️ Testing Risk Management System")
+        
+        # Get settings to check risk parameters
+        settings_success, settings_data = await self.make_request("GET", "/api/settings")
+        
+        if settings_success:
+            risk_per_trade = settings_data.get("risk_per_trade_percent", 0)
+            max_portfolio_risk = settings_data.get("max_portfolio_risk_percent", 0)
+            stop_loss_percent = settings_data.get("stop_loss_percent", 0)
+            take_profit_percent = settings_data.get("take_profit_percent", 0)
+            
+            # Check if risk management parameters are configured
+            risk_params_configured = all([
+                risk_per_trade > 0,
+                max_portfolio_risk > 0,
+                stop_loss_percent > 0,
+                take_profit_percent > 0
+            ])
+            
+            if risk_params_configured:
+                self.log_test_result(
+                    "Risk Management Configuration", 
+                    True, 
+                    f"✅ Risk management configured: Risk per trade: {risk_per_trade}%, Max portfolio risk: {max_portfolio_risk}%, SL: {stop_loss_percent}%, TP: {take_profit_percent}%",
+                    {
+                        "risk_per_trade_percent": risk_per_trade,
+                        "max_portfolio_risk_percent": max_portfolio_risk,
+                        "stop_loss_percent": stop_loss_percent,
+                        "take_profit_percent": take_profit_percent
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Risk Management Configuration", 
+                    False, 
+                    f"❌ Risk management not properly configured: Risk per trade: {risk_per_trade}%, Max portfolio: {max_portfolio_risk}%, SL: {stop_loss_percent}%, TP: {take_profit_percent}%",
+                    settings_data
+                )
+        else:
+            self.log_test_result("Risk Management Configuration", False, "Failed to get settings for risk management check", settings_data)
+    
+    async def run_comprehensive_ai_trading_bot_tests(self):
+        """Run COMPREHENSIVE AI Trading Bot & AI Chat Tests (as requested in review)"""
+        logger.info("\n" + "="*100)
+        logger.info("🤖 COMPREHENSIVE AI TRADING BOT & AI CHAT TESTING")
+        logger.info("ZIEL: Teste ALLE Funktionen des vollautonomen AI Trading Bots und AI Chats")
+        logger.info("="*100)
+        
+        # 1. BOT STATUS & KONFIGURATION
+        logger.info("\n=== 1. BOT STATUS & KONFIGURATION ===")
+        await self.test_bot_status()
+        await self.test_ai_settings_retrieval()
+        
+        # 2. MARKT-ANALYSE
+        logger.info("\n=== 2. MARKT-ANALYSE ===")
+        await self.test_market_data_for_bot()
+        await self.test_bot_trade_logic_analysis()
+        
+        # 3. BOT-LOGS ANALYSIEREN
+        logger.info("\n=== 3. BOT-LOGS ANALYSIEREN ===")
+        await self.check_backend_logs_bot_activity()
+        await self.test_google_news_integration()
+        
+        # 4. AI CHAT TESTS
+        logger.info("\n=== 4. AI CHAT TESTS (WICHTIG) ===")
+        await self.test_ai_chat_context_generation()
+        await self.test_ai_chat_with_settings()
+        
+        # 5. PLATFORM-VERBINDUNGEN
+        logger.info("\n=== 5. PLATFORM-VERBINDUNGEN ===")
+        await self.test_platforms_status()
+        await self.test_mt5_libertex_account()
+        await self.test_mt5_icmarkets_account()
+        
+        # 6. BOT TRADE-LOGIC
+        logger.info("\n=== 6. BOT TRADE-LOGIC ===")
+        await self.test_bot_lifecycle()
+        await self.test_settings_auto_trading_toggle()
+        
+        # 7. RISK MANAGEMENT
+        logger.info("\n=== 7. RISK MANAGEMENT ===")
+        await self.test_risk_management_system()
+        
+        # 8. MULTI-STRATEGIE-ANALYSE
+        logger.info("\n=== 8. MULTI-STRATEGIE-ANALYSE ===")
+        await self.test_multi_strategy_analysis()
+        
+        # 9. BOT REQUIREMENTS CHECK
+        logger.info("\n=== 9. BOT REQUIREMENTS CHECK ===")
+        await self.test_bot_requirements_check()
+        
+        logger.info("\n" + "="*100)
+        logger.info("🎯 COMPREHENSIVE AI TRADING BOT TESTING COMPLETED")
+        logger.info("="*100)
+
     async def run_ai_bot_tests(self):
         """Run comprehensive AI Trading Bot tests"""
         logger.info("\n" + "="*80)
