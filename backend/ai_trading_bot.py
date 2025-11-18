@@ -112,10 +112,19 @@ class AITradingBot:
                 # 2. ALLE offenen Positionen überwachen
                 await self.monitor_open_positions()
                 
-                # 3. KI-Analyse für neue Trades
-                await self.analyze_and_open_trades()
+                # 3. SWING TRADING: KI-Analyse für neue Swing-Trades (alle 10 Min)
+                if self.settings.get('swing_trading_enabled', True):
+                    await self.analyze_and_open_trades(strategy="swing")
                 
-                # 4. Kurze Pause (alle 10 Sekunden)
+                # 4. DAY TRADING: KI-Analyse für neue Day-Trades (jede Minute)
+                if self.settings.get('day_trading_enabled', False):
+                    await self.analyze_and_open_trades(strategy="day")
+                
+                # 5. Automatisches Schließen alter Day-Trading-Positionen (Time-Based Exit)
+                if self.settings.get('day_trading_enabled', False):
+                    await self.close_expired_day_trades()
+                
+                # 6. Kurze Pause (alle 10 Sekunden)
                 logger.info("✅ Iteration abgeschlossen, warte 10 Sekunden...")
                 await asyncio.sleep(10)
                 
