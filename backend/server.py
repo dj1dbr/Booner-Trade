@@ -331,8 +331,8 @@ class TradingSettings(BaseModel):
     position_size: float = 1.0
     max_portfolio_risk_percent: float = 20.0  # Max 20% of balance for all open positions
     default_platform: Optional[Literal["ALL", "MT5_LIBERTEX", "MT5_ICMARKETS", "MT5_LIBERTEX_DEMO", "MT5_ICMARKETS_DEMO", "MT5_LIBERTEX_REAL"]] = None  # Deprecated - all active platforms receive trades
-    # Alle Rohstoffe aktiviert (jetzt erweitert mit EUR/USD und weiteren Assets)
-    enabled_commodities: List[str] = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM", "WTI_CRUDE", "BRENT_CRUDE", "NATURAL_GAS", "WHEAT", "CORN", "SOYBEANS", "COFFEE", "SUGAR", "COTTON", "COCOA", "EURUSD"]
+    # Alle Assets aktiviert: 14 Rohstoffe + EUR/USD + BITCOIN (24/7!)
+    enabled_commodities: List[str] = ["GOLD", "SILVER", "PLATINUM", "PALLADIUM", "WTI_CRUDE", "BRENT_CRUDE", "NATURAL_GAS", "WHEAT", "CORN", "SOYBEANS", "COFFEE", "SUGAR", "COCOA", "EURUSD", "BITCOIN"]
     
     # KI Trading Strategie-Parameter (anpassbar) - LEGACY für Backward-Compatibility
     rsi_oversold_threshold: float = 30.0  # RSI Kaufsignal (Standard: 30)
