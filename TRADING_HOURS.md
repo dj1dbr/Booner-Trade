@@ -259,11 +259,39 @@ enabled_commodities:
 
 **Für maximale Bot-Performance:**
 
+### **WOCHENTAGS (Mo-Fr):**
 1. **Day Trading:** Fokus auf BITCOIN + Edelmetalle (fast 24h handelbar)
 2. **Swing Trading:** Alle Assets (Handelszeiten weniger wichtig)
 3. **Timeouts minimieren:** Bevorzuge Assets mit langen Handelszeiten
 
-**Bitcoin ist Ihr bester Freund für Day Trading! 🚀**
+### **WOCHENENDE (Sa+So):**
+1. **Day Trading:** NUR EUR/USD verfügbar!
+2. **Swing Trading:** Offene Positionen bleiben, keine neuen Trades
+3. **Bot-Strategie:** Entweder nur EUR/USD aktivieren ODER Bot ignoriert Timeouts
+
+**Bitcoin ist Ihr bester Freund Mo-Fr! EUR/USD fürs Wochenende! 🚀**
+
+---
+
+### 💡 WOCHENEND-KONFIGURATION
+
+**Option 1: Nur EUR/USD am Wochenende**
+```bash
+# Freitag Abend ausführen
+curl -X POST http://localhost:8001/api/settings \
+  -H "Content-Type: application/json" \
+  -d '{"enabled_commodities": ["EURUSD"]}'
+```
+
+**Option 2: Bot läuft durch (versucht alle, nur EUR/USD geht)**
+```bash
+# Keine Änderung nötig - Bot versucht automatisch
+# Alle Assets werden analysiert
+# Nur EUR/USD Trades gehen durch
+# Andere Assets: Timeout → Retry Montag
+```
+
+**EMPFEHLUNG:** Option 2 ist einfacher - Bot regelt automatisch!
 
 ---
 
