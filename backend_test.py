@@ -2568,21 +2568,21 @@ class Booner_TradeTester:
         """Print focused summary for critical manual trade execution tests"""
         critical_tests = [
             "API Root - App Name Change",
-            "API Availability - Platforms Status", 
-            "API Availability - Commodities",
-            "API Availability - Settings",
-            "Manual Trade Execution - WTI_CRUDE SUCCESS",
-            "Manual Trade Execution - Informative Error",
-            "Error Handling - Descriptive Messages",
-            "Backend Logs - SDK Response Details"
+            "Platform Connections - MT5_LIBERTEX",
+            "Platform Connections - MT5_ICMARKETS", 
+            "Manual Trade Execution - SUCCESS",
+            "Manual Trade Execution - Specific Error",
+            "Manual Trade Execution - Other Error",
+            "Backend Logs - SDK Response Details",
+            "Error Handling - Descriptive Messages"
         ]
         
-        critical_results = [r for r in self.test_results if r["test"] in critical_tests]
+        critical_results = [r for r in self.test_results if any(test in r["test"] for test in critical_tests)]
         total_critical = len(critical_results)
         passed_critical = sum(1 for r in critical_results if r["success"])
         
         logger.info("\n" + "="*80)
-        logger.info("🎯 CRITICAL TEST SUMMARY - MANUAL TRADE EXECUTION BUG FIX")
+        logger.info("🎯 FINAL BACKEND TESTING SUMMARY - Manual Trade Bug Fix & Platform Connections")
         logger.info("="*80)
         logger.info(f"Critical Tests: {total_critical}")
         logger.info(f"✅ Passed: {passed_critical}")
