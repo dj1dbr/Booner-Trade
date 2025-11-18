@@ -183,6 +183,7 @@ class AITradingBot:
                         symbol = pos.get('symbol', '')
                         ticket = pos.get('ticket') or pos.get('id') or pos.get('positionId')
                         profit = pos.get('profit', 0)
+                        quantity = pos.get('volume', 0) or pos.get('quantity', 0) or pos.get('size', 0)
                         
                         if not entry_price or not current_price or not ticket:
                             continue
