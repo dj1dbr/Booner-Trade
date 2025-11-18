@@ -207,7 +207,7 @@ async def update_settings(settings: TradingSettings):
 @api_router.get("/market/all")
 async def get_all_market_data():
     """Get latest market data for all commodities"""
-    latest_data = []
+    markets_dict = {}
     
     from commodity_processor import COMMODITIES
     for commodity_id in COMMODITIES.keys():
@@ -217,9 +217,9 @@ async def get_all_market_data():
         )
         if data:
             data.pop('_id', None)
-            latest_data.append(data)
+            markets_dict[commodity_id] = data
     
-    return latest_data
+    return {"markets": markets_dict}
 
 @api_router.get("/market/live-ticks")
 async def get_live_ticks():
