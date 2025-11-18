@@ -61,9 +61,18 @@ MARKTDATEN (Live):
             trade_type = trade.get('type', 'UNKNOWN')
             quantity = trade.get('quantity', trade.get('volume', 0))
             entry = trade.get('entry_price', trade.get('openPrice', trade.get('price', 0)))
+            current = trade.get('price', entry)
             profit = trade.get('profit_loss', trade.get('profit', trade.get('unrealizedProfit', 0)))
+            stop_loss = trade.get('stop_loss', trade.get('sl'))
+            take_profit = trade.get('take_profit', trade.get('tp'))
             
-            context += f"{i}. {commodity} {trade_type} - Menge: {quantity}, Entry: ${entry:.2f}, P/L: ${profit:.2f}\n"
+            # Format SL/TP info
+            sl_text = f"${stop_loss:.2f}" if stop_loss else "NICHT GESETZT"
+            tp_text = f"${take_profit:.2f}" if take_profit else "NICHT GESETZT"
+            
+            context += f"{i}. {commodity} {trade_type}\n"
+            context += f"   Menge: {quantity}, Entry: ${entry:.2f}, Aktuell: ${current:.2f}\n"
+            context += f"   P/L: ${profit:.2f}, Stop Loss: {sl_text}, Take Profit: {tp_text}\n"
     else:
         context += "\n(Keine offenen Trades)"
     
