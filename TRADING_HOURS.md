@@ -224,8 +224,10 @@ enabled_commodities:
 
 ### Assets nach Verfügbarkeit sortiert:
 
-1. **24/7 Trading:**
-   - ✅ BITCOIN (einziges!)
+#### **WOCHENTAGE (Mo-Fr):**
+
+1. **24/7 Trading (Mo-Fr):**
+   - ✅ BITCOIN
 
 2. **Fast 24h (23h):**
    - ✅ Gold, Silber, Platin, Palladium
@@ -242,6 +244,14 @@ enabled_commodities:
 
 6. **8-9h Trading:**
    - ⚠️ Coffee, Sugar, Cocoa (08:30-18:30)
+
+#### **WOCHENENDE (Sa+So):**
+
+1. **Verfügbar:**
+   - ✅ **NUR EUR/USD** ⭐
+
+2. **GESCHLOSSEN:**
+   - ❌ Alle anderen 14 Assets
 
 ---
 
