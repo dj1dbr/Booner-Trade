@@ -38,10 +38,16 @@ class MarketAnalyzer:
                 if (datetime.now() - cache_time).seconds < 300:
                     return cache_data
             
-            # Priorität: Finnhub > NewsAPI > Alpha Vantage
+            # Priorität: Yahoo Finance > Finnhub > NewsAPI > Alpha Vantage
             result = None
             
-            # 1. Finnhub (beste kostenlose Option)
+            # 0. Yahoo Finance (IMMER verfügbar, keine API-Key nötig!)
+            result = await self._fetch_yahoo_finance_news(commodity)
+            if result and result.get('articles', 0) > 0:
+                self.news_cache[cache_key] = (datetime.now(), result)
+                return result
+            
+            # 1. Finnhub (falls konfiguriert)
             if self.finnhub_key:
                 result = await self._fetch_finnhub_news(commodity)
                 if result and result.get('articles', 0) > 0:
