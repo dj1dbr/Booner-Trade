@@ -158,10 +158,7 @@ class AITradingBot:
         try:
             from multi_platform_connector import multi_platform
             
-            # Hole Strategy-spezifische Settings (nicht die alten!)
-            # Verwende Swing-Trading Settings als Standard
-            tp_percent = self.settings.get('swing_take_profit_percent', 4.0)
-            sl_percent = self.settings.get('swing_stop_loss_percent', 2.0)
+            # Strategy-spezifische Settings werden dynamisch pro Position geladen
             
             platforms = ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']
             total_positions = 0
