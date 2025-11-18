@@ -209,7 +209,7 @@ class AITradingBot:
                         
                         logger.debug(f"🤖 KI überwacht {symbol}: Entry={entry_price:.2f}, SL={stop_loss_price:.2f}, TP={take_profit_price:.2f}")
                         
-                        # Prüfe ob Ziele erreicht
+                        # Prüfe ob SL oder TP erreicht
                         if 'BUY' in pos_type:
                             tp_reached = current_price >= take_profit_price
                             sl_reached = current_price <= stop_loss_price
@@ -217,7 +217,7 @@ class AITradingBot:
                             tp_reached = current_price <= take_profit_price
                             sl_reached = current_price >= stop_loss_price
                         
-                        # KI-Entscheidung: Schließen?
+                        # 🤖 KI-ENTSCHEIDUNG: Position schließen bei SL oder TP
                         should_close = False
                         close_reason = ""
                         
