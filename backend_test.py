@@ -1451,6 +1451,329 @@ class RohstoffTraderTester:
         else:
             self.log_test_result("Trades List for Bot", False, f"Failed to get trades: {data}")
 
+    # ========================================
+    # DUAL TRADING STRATEGY TESTS - NEW FEATURES
+    # ========================================
+    
+    async def test_dual_strategy_settings_parameters(self):
+        """Test Dual Trading Strategy Settings Parameters - GET /api/settings"""
+        logger.info("🔄 Testing Dual Trading Strategy Settings Parameters")
+        
+        success, data = await self.make_request("GET", "/api/settings")
+        
+        if success:
+            # Check for new dual-strategy parameters
+            swing_enabled = data.get("swing_trading_enabled")
+            day_enabled = data.get("day_trading_enabled")
+            
+            # Swing Trading Parameters
+            swing_confidence = data.get("swing_min_confidence_score")
+            swing_stop_loss = data.get("swing_stop_loss_percent")
+            swing_take_profit = data.get("swing_take_profit_percent")
+            swing_max_positions = data.get("swing_max_positions")
+            swing_max_balance = data.get("swing_max_balance_percent")
+            
+            # Day Trading Parameters
+            day_confidence = data.get("day_min_confidence_score")
+            day_stop_loss = data.get("day_stop_loss_percent")
+            day_take_profit = data.get("day_take_profit_percent")
+            day_max_positions = data.get("day_max_positions")
+            day_max_balance = data.get("day_max_balance_percent")
+            
+            # Expected values according to review request
+            expected_swing_enabled = True
+            expected_day_enabled = False  # Should be false by default
+            
+            # Check if all dual-strategy parameters are present
+            dual_params_present = all([
+                swing_enabled is not None,
+                day_enabled is not None,
+                swing_confidence is not None,
+                swing_stop_loss is not None,
+                swing_take_profit is not None,
+                swing_max_positions is not None,
+                swing_max_balance is not None,
+                day_confidence is not None,
+                day_stop_loss is not None,
+                day_take_profit is not None,
+                day_max_positions is not None,
+                day_max_balance is not None
+            ])
+            
+            if dual_params_present and swing_enabled == expected_swing_enabled and day_enabled == expected_day_enabled:
+                self.log_test_result(
+                    "Dual Strategy Settings Parameters", 
+                    True, 
+                    f"✅ All dual-strategy parameters present: swing_enabled={swing_enabled}, day_enabled={day_enabled}, swing_confidence={swing_confidence}, day_confidence={day_confidence}",
+                    {
+                        "swing_trading_enabled": swing_enabled,
+                        "day_trading_enabled": day_enabled,
+                        "swing_params": {
+                            "confidence": swing_confidence,
+                            "stop_loss": swing_stop_loss,
+                            "take_profit": swing_take_profit,
+                            "max_positions": swing_max_positions,
+                            "max_balance": swing_max_balance
+                        },
+                        "day_params": {
+                            "confidence": day_confidence,
+                            "stop_loss": day_stop_loss,
+                            "take_profit": day_take_profit,
+                            "max_positions": day_max_positions,
+                            "max_balance": day_max_balance
+                        }
+                    }
+                )
+            else:
+                missing_params = []
+                if swing_enabled is None: missing_params.append("swing_trading_enabled")
+                if day_enabled is None: missing_params.append("day_trading_enabled")
+                if swing_confidence is None: missing_params.append("swing_min_confidence_score")
+                if day_confidence is None: missing_params.append("day_min_confidence_score")
+                
+                self.log_test_result(
+                    "Dual Strategy Settings Parameters", 
+                    False, 
+                    f"❌ Missing or incorrect dual-strategy parameters: {missing_params}. swing_enabled={swing_enabled} (expected {expected_swing_enabled}), day_enabled={day_enabled} (expected {expected_day_enabled})",
+                    data
+                )
+        else:
+            self.log_test_result("Dual Strategy Settings Parameters", False, f"Failed to get settings: {data}")
+    
+    async def test_eurusd_commodity_availability(self):
+        """Test EUR/USD Commodity Availability - GET /api/commodities"""
+        logger.info("💱 Testing EUR/USD Commodity Availability")
+        
+        success, data = await self.make_request("GET", "/api/commodities")
+        
+        if success:
+            commodities = data.get("commodities", {})
+            total_assets = len(commodities)
+            
+            # Check if EURUSD is present
+            eurusd_present = "EURUSD" in commodities
+            
+            if eurusd_present:
+                eurusd_info = commodities["EURUSD"]
+                eurusd_name = eurusd_info.get("name")
+                eurusd_category = eurusd_info.get("category")
+                eurusd_platforms = eurusd_info.get("platforms", [])
+                
+                # Expected: 15 assets total (14 commodities + 1 forex)
+                if total_assets == 15 and eurusd_name == "EUR/USD" and eurusd_category == "Forex":
+                    self.log_test_result(
+                        "EUR/USD Commodity Availability", 
+                        True, 
+                        f"✅ EUR/USD available: {total_assets} total assets, Name={eurusd_name}, Category={eurusd_category}, Platforms={eurusd_platforms}",
+                        {
+                            "total_assets": total_assets,
+                            "eurusd_present": eurusd_present,
+                            "eurusd_info": eurusd_info
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "EUR/USD Commodity Availability", 
+                        False, 
+                        f"❌ EUR/USD issues: Total assets={total_assets} (expected 15), Name={eurusd_name}, Category={eurusd_category}",
+                        {
+                            "total_assets": total_assets,
+                            "eurusd_info": eurusd_info
+                        }
+                    )
+            else:
+                self.log_test_result(
+                    "EUR/USD Commodity Availability", 
+                    False, 
+                    f"❌ EUR/USD not found in commodities. Total assets: {total_assets}, Available: {list(commodities.keys())}",
+                    {
+                        "total_assets": total_assets,
+                        "available_commodities": list(commodities.keys())
+                    }
+                )
+        else:
+            self.log_test_result("EUR/USD Commodity Availability", False, f"Failed to get commodities: {data}")
+    
+    async def test_bot_status_dual_strategy(self):
+        """Test Bot Status for Dual Strategy - GET /api/bot/status"""
+        logger.info("🤖 Testing Bot Status for Dual Strategy")
+        
+        success, data = await self.make_request("GET", "/api/bot/status")
+        
+        if success:
+            running = data.get("running", False)
+            instance_running = data.get("instance_running", False)
+            
+            # Bot should be running for dual strategy testing
+            if running and instance_running:
+                self.log_test_result(
+                    "Bot Status Dual Strategy", 
+                    True, 
+                    f"✅ Bot running for dual strategy: running={running}, instance_running={instance_running}",
+                    {
+                        "running": running,
+                        "instance_running": instance_running,
+                        "full_status": data
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Bot Status Dual Strategy", 
+                    False, 
+                    f"❌ Bot not running: running={running}, instance_running={instance_running}",
+                    data
+                )
+        else:
+            self.log_test_result("Bot Status Dual Strategy", False, f"Failed to get bot status: {data}")
+    
+    async def test_day_trading_activation(self):
+        """Test Day Trading Activation - POST /api/settings"""
+        logger.info("📈 Testing Day Trading Activation")
+        
+        # Test activating both swing and day trading
+        settings_data = {
+            "day_trading_enabled": True,
+            "swing_trading_enabled": True
+        }
+        
+        success, data = await self.make_request("POST", "/api/settings", settings_data)
+        
+        if success:
+            day_enabled = data.get("day_trading_enabled", False)
+            swing_enabled = data.get("swing_trading_enabled", False)
+            
+            if day_enabled and swing_enabled:
+                self.log_test_result(
+                    "Day Trading Activation", 
+                    True, 
+                    f"✅ Both trading strategies activated: day_trading_enabled={day_enabled}, swing_trading_enabled={swing_enabled}",
+                    {
+                        "day_trading_enabled": day_enabled,
+                        "swing_trading_enabled": swing_enabled
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Day Trading Activation", 
+                    False, 
+                    f"❌ Failed to activate both strategies: day_trading_enabled={day_enabled}, swing_trading_enabled={swing_enabled}",
+                    data
+                )
+        else:
+            self.log_test_result("Day Trading Activation", False, f"Failed to update settings: {data}")
+    
+    async def test_eurusd_in_market_data(self):
+        """Test EUR/USD in Market Data - GET /api/market/all"""
+        logger.info("📊 Testing EUR/USD in Market Data")
+        
+        success, data = await self.make_request("GET", "/api/market/all")
+        
+        if success:
+            markets = data.get("markets", {})
+            commodities = data.get("commodities", [])
+            
+            # Check if EURUSD is in markets
+            eurusd_in_markets = "EURUSD" in markets
+            
+            if eurusd_in_markets:
+                eurusd_market_data = markets["EURUSD"]
+                eurusd_price = eurusd_market_data.get("price")
+                eurusd_signal = eurusd_market_data.get("signal")
+                eurusd_rsi = eurusd_market_data.get("rsi")
+                
+                # Check if EURUSD is also in commodities list
+                eurusd_in_commodities = any(c.get("id") == "EURUSD" for c in commodities if isinstance(c, dict))
+                
+                if eurusd_price and eurusd_signal:
+                    self.log_test_result(
+                        "EUR/USD in Market Data", 
+                        True, 
+                        f"✅ EUR/USD in market data: Price={eurusd_price}, Signal={eurusd_signal}, RSI={eurusd_rsi}, In commodities list={eurusd_in_commodities}",
+                        {
+                            "eurusd_market_data": eurusd_market_data,
+                            "eurusd_in_commodities": eurusd_in_commodities,
+                            "total_markets": len(markets)
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "EUR/USD in Market Data", 
+                        False, 
+                        f"❌ EUR/USD market data incomplete: Price={eurusd_price}, Signal={eurusd_signal}",
+                        eurusd_market_data
+                    )
+            else:
+                self.log_test_result(
+                    "EUR/USD in Market Data", 
+                    False, 
+                    f"❌ EUR/USD not found in market data. Available markets: {list(markets.keys())}",
+                    {
+                        "available_markets": list(markets.keys()),
+                        "total_markets": len(markets)
+                    }
+                )
+        else:
+            self.log_test_result("EUR/USD in Market Data", False, f"Failed to get market data: {data}")
+    
+    async def test_backend_logs_dual_strategy(self):
+        """Test Backend Logs for Dual Strategy Messages"""
+        logger.info("📋 Testing Backend Logs for Dual Strategy Messages")
+        
+        try:
+            import subprocess
+            
+            # Check for Swing Trading messages
+            result_swing = subprocess.run(
+                ["grep", "-i", "Swing Trading", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            swing_messages_found = result_swing.returncode == 0 and result_swing.stdout
+            
+            # Check for Day Trading messages
+            result_day = subprocess.run(
+                ["grep", "-i", "Day Trading", "/var/log/supervisor/backend.err.log"],
+                capture_output=True, text=True, timeout=5
+            )
+            
+            day_messages_found = result_day.returncode == 0 and result_day.stdout
+            
+            # Count recent messages
+            swing_count = len(result_swing.stdout.strip().split('\n')) if swing_messages_found else 0
+            day_count = len(result_day.stdout.strip().split('\n')) if day_messages_found else 0
+            
+            # Success if we find at least swing trading messages (day trading might be disabled)
+            if swing_messages_found:
+                self.log_test_result(
+                    "Backend Logs Dual Strategy", 
+                    True, 
+                    f"✅ Dual strategy logs found: Swing Trading messages={swing_count}, Day Trading messages={day_count}",
+                    {
+                        "swing_messages_found": swing_messages_found,
+                        "day_messages_found": day_messages_found,
+                        "swing_count": swing_count,
+                        "day_count": day_count
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "Backend Logs Dual Strategy", 
+                    False, 
+                    f"❌ No dual strategy logs found: Swing Trading messages={swing_count}, Day Trading messages={day_count}",
+                    {
+                        "swing_messages_found": swing_messages_found,
+                        "day_messages_found": day_messages_found
+                    }
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "Backend Logs Dual Strategy", 
+                False, 
+                f"Error checking logs: {str(e)}",
+                {"error": str(e)}
+            )
+
     async def test_ai_chat_context_generation(self):
         """Test AI Chat Context Generation (CRITICAL - Budget may be empty)"""
         logger.info("🧠 Testing AI Chat Context Generation")
