@@ -801,84 +801,89 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: |
-      🔥 COMPREHENSIVE FRONTEND TESTING COMPLETED - Booner-Trade Application (Nov 18, 2025)
+      🔥 FINAL COMPREHENSIVE FRONTEND TESTING COMPLETED - Booner-Trade Application (Nov 18, 2025)
       
-      ✅ SUCCESS CRITERIA MET (6/8 major tests - 75% success rate):
+      ✅ SUCCESS CRITERIA MET (4/8 major tests - 50% success rate):
       
       1. APP BRANDING VERIFICATION - FULLY SUCCESSFUL ✅:
          - Dashboard title: "Booner-Trade" correctly displayed
          - Browser page title: "Booner-Trade | Multi-Commodity Trading" 
          - App name change from "Rohstoff Trader" → "Booner-Trade" COMPLETE
+         - No old "Rohstoff Trader" references found
       
       2. PLATFORM STATUS CARDS - PARTIALLY SUCCESSFUL ✅:
-         - ✅ MT5 Libertex Demo card visible
-         - ✅ MT5 Libertex REAL card visible (with "ECHTGELD" badge)
-         - ✅ MT5 ICMarkets card visible
-         - ❌ All balances showing €0.00 (backend connectivity issues)
-         - ✅ Platform cards structure and UI working correctly
+         - ✅ 3 Platform cards visible: MT5 Libertex Demo, MT5 ICMarkets, MT5 Libertex REAL
+         - ✅ Platform card structure and UI working correctly
+         - ❌ All balances showing €0.00 (MetaAPI quota exceeded - 429 errors)
+         - ✅ Connection status indicators present
       
-      3. COMMODITY CARDS DISPLAY - MAJOR ISSUE ❌:
-         - ❌ 0 commodity cards with data-testid found
+      3. COMMODITY CARDS DISPLAY - CRITICAL FAILURE ❌:
+         - ❌ 0 commodity cards visible in frontend
          - ❌ 0 BUY/SELL buttons (KAUFEN/VERKAUFEN) found
-         - ❌ No commodity-related text (Gold, Silver, WTI, etc.)
+         - ❌ No commodity-related text (Gold, Silver, WTI, etc.) displayed
          - ✅ No Bitpanda "handelbar" badges found (correctly removed)
-         - ✅ No "Handelbar" badges found (correctly removed)
+         - ✅ Backend APIs working: /api/market/all returns 15 commodities with live data
+         - ✅ Backend APIs working: /api/commodities returns all commodity definitions
       
       4. NAVIGATION TABS - WORKING ✅:
-         - ✅ Rohstoffe tab visible
-         - ✅ Trades tab visible (showing "Trades (0)")
+         - ✅ Rohstoffe tab visible and clickable
+         - ✅ Trades tab visible (showing "Trades (0)") and functional
          - ✅ Charts tab visible
-         - ✅ Tab structure and navigation working
+         - ✅ Tab switching working correctly
       
-      5. SETTINGS FUNCTIONALITY - WORKING ✅:
-         - ✅ Settings button (Einstellungen) visible and clickable
-         - ✅ Settings modal opens correctly
-         - ✅ Dual-strategy settings visible (Swing Trading, Day Trading)
-         - ✅ AI provider settings visible
+      5. SETTINGS FUNCTIONALITY - NOT TESTED ❌:
+         - ❌ Settings button (Einstellungen) not found in current UI
+         - ❌ Could not test dual-strategy settings
+         - ❌ Could not test AI provider settings
       
       6. AI STATUS INDICATOR - WORKING ✅:
-         - ✅ AI status indicator visible
-         - ✅ "KI Inaktiv" badge showing (correct - AI not active)
+         - ✅ "KI Inaktiv" badge visible (correct - AI not active)
          - ✅ AI analysis status panel working
+      
+      7. MANUAL TRADE EXECUTION - CANNOT BE TESTED ❌:
+         - ❌ No commodity cards available to click
+         - ❌ Cannot test WTI Crude Oil BUY trade as requested
+         - ❌ Trade execution functionality blocked by missing commodity UI
+      
+      8. CHARTS FUNCTIONALITY - NOT TESTED ❌:
+         - ❌ Cannot test chart functionality without commodity selection
+      
+      🎯 ROOT CAUSE ANALYSIS:
+      
+      ✅ WORKING SYSTEMS:
+      - Frontend UI framework and branding: COMPLETE
+      - Navigation and tab system: WORKING
+      - Backend APIs: FUNCTIONAL (market data, commodities, trades)
+      - Platform connection logic: IMPLEMENTED
       
       ❌ CRITICAL ISSUES IDENTIFIED:
       
-      1. BACKEND API CONNECTIVITY PROBLEMS:
-         - Multiple 404 errors: /api/market/live-ticks, /api/market/history, /api/trades/stats
-         - Multiple 405 errors: /api/market/refresh (Method Not Allowed)
-         - Platform balances not loading (all showing €0.00)
-         - Commodity data not loading (no commodity cards displayed)
+      1. METAAPI QUOTA EXCEEDED (PRIMARY ISSUE):
+         - Backend logs show: "TooManyRequestsException: You have used all your account subscriptions quota"
+         - 109/100 subscriptions used - quota exceeded
+         - This causes platform balance loading failures (€0.00 displayed)
+         - May also affect commodity data rendering
       
-      2. COMMODITY CARDS NOT LOADING:
-         - Expected 15 commodity cards, found 0
-         - No WTI Crude Oil, Gold, Silver cards visible
-         - Cannot test manual trade execution without commodity cards
-         - Frontend structure is correct but data not loading from backend
+      2. FRONTEND COMMODITY RENDERING ISSUE:
+         - Backend returns 15 commodities with live prices via /api/market/all
+         - Backend returns commodity definitions via /api/commodities
+         - Frontend not displaying commodity cards despite data availability
+         - Possible frontend data binding or rendering issue
       
-      3. MANUAL TRADE EXECUTION CANNOT BE TESTED:
-         - No commodity cards available to click
-         - Cannot test WTI Crude Oil BUY trade as requested
-         - Trade execution functionality blocked by missing commodity data
-      
-      🎯 ROOT CAUSE ANALYSIS:
-      Frontend UI is FULLY FUNCTIONAL and correctly implemented:
-      - ✅ App branding updated correctly
-      - ✅ Platform cards structure working
-      - ✅ Navigation and settings working
-      - ✅ Bitpanda badges removed correctly
-      
-      Backend API issues preventing data loading:
-      - ❌ Market data endpoints returning 404/405 errors
-      - ❌ Platform account data not loading
-      - ❌ Commodity definitions not reaching frontend
+      3. SETTINGS UI MISSING:
+         - Settings button not visible in current frontend state
+         - Cannot test dual-strategy or AI provider configurations
       
       🔧 IMMEDIATE ACTION NEEDED:
-      1. Fix backend API endpoints (market data, platform status)
-      2. Restore commodity data loading
-      3. Fix platform balance connectivity
-      4. Once backend fixed, manual trade execution can be tested
+      1. CRITICAL: Resolve MetaAPI subscription quota (backend issue)
+      2. CRITICAL: Fix frontend commodity card rendering (frontend issue)
+      3. HIGH: Restore settings button visibility
+      4. MEDIUM: Test manual trade execution after commodity cards fixed
       
-      RECOMMENDATION: Frontend implementation is COMPLETE and WORKING. Backend connectivity issues need resolution before full testing can be completed.
+      RECOMMENDATION: 
+      - Backend APIs are functional but MetaAPI quota limits platform connections
+      - Frontend has a critical rendering issue preventing commodity cards from displaying
+      - Core application structure is sound but needs these two critical fixes
   
   - agent: "main"
     message: |
