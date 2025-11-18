@@ -77,51 +77,49 @@ class MarketAnalyzer:
             return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "error"}
     
     async def _fetch_yahoo_finance_news(self, commodity: str) -> Dict:
-        """Hole News von Yahoo Finance (KOSTENLOS, keine API-Key nötig!)"""
+        """Hole News von Google News RSS (KOSTENLOS, keine Limits!)"""
         try:
-            import yfinance as yf
+            import feedparser
             
-            # Map commodity zu Yahoo Finance Ticker
-            ticker_map = {
-                "GOLD": "GC=F",  # Gold Futures
-                "SILVER": "SI=F",  # Silver Futures
-                "WTI_CRUDE": "CL=F",  # Crude Oil WTI Futures
-                "BRENT_CRUDE": "BZ=F",  # Brent Crude Oil Futures
-                "PLATINUM": "PL=F",  # Platinum Futures
-                "PALLADIUM": "PA=F",  # Palladium Futures
-                "NATURAL_GAS": "NG=F",  # Natural Gas Futures
-                "WHEAT": "ZW=F",  # Wheat Futures
-                "CORN": "ZC=F",  # Corn Futures
-                "SOYBEANS": "ZS=F",  # Soybean Futures
-                "SUGAR": "SB=F",  # Sugar Futures
-                "COFFEE": "KC=F",  # Coffee Futures
-                "COTTON": "CT=F",  # Cotton Futures
-                "COCOA": "CC=F"  # Cocoa Futures
+            # Map commodity zu Suchbegriffen
+            search_terms = {
+                "GOLD": "gold prices",
+                "SILVER": "silver prices",
+                "WTI_CRUDE": "crude oil prices",
+                "BRENT_CRUDE": "brent oil prices",
+                "PLATINUM": "platinum prices",
+                "PALLADIUM": "palladium prices",
+                "NATURAL_GAS": "natural gas prices",
+                "WHEAT": "wheat prices",
+                "CORN": "corn prices",
+                "SOYBEANS": "soybean prices",
+                "SUGAR": "sugar prices",
+                "COFFEE": "coffee prices",
+                "COTTON": "cotton prices",
+                "COCOA": "cocoa prices"
             }
             
-            ticker = ticker_map.get(commodity)
-            if not ticker:
-                return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_no_ticker"}
+            search_term = search_terms.get(commodity, commodity.lower())
             
-            # Hole Yahoo Finance Ticker Objekt
-            ticker_obj = yf.Ticker(ticker)
+            # Google News RSS Feed
+            url = f"https://news.google.com/rss/search?q={search_term.replace(' ', '%20')}&hl=en-US&gl=US&ceid=US:en"
             
-            # Hole News
-            news = ticker_obj.news if hasattr(ticker_obj, 'news') else []
+            # Parse RSS Feed
+            feed = feedparser.parse(url)
             
-            if not news or len(news) == 0:
-                return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_no_news"}
+            if not feed.entries or len(feed.entries) == 0:
+                return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "google_no_news"}
             
             # Sentiment-Analyse
-            positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar']
-            negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble']
+            positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar', 'higher']
+            negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble', 'lower']
             
             sentiment_score = 0
             article_count = 0
             
-            for article in news[:10]:  # Top 10 News
-                title = article.get('title', '').lower()
-                summary = article.get('summary', '').lower()
+            for entry in feed.entries[:15]:  # Top 15 News
+                title = entry.get('title', '').lower()
+                summary = entry.get('summary', '').lower()
                 text = title + " " + summary
                 
                 article_count += 1
@@ -136,18 +134,18 @@ class MarketAnalyzer:
             normalized_score = sentiment_score / max(article_count, 1) if article_count > 0 else 0
             sentiment = "bullish" if normalized_score > 0.3 else "bearish" if normalized_score < -0.3 else "neutral"
             
-            logger.info(f"📰 Yahoo Finance News für {commodity}: {article_count} Artikel, Sentiment: {sentiment} ({normalized_score:.2f})")
+            logger.info(f"📰 Google News für {commodity}: {article_count} Artikel, Sentiment: {sentiment} ({normalized_score:.2f})")
             
             return {
                 "sentiment": sentiment,
                 "score": normalized_score,
                 "articles": article_count,
-                "source": "yahoo_finance"
+                "source": "google_news"
             }
             
         except Exception as e:
-            logger.error(f"Yahoo Finance News error für {commodity}: {e}")
-            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "yahoo_error"}
+            logger.error(f"Google News error für {commodity}: {e}")
+            return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "google_error"}
     
     async def _fetch_finnhub_news(self, commodity: str) -> Dict:
         """Hole News von Finnhub.io (kostenlos, 60 calls/min)"""
