@@ -1496,6 +1496,20 @@ const Dashboard = () => {
             <p className={`text-sm ${settings?.auto_trading ? 'text-emerald-400' : 'text-slate-400'}`}>
               {settings?.auto_trading ? 'Auto-Trading Aktiv' : 'Manueller Modus'}
             </p>
+            {settings?.auto_trading && (
+              <div className="flex gap-2 mt-2">
+                {settings?.swing_trading_enabled && (
+                  <Badge className="bg-green-600/20 text-green-300 border-green-600/50 text-xs">
+                    📈 Swing
+                  </Badge>
+                )}
+                {settings?.day_trading_enabled && (
+                  <Badge className="bg-orange-600/20 text-orange-300 border-orange-600/50 text-xs">
+                    ⚡ Day
+                  </Badge>
+                )}
+              </div>
+            )}
           </Card>
         </div>
 
