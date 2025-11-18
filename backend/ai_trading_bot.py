@@ -291,10 +291,13 @@ class AITradingBot:
                 return
             
             # Analysiere jeden Commodity
+            analyzed_count = 0
+            skipped_count = 0
             for commodity_id in enabled_commodities:
                 # Rate Limiting: Respektiere analysis_interval
                 last_check = last_analysis_dict.get(commodity_id)
                 if last_check and (datetime.now() - last_check).seconds < analysis_interval:
+                    skipped_count += 1
                     continue
                 
                 last_analysis_dict[commodity_id] = datetime.now()
@@ -302,11 +305,12 @@ class AITradingBot:
                 # Hole Preishistorie
                 price_history = await self.get_price_history(commodity_id)
                 if len(price_history) < 20:
-                    logger.debug(f"ℹ️  {commodity_id}: Nicht genug Preisdaten ({len(price_history)})")
+                    logger.info(f"ℹ️  {strategy_name}: {commodity_id} - Nicht genug Preisdaten ({len(price_history)}/20)")
                     continue
                 
                 # Vollständige Marktanalyse
                 analysis = await self.market_analyzer.analyze_commodity(commodity_id, price_history)
+                analyzed_count += 1
                 
                 signal = analysis.get('signal', 'HOLD')
                 confidence = analysis.get('confidence', 0)
@@ -326,7 +330,9 @@ class AITradingBot:
                     await self.execute_ai_trade(commodity_id, signal, analysis, strategy=strategy)
                 else:
                     if signal != 'HOLD':
-                        logger.debug(f"ℹ️  {commodity_id}: {signal} aber Konfidenz zu niedrig ({confidence}% < {min_confidence}%)")
+                        logger.info(f"ℹ️  {strategy_name}: {commodity_id} {signal} aber Konfidenz zu niedrig ({confidence:.1f}% < {min_confidence:.1f}%)")
+            
+            logger.info(f"📊 {strategy_name} Analyse: {analyzed_count} analysiert, {skipped_count} übersprungen (Rate Limit)")
             
         except Exception as e:
             logger.error(f"Fehler bei der {strategy_name} KI-Analyse: {e}", exc_info=True)
