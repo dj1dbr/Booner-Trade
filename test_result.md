@@ -525,11 +525,11 @@ backend:
 
   - task: "Manual Trade Execution Bug Fix"
     implemented: true
-    working: true
+    working: false
     file: "metaapi_connector.py, server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
