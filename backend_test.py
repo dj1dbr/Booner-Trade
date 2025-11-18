@@ -2428,14 +2428,70 @@ class Booner_TradeTester:
         logger.info("\n🤖 AI Trading Bot Tests Complete")
         logger.info("="*80)
 
+    async def run_critical_manual_trade_tests(self):
+        """Run CRITICAL tests focused on Manual Trade Execution Bug Fix"""
+        logger.info("🔥 CRITICAL TESTING: Manual Trade Execution Bug Fix")
+        logger.info("=" * 80)
+        
+        # 1. API Availability Tests
+        await self.test_api_root()
+        await self.test_api_availability()
+        
+        # 2. CRITICAL: Manual Trade Execution
+        await self.test_manual_trade_execution_critical()
+        
+        # 3. Error Handling Improvements
+        await self.test_error_handling_improvements()
+        
+        # 4. Backend Logs Verification
+        await self.test_backend_logs_sdk_response()
+        
+        # 5. Platform Status (supporting test)
+        await self.test_platforms_status()
+        
+        # Print focused summary
+        self.print_critical_test_summary()
+    
+    def print_critical_test_summary(self):
+        """Print focused summary for critical manual trade execution tests"""
+        critical_tests = [
+            "API Root - App Name Change",
+            "API Availability - Platforms Status", 
+            "API Availability - Commodities",
+            "API Availability - Settings",
+            "Manual Trade Execution - WTI_CRUDE SUCCESS",
+            "Manual Trade Execution - Informative Error",
+            "Error Handling - Descriptive Messages",
+            "Backend Logs - SDK Response Details"
+        ]
+        
+        critical_results = [r for r in self.test_results if r["test"] in critical_tests]
+        total_critical = len(critical_results)
+        passed_critical = sum(1 for r in critical_results if r["success"])
+        
+        logger.info("\n" + "="*80)
+        logger.info("🎯 CRITICAL TEST SUMMARY - MANUAL TRADE EXECUTION BUG FIX")
+        logger.info("="*80)
+        logger.info(f"Critical Tests: {total_critical}")
+        logger.info(f"✅ Passed: {passed_critical}")
+        logger.info(f"❌ Failed: {total_critical - passed_critical}")
+        logger.info(f"Success Rate: {(passed_critical/total_critical*100):.1f}%" if total_critical > 0 else "No tests run")
+        
+        logger.info("\n📋 CRITICAL TEST RESULTS:")
+        for result in critical_results:
+            status = "✅" if result["success"] else "❌"
+            logger.info(f"  {status} {result['test']}: {result['details']}")
+        
+        logger.info("="*80)
+    
     async def run_all_tests(self):
-        """Run all backend tests in sequence - DUAL TRADING STRATEGY TESTING"""
-        logger.info("🚀 DUAL TRADING STRATEGY IMPLEMENTATION TESTING")
-        logger.info("ZIEL: Teste neue Dual-Strategy Features (Swing + Day Trading)")
+        """Run all backend tests - FOCUS ON MANUAL TRADE EXECUTION BUG FIX"""
+        logger.info("🚀 BOONER-TRADE BACKEND TESTING")
+        logger.info("FOCUS: Manual Trade Execution Bug Fix Testing")
         logger.info(f"Testing against: {self.base_url}")
         
-        # Run the dual trading strategy test suite as requested in the review
-        await self.run_dual_trading_strategy_tests()
+        # Run critical manual trade execution tests
+        await self.run_critical_manual_trade_tests()
         
         # Summary
         self.print_test_summary()
