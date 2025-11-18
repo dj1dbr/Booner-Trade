@@ -1274,7 +1274,7 @@ async def ai_chat_endpoint(
                 commodity = None
                 
                 # Find commodity by symbol
-                for comm in commodity_processor.commodities:
+                for comm_id, comm in commodity_processor.COMMODITIES.items():
                     if (comm.get('mt5_libertex_symbol') == symbol or 
                         comm.get('mt5_icmarkets_symbol') == symbol):
                         commodity = comm.get('id')
