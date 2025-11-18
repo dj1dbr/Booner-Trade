@@ -1068,51 +1068,67 @@ async def get_platform_positions(platform_name: str):
 @api_router.get("/bot/status", response_model=BotStatusResponse)
 async def get_bot_status():
     """Get AI Trading Bot status"""
-    from ai_trading_bot import bot_manager
-    
-    is_running = bot_manager.is_running()
-    instance_running = bot_manager.bot is not None
-    task_alive = bot_manager.bot_task is not None and not bot_manager.bot_task.done() if bot_manager.bot_task else False
-    
-    # Get trade count
-    trade_count = await db.trades.count_documents({"status": "OPEN"})
-    
-    return BotStatusResponse(
-        running=is_running,
-        instance_running=instance_running,
-        task_alive=task_alive,
-        trade_count=trade_count
-    )
+    try:
+        from ai_trading_bot import bot_manager
+        
+        is_running = bot_manager.is_running()
+        instance_running = bot_manager.bot is not None
+        task_alive = bot_manager.bot_task is not None and not bot_manager.bot_task.done() if bot_manager.bot_task else False
+        
+        # Get trade count
+        trade_count = await db.trades.count_documents({"status": "OPEN"})
+        
+        return BotStatusResponse(
+            running=is_running,
+            instance_running=instance_running,
+            task_alive=task_alive,
+            trade_count=trade_count
+        )
+    except ImportError:
+        # Bot manager not available
+        trade_count = await db.trades.count_documents({"status": "OPEN"})
+        return BotStatusResponse(
+            running=False,
+            instance_running=False,
+            task_alive=False,
+            trade_count=trade_count
+        )
 
 @api_router.post("/bot/start")
 async def start_bot():
     """Start AI Trading Bot"""
-    from ai_trading_bot import bot_manager
-    
-    # Check if auto_trading is enabled
-    settings = await db.trading_settings.find_one({"id": "trading_settings"})
-    if not settings or not settings.get('auto_trading', False):
-        raise HTTPException(
-            status_code=400, 
-            detail="Auto-Trading ist deaktiviert. Bitte aktivieren Sie Auto-Trading in den Einstellungen."
-        )
-    
-    if bot_manager.is_running():
-        return {"success": False, "message": "Bot läuft bereits"}
-    
-    await bot_manager.start()
-    return {"success": True, "message": "AI Trading Bot gestartet"}
+    try:
+        from ai_trading_bot import bot_manager
+        
+        # Check if auto_trading is enabled
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if not settings or not settings.get('auto_trading', False):
+            raise HTTPException(
+                status_code=400, 
+                detail="Auto-Trading ist deaktiviert. Bitte aktivieren Sie Auto-Trading in den Einstellungen."
+            )
+        
+        if bot_manager.is_running():
+            return {"success": False, "message": "Bot läuft bereits"}
+        
+        await bot_manager.start()
+        return {"success": True, "message": "AI Trading Bot gestartet"}
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Bot Manager nicht verfügbar")
 
 @api_router.post("/bot/stop")
 async def stop_bot():
     """Stop AI Trading Bot"""
-    from ai_trading_bot import bot_manager
-    
-    if not bot_manager.is_running():
-        return {"success": False, "message": "Bot läuft nicht"}
-    
-    await bot_manager.stop()
-    return {"success": True, "message": "AI Trading Bot gestoppt"}
+    try:
+        from ai_trading_bot import bot_manager
+        
+        if not bot_manager.is_running():
+            return {"success": False, "message": "Bot läuft nicht"}
+        
+        await bot_manager.stop()
+        return {"success": True, "message": "AI Trading Bot gestoppt"}
+    except ImportError:
+        raise HTTPException(status_code=503, detail="Bot Manager nicht verfügbar")
 
 # AI Chat Endpoint
 @api_router.post("/ai-chat")
