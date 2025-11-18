@@ -2528,7 +2528,7 @@ async def main():
     # Backend URL from environment
     backend_url = "https://aistrategy-1.preview.emergentagent.com"
     
-    async with RohstoffTraderTester(backend_url) as tester:
+    async with Booner_TradeTester(backend_url) as tester:
         await tester.run_all_tests()
 
 if __name__ == "__main__":
