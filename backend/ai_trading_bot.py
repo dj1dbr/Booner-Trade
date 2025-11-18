@@ -603,13 +603,18 @@ Antworte NUR mit: JA oder NEIN
             logger.error(f"LLM Entscheidung fehlgeschlagen: {e}")
             return True  # Default: Ja bei Fehler
     
-    async def execute_ai_trade(self, commodity_id: str, direction: str, analysis: Dict):
-        """Führe Trade aus mit Risk Management"""
+    async def execute_ai_trade(self, commodity_id: str, direction: str, analysis: Dict, strategy="swing"):
+        """Führe Trade aus mit Risk Management - DUAL STRATEGY AWARE
+        
+        Args:
+            strategy: "swing" für Swing Trading, "day" für Day Trading
+        """
         try:
             from multi_platform_connector import multi_platform
             from commodity_processor import commodity_processor
             
-            logger.info(f"🚀 Führe AI-Trade aus: {commodity_id} {direction}")
+            strategy_name = "Swing Trading" if strategy == "swing" else "Day Trading"
+            logger.info(f"🚀 Führe {strategy_name} Trade aus: {commodity_id} {direction}")
             
             # Hole Commodity-Info
             commodity = commodity_processor.get_commodity_by_id(commodity_id)
