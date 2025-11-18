@@ -72,13 +72,16 @@
 
 ### ⚡ Day Trading (25% Confidence, 1h Haltezeit)
 
-**Beste Assets:**
-1. **BITCOIN (BTCUSD)** - 24/7 verfügbar! ⭐
+**Beste Assets Mo-Fr:**
+1. **BITCOIN (BTCUSD)** - 24/7 Mo-Fr! ⭐
 2. **Gold (XAUUSD)** - Fast 24h (23:05-22:00)
 3. **Silber (XAGUSD)** - Fast 24h (23:05-22:00)
 4. **WTI/Brent** - Fast 24h
 
-**Warum:** Day Trading braucht Liquidität rund um die Uhr. Bitcoin ist perfekt!
+**Beste Assets Wochenende:**
+1. **EUR/USD** - EINZIGES verfügbares Asset! ⭐
+
+**Warum:** Day Trading braucht Liquidität. Bitcoin perfekt Mo-Fr, EUR/USD für Wochenende!
 
 ---
 
