@@ -1150,30 +1150,47 @@ const Dashboard = () => {
                                 if (trade.status === 'OPEN' && trade.entry_price && settings) {
                                   const currentPrice = trade.price || trade.entry_price;
                                   const entryPrice = trade.entry_price;
+                                  const targetPrice = trade.take_profit;
                                   
-                                  // Nutze TP vom Trade ODER berechne aus Settings
-                                  const tpPercent = settings.take_profit_percent || 0.2;
-                                  const targetPrice = trade.take_profit || (
-                                    trade.type === 'BUY' 
-                                      ? entryPrice * (1 + tpPercent / 100)
-                                      : entryPrice * (1 - tpPercent / 100)
-                                  );
+                                  if (!targetPrice) {
+                                    return <span className="text-xs text-slate-500">Kein TP gesetzt</span>;
+                                  }
                                   
-                                  // Berechne Distanz zum Ziel
+                                  // Prüfe ob TP erreicht ist (mit Richtung)
+                                  const isTargetReached = trade.type === 'BUY' 
+                                    ? currentPrice >= targetPrice 
+                                    : currentPrice <= targetPrice;
+                                  
+                                  if (isTargetReached) {
+                                    return (
+                                      <div className="text-xs">
+                                        <span className="text-green-400 font-semibold">✅ Ziel erreicht!</span>
+                                        <p className="text-amber-400 mt-1">⚠️ Trade sollte geschlossen werden</p>
+                                      </div>
+                                    );
+                                  }
+                                  
+                                  // Berechne Distanz zum Ziel (in richtige Richtung)
                                   const totalDistance = Math.abs(targetPrice - entryPrice);
-                                  const currentDistance = Math.abs(currentPrice - entryPrice);
-                                  const progressPercent = totalDistance > 0 ? (currentDistance / totalDistance) * 100 : 0;
+                                  let currentDistance;
                                   
+                                  if (trade.type === 'BUY') {
+                                    currentDistance = Math.max(0, currentPrice - entryPrice);
+                                  } else {
+                                    currentDistance = Math.max(0, entryPrice - currentPrice);
+                                  }
+                                  
+                                  const progressPercent = totalDistance > 0 ? (currentDistance / totalDistance) * 100 : 0;
                                   const remaining = Math.max(0, 100 - progressPercent);
                                   
                                   return (
                                     <div className="text-xs">
-                                      {progressPercent >= 100 ? (
-                                        <span className="text-green-400 font-semibold">✅ Ziel erreicht!</span>
-                                      ) : progressPercent > 50 ? (
+                                      {progressPercent > 50 ? (
                                         <span className="text-cyan-400">Noch {remaining.toFixed(0)}% zum Ziel 🎯</span>
-                                      ) : (
+                                      ) : progressPercent > 0 ? (
                                         <span className="text-slate-400">Noch {remaining.toFixed(0)}% zum Ziel</span>
+                                      ) : (
+                                        <span className="text-red-400">Gegenläufig {Math.abs(progressPercent).toFixed(0)}%</span>
                                       )}
                                     </div>
                                   );
