@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://autotradeai-8.preview.emergentagent.com
+https://aistrategy-1.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.

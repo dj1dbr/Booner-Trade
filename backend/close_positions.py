@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BACKEND_URL = "https://autotradeai-8.preview.emergentagent.com"
+BACKEND_URL = "https://aistrategy-1.preview.emergentagent.com"
 
 async def list_positions():
     """Liste alle offenen Positionen auf"""
