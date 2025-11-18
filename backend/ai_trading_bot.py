@@ -152,15 +152,16 @@ class AITradingBot:
             logger.error(f"Fehler beim Laden der Marktdaten: {e}")
     
     async def monitor_open_positions(self):
-        """Überwache ALLE offenen Positionen und schließe bei Ziel"""
-        logger.info("👀 Überwache offene Positionen...")
+        """🤖 KI ÜBERWACHT SL/TP - schließt automatisch bei Ziel!"""
+        logger.info("👀 KI überwacht offene Positionen und prüft SL/TP...")
         
         try:
             from multi_platform_connector import multi_platform
             
-            # Hole Settings
-            tp_percent = self.settings.get('take_profit_percent', 0.2)
-            sl_percent = self.settings.get('stop_loss_percent', 2.0)
+            # Hole Strategy-spezifische Settings (nicht die alten!)
+            # Verwende Swing-Trading Settings als Standard
+            tp_percent = self.settings.get('swing_take_profit_percent', 4.0)
+            sl_percent = self.settings.get('swing_stop_loss_percent', 2.0)
             
             platforms = ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']
             total_positions = 0
