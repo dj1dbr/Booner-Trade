@@ -385,41 +385,57 @@ class AITradingBot:
             logger.error(f"Fehler beim Laden der {strategy} Positionen: {e}")
             return []
     
-    async def calculate_strategy_balance_usage(self, strategy: str) -> float:
-        """Berechne aktuelle Balance-Auslastung einer Strategie in Prozent"""
+    async def calculate_combined_balance_usage_per_platform(self) -> float:
+        """KORRIGIERT: Berechne kombinierte Balance-Auslastung (Swing + Day) PRO Plattform
+        
+        Returns:
+            Höchste Auslastung über alle aktiven Plattformen in Prozent
+        """
         try:
             from multi_platform_connector import multi_platform
             
-            # Hole Gesamt-Balance
-            total_balance = 0.0
+            max_usage_percent = 0.0
+            
+            # Prüfe jede aktive Plattform separat
             for platform in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
-                if platform in self.settings.get('active_platforms', []):
-                    account_info = await multi_platform.get_account_info(platform)
-                    if account_info:
-                        total_balance += account_info.get('balance', 0)
+                if platform not in self.settings.get('active_platforms', []):
+                    continue
+                
+                # Hole Balance dieser Plattform
+                account_info = await multi_platform.get_account_info(platform)
+                if not account_info:
+                    continue
+                
+                platform_balance = account_info.get('balance', 0)
+                if platform_balance <= 0:
+                    continue
+                
+                # Hole ALLE offenen Positionen (Swing + Day) auf dieser Plattform
+                all_positions = await self.db.trades.find({
+                    "status": "OPEN",
+                    "platform": platform
+                }).to_list(length=100)
+                
+                # Berechne genutztes Kapital
+                used_capital = 0.0
+                for pos in all_positions:
+                    entry_price = pos.get('entry_price', 0)
+                    quantity = pos.get('quantity', 0)
+                    used_capital += (entry_price * quantity)
+                
+                # Prozent dieser Plattform-Balance
+                usage_percent = (used_capital / platform_balance) * 100
+                
+                logger.debug(f"{platform}: {usage_percent:.1f}% genutzt (€{used_capital:.2f} von €{platform_balance:.2f})")
+                
+                # Höchste Auslastung merken
+                if usage_percent > max_usage_percent:
+                    max_usage_percent = usage_percent
             
-            if total_balance <= 0:
-                return 100.0
-            
-            # Hole alle offenen Positionen dieser Strategie
-            strategy_positions = await self.get_strategy_positions(strategy)
-            
-            # Berechne genutztes Kapital
-            used_capital = 0.0
-            for pos in strategy_positions:
-                entry_price = pos.get('entry_price', 0)
-                quantity = pos.get('quantity', 0)
-                used_capital += (entry_price * quantity)
-            
-            # Prozent der Gesamt-Balance
-            usage_percent = (used_capital / total_balance) * 100
-            
-            logger.debug(f"{strategy} Balance-Nutzung: {usage_percent:.1f}% (€{used_capital:.2f} von €{total_balance:.2f})")
-            
-            return min(usage_percent, 100.0)
+            return min(max_usage_percent, 100.0)
             
         except Exception as e:
-            logger.error(f"Fehler bei {strategy} Balance-Berechnung: {e}")
+            logger.error(f"Fehler bei kombinierten Balance-Berechnung: {e}")
             return 0.0
     
     async def close_expired_day_trades(self):
