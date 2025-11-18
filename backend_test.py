@@ -2813,17 +2813,39 @@ class Booner_TradeTester:
         
         logger.info("="*80)
     
-    async def run_all_tests(self):
-        """Run all backend tests - FOCUS ON MANUAL TRADE EXECUTION BUG FIX"""
+    async def run_broker_connection_and_settings_tests(self):
+        """Run focused tests for the specific user problems"""
         logger.info("🚀 BOONER-TRADE BACKEND TESTING")
-        logger.info("FOCUS: Manual Trade Execution Bug Fix Testing")
+        logger.info("FOCUS: Broker Connection & Settings Issues")
         logger.info(f"Testing against: {self.base_url}")
         
-        # Run critical manual trade execution tests
-        await self.run_critical_manual_trade_tests()
+        # PROBLEM 1: Broker-Verbindung
+        logger.info("\n" + "="*60)
+        logger.info("🔍 PROBLEM 1: Broker-Verbindung")
+        logger.info("User says: 'Immer noch keine Verbindung zu den Brokern'")
+        logger.info("="*60)
+        await self.test_broker_connection_problem_1()
+        
+        # PROBLEM 2: Day/Swing Settings nicht änderbar
+        logger.info("\n" + "="*60)
+        logger.info("🔍 PROBLEM 2: Day/Swing Settings nicht änderbar")
+        logger.info("User says: 'Day und Swift Einstellungen sind plötzlich nicht mehr änderbar'")
+        logger.info("="*60)
+        await self.test_day_swing_settings_problem_2()
+        
+        # Check backend logs for connection errors
+        logger.info("\n" + "="*60)
+        logger.info("📋 BACKEND LOGS ANALYSIS")
+        logger.info("Checking for connection errors and issues")
+        logger.info("="*60)
+        await self.test_backend_logs_connection_errors()
         
         # Summary
         self.print_test_summary()
+
+    async def run_all_tests(self):
+        """Run all backend tests - FOCUS ON BROKER CONNECTION & SETTINGS"""
+        await self.run_broker_connection_and_settings_tests()
     
     def print_test_summary(self):
         """Print comprehensive test summary"""
