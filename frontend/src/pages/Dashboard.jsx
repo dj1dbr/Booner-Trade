@@ -1822,7 +1822,18 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
       use_volume_confirmation: true,
       risk_per_trade_percent: 2.0,
       stop_loss_percent: 2.0,
-      take_profit_percent: 4.0
+      take_profit_percent: 4.0,
+      // Dual Trading Strategy Defaults
+      swing_trading_enabled: true,
+      swing_min_confidence_score: 0.6,
+      swing_stop_loss_percent: 2.0,
+      swing_take_profit_percent: 4.0,
+      swing_max_positions: 5,
+      day_trading_enabled: false,
+      day_min_confidence_score: 0.4,
+      day_stop_loss_percent: 0.5,
+      day_take_profit_percent: 0.8,
+      day_max_positions: 10
     };
     
     if (settings) {
