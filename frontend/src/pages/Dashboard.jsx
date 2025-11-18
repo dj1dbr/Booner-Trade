@@ -2276,60 +2276,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="stop_loss">Stop Loss (%)</Label>
-              <Input
-                id="stop_loss"
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={formData.stop_loss_percent ?? 2.0}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '') {
-                    setFormData({ ...formData, stop_loss_percent: '' });
-                  } else {
-                    const parsed = parseFloat(val);
-                    setFormData({ ...formData, stop_loss_percent: isNaN(parsed) ? 2.0 : parsed });
-                  }
-                }}
-                onBlur={(e) => {
-                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
-                    setFormData({ ...formData, stop_loss_percent: 2.0 });
-                  }
-                }}
-                className="bg-slate-800 border-slate-700"
-                data-testid="stop-loss-input"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="take_profit">Take Profit (%)</Label>
-              <Input
-                id="take_profit"
-                type="number"
-                step="0.1"
-                min="0.1"
-                value={formData.take_profit_percent ?? 4.0}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '') {
-                    setFormData({ ...formData, take_profit_percent: '' });
-                  } else {
-                    const parsed = parseFloat(val);
-                    setFormData({ ...formData, take_profit_percent: isNaN(parsed) ? 4.0 : parsed });
-                  }
-                }}
-                onBlur={(e) => {
-                  if (e.target.value === '' || isNaN(parseFloat(e.target.value))) {
-                    setFormData({ ...formData, take_profit_percent: 4.0 });
-                  }
-                }}
-                className="bg-slate-800 border-slate-700"
-                data-testid="take-profit-input"
-              />
-            </div>
-          </div>
+          {/* DEPRECATED: Alte Stop Loss / Take Profit Felder entfernt - jetzt in Dual Trading Strategy */}
 
           {/* Trailing Stop Settings */}
           <div className="space-y-4 mt-6">
