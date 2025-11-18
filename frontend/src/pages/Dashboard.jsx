@@ -983,16 +983,6 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <p className="text-xs text-slate-500">{commodity.category}</p>
-                  {settings?.mode === 'MT5' && !['GOLD', 'SILVER', 'PLATINUM', 'PALLADIUM'].includes(commodityId) && (
-                    <div className="mt-2 flex items-center gap-1 text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded px-2 py-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>✓ Auf Bitpanda handelbar</span>
-                    </div>
-                  )}
-                  {settings?.mode === 'BITPANDA' && (
-                    <div className="mt-2 flex items-center gap-1 text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded px-2 py-1">
-                      <AlertCircle className="w-3 h-3" />
-                      <span>✓ Handelbar</span>
                     </div>
                   )}
                 </div>
