@@ -1249,7 +1249,7 @@ async def ai_chat_endpoint(
         
         # Get open trades - Use the same logic as /trades/list endpoint
         from multi_platform_connector import multi_platform
-        from commodity_processor import commodity_processor
+        import commodity_processor
         
         open_trades = []
         
