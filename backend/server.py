@@ -480,6 +480,48 @@ async def analyze_commodity(commodity_id: str):
         logger.error(f"Error analyzing {commodity_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@api_router.get("/market/ohlcv/{commodity_id}")
+async def get_market_ohlcv(commodity_id: str, timeframe: str = "1d", period: str = "1mo"):
+    """Get OHLCV (candlestick) data for charts"""
+    from commodity_processor import COMMODITIES
+    
+    if commodity_id not in COMMODITIES:
+        raise HTTPException(status_code=404, detail="Commodity not found")
+    
+    commodity = COMMODITIES[commodity_id]
+    
+    try:
+        ticker = yf.Ticker(commodity['symbol'])
+        df = ticker.history(period=period)
+        
+        if df.empty:
+            return {"success": False, "data": [], "error": "No data available"}
+        
+        df = df.reset_index()
+        
+        chart_data = []
+        for _, row in df.iterrows():
+            chart_data.append({
+                "time": row['Date'].isoformat(),
+                "open": float(row['Open']),
+                "high": float(row['High']),
+                "low": float(row['Low']),
+                "close": float(row['Close']),
+                "volume": float(row['Volume']) if not pd.isna(row['Volume']) else 0
+            })
+        
+        return {"success": True, "data": chart_data, "commodity": commodity_id}
+    
+    except Exception as e:
+        logger.error(f"Error fetching OHLCV data for {commodity_id}: {e}")
+        return {"success": False, "data": [], "error": str(e)}
+
+@api_router.get("/market/ohlcv-simple/{commodity_id}")
+async def get_market_ohlcv_simple(commodity_id: str, timeframe: str = "1d", period: str = "1mo"):
+    """Simple OHLCV endpoint using yfinance - fallback when MetaAPI quota exceeded"""
+    return await get_market_ohlcv(commodity_id, timeframe, period)
+
 async def execute_trade_logic(signal, price, settings, commodity_id='WTI_CRUDE'):
     """Auto-execute trade based on signal"""
     try:
