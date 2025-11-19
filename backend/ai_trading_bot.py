@@ -667,6 +667,12 @@ Antworte NUR mit: JA oder NEIN
             strategy_name = "Swing Trading" if strategy == "swing" else "Day Trading"
             logger.info(f"🚀 Führe {strategy_name} Trade aus: {commodity_id} {direction}")
             
+            # ⏰ WICHTIG: Prüfe Handelszeiten
+            if not commodity_processor.is_market_open(commodity_id):
+                next_open = commodity_processor.get_next_market_open(commodity_id)
+                logger.warning(f"⏰ Markt für {commodity_id} ist geschlossen. Nächste Öffnung: {next_open}")
+                return
+            
             # Hole Commodity-Info aus dem COMMODITIES dict
             commodity = commodity_processor.COMMODITIES.get(commodity_id)
             if not commodity:
