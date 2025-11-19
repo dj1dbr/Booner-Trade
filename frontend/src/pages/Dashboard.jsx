@@ -68,18 +68,8 @@ const Dashboard = () => {
         fetchTrades();
         fetchStats();
         updateBalance();
-        // Fetch account data for all active platforms
-        if (settings?.active_platforms) {
-          if (settings.active_platforms.includes('MT5_LIBERTEX')) {
-            fetchMT5LibertexAccount();
-          }
-          if (settings.active_platforms.includes('MT5_ICMARKETS')) {
-            fetchMT5ICMarketsAccount();
-          }
-          if (settings.active_platforms.includes('BITPANDA')) {
-            fetchBitpandaAccount();
-          }
-        }
+        // Fetch account data for all platforms
+        fetchAllPlatformData();
       }
     }, 10000);  // Every 10 seconds
 
