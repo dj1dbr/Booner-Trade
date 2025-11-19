@@ -586,9 +586,10 @@ const Dashboard = () => {
   const fetchMT5LibertexAccount = async () => {
     try {
       const response = await axios.get(`${API}/platforms/MT5_LIBERTEX/account`);
-      if (response.data.success) {
+      if (response.data && response.data.account) {
         setMt5LibertexAccount(response.data.account);
         setMt5LibertexConnected(true);
+        console.log('✅ MT5 Libertex account loaded:', response.data.account.balance);
       }
     } catch (error) {
       console.error('Error fetching MT5 Libertex account:', error);
@@ -600,9 +601,10 @@ const Dashboard = () => {
   const fetchMT5ICMarketsAccount = async () => {
     try {
       const response = await axios.get(`${API}/platforms/MT5_ICMARKETS/account`);
-      if (response.data.success) {
+      if (response.data && response.data.account) {
         setMt5Account(response.data.account);
         setMt5Connected(true);
+        console.log('✅ MT5 ICMarkets account loaded:', response.data.account.balance);
       }
     } catch (error) {
       console.error('Error fetching MT5 ICMarkets account:', error);
