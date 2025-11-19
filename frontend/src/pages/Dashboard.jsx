@@ -89,24 +89,9 @@ const Dashboard = () => {
   // Load account data when settings change or component mounts
   useEffect(() => {
     console.log('🔍 Settings loaded:', settings);
-    if (settings?.active_platforms && settings.active_platforms.length > 0) {
-      console.log('Loading account data for platforms:', settings.active_platforms);
-      
-      if (settings.active_platforms.includes('MT5_LIBERTEX')) {
-        fetchMT5LibertexAccount();
-      }
-      if (settings.active_platforms.includes('MT5_ICMARKETS')) {
-        fetchMT5ICMarketsAccount();
-      }
-      if (settings.active_platforms.includes('BITPANDA')) {
-        fetchBitpandaAccount();
-      }
-    } else {
-      // Always try to fetch account data regardless of settings
-      console.log('🔍 No active_platforms in settings, fetching all accounts anyway');
-      fetchMT5LibertexAccount();
-      fetchMT5ICMarketsAccount();
-    }
+    // Always fetch platform data using the efficient status endpoint
+    console.log('🔍 Fetching all platform data from status endpoint');
+    fetchAllPlatformData();
   }, [settings?.active_platforms]);
 
   // Load OHLCV data for selected commodity in modal with timeframe
