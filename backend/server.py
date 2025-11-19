@@ -1026,42 +1026,40 @@ async def list_trades():
 
 @api_router.get("/trades/stats")
 async def get_trade_stats():
-    """Get trading statistics"""
+    """Get trading statistics: OPEN from MT5 live, CLOSED from DB"""
     try:
-        # Get all trades
-        all_trades = await db.trades.find().to_list(length=None)
+        from multi_platform_connector import multi_platform
         
-        # Calculate stats
-        total_trades = len(all_trades)
-        open_trades = [t for t in all_trades if t.get('status') == 'OPEN']
-        closed_trades = [t for t in all_trades if t.get('status') == 'CLOSED']
+        # 1. Get OPEN trades from MT5 (live)
+        open_count = 0
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            try:
+                if platform_name in multi_platform.platforms:
+                    connector = multi_platform.platforms[platform_name].get('connector')
+                    if connector:
+                        positions = await connector.get_positions()
+                        open_count += len(positions)
+            except Exception as e:
+                logger.error(f"Error getting positions from {platform_name}: {e}")
+        
+        # 2. Get CLOSED trades from DB
+        closed_trades = await db.trades.find({'status': 'CLOSED'}).to_list(length=None)
+        closed_count = len(closed_trades)
         
         # Calculate P&L for closed trades
         total_pnl = sum([t.get('pnl', 0) for t in closed_trades if t.get('pnl')])
         
         # Win rate
         winning_trades = [t for t in closed_trades if t.get('pnl', 0) > 0]
-        win_rate = (len(winning_trades) / len(closed_trades) * 100) if closed_trades else 0
-        
-        # Platform breakdown
-        platform_stats = {}
-        for trade in all_trades:
-            platform = trade.get('platform', 'UNKNOWN')
-            if platform not in platform_stats:
-                platform_stats[platform] = {'total': 0, 'open': 0, 'closed': 0}
-            platform_stats[platform]['total'] += 1
-            if trade.get('status') == 'OPEN':
-                platform_stats[platform]['open'] += 1
-            else:
-                platform_stats[platform]['closed'] += 1
+        win_rate = (len(winning_trades) / closed_count * 100) if closed_count else 0
         
         return {
-            'total_trades': total_trades,
-            'open_trades': len(open_trades),
-            'closed_trades': len(closed_trades),
+            'total_trades': open_count + closed_count,
+            'open_trades': open_count,
+            'closed_trades': closed_count,
             'total_pnl': total_pnl,
             'win_rate': win_rate,
-            'platform_stats': platform_stats
+            'platform_stats': {}
         }
     
     except Exception as e:
