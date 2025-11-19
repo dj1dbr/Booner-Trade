@@ -842,10 +842,10 @@ backend:
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
     implemented: true
-    working: true
+    working: false
     file: "Dashboard.jsx"
-    stuck_count: 0
-    priority: "medium"
+    stuck_count: 1
+    priority: "critical"
     needs_retesting: false
     status_history:
       - working: "NA"
