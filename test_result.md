@@ -1147,6 +1147,67 @@ agent_communication:
   
   - agent: "testing"
     message: |
+      🔥 QUICK DIAGNOSIS COMPLETED - CHARTS & OPEN POSITIONS ISSUES (Nov 19, 2025)
+      
+      ✅ CRITICAL TESTING RESULTS (4/6 tests - 67% success rate):
+      
+      🔍 USER ISSUE #1: "Charts laden nicht" (Charts not loading) - ✅ PARTIALLY WORKING
+      
+      CHARTS FUNCTIONALITY VERIFICATION:
+      ✅ Charts tab accessible and clickable
+      ✅ WTI Crude Oil found in Charts section
+      ✅ Chart buttons (15 total) present and clickable
+      ✅ Chart modal opens successfully for Gold commodity
+      ✅ Chart displays "Lade Chart-Daten für Gold..." loading message
+      ✅ Technical indicators working (RSI: 59.78, MACD: 17.60, SMA 20: $4050.36, EMA 20: $4061.48)
+      ✅ Timeframe selectors present (Interval and Zeitraum dropdowns)
+      ❌ Chart data not loading - shows loading spinner indefinitely
+      ❌ Timeframe changes timeout (30s) - cannot select different periods
+      
+      🔍 USER ISSUE #2: "Offene Positionen bei MT5 werden nicht angezeigt" (Open positions not displayed) - ❌ CONFIRMED ISSUE
+      
+      OPEN POSITIONS VERIFICATION:
+      ✅ Trades tab accessible and clickable
+      ✅ Backend API returns 1 open trade: WTI_CRUDE BUY (Status: OPEN)
+      ❌ "Offene Trades" sub-tab not found in frontend
+      ❌ Open positions not displayed in UI despite backend data
+      ❌ Shows "Keine offenen Trades" message when 1 trade exists
+      ❌ Frontend-backend data synchronization issue
+      
+      🔍 ROOT CAUSE ANALYSIS:
+      
+      CHARTS ISSUE:
+      - Chart modal opens but data loading fails
+      - Backend logs show MetaAPI quota exceeded (101/100 subscriptions)
+      - TooManyRequestsException preventing chart data retrieval
+      - Chart functionality blocked by infrastructure limitation
+      
+      OPEN POSITIONS ISSUE:
+      - Backend correctly returns 1 open WTI_CRUDE trade
+      - Frontend fails to display existing trade data
+      - UI shows "Keine offenen Trades" despite backend having data
+      - Critical frontend data binding/rendering issue
+      
+      🎯 EXACT ERRORS IDENTIFIED:
+      
+      ❌ CHARTS: MetaAPI subscription quota exceeded (101/100)
+      - Error: "TooManyRequestsException: You have used all your account subscriptions quota"
+      - Impact: Chart data cannot be loaded from MetaAPI
+      - Status: Infrastructure limitation, not code defect
+      
+      ❌ OPEN POSITIONS: Frontend data synchronization failure
+      - Backend: 1 trade available via /api/trades/list
+      - Frontend: Shows "Keine offenen Trades" message
+      - Impact: User cannot see their actual open positions
+      - Status: Critical frontend rendering bug
+      
+      RECOMMENDATION: 
+      1. CRITICAL: Fix frontend open positions display (data binding issue)
+      2. INFRASTRUCTURE: Resolve MetaAPI quota to enable chart data loading
+      3. Charts UI works but needs backend data connection restored
+  
+  - agent: "testing"
+    message: |
       🔥 MANUAL TRADE EXECUTION TEST COMPLETED - WTI Crude Oil (Nov 18, 2025)
       
       ✅ SUCCESS CRITERIA MET (2/3 tests - 67% success rate):
