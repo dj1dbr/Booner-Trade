@@ -456,7 +456,20 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('Trade execution error:', error);
-      const errorMsg = error.response?.data?.detail || error.response?.data?.message || error.message || 'Unbekannter Fehler';
+      let errorMsg = 'Unbekannter Fehler';
+      
+      if (error.response?.data?.detail) {
+        errorMsg = typeof error.response.data.detail === 'string' 
+          ? error.response.data.detail 
+          : JSON.stringify(error.response.data.detail);
+      } else if (error.response?.data?.message) {
+        errorMsg = typeof error.response.data.message === 'string'
+          ? error.response.data.message
+          : JSON.stringify(error.response.data.message);
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
       toast.error('Fehler beim Ausführen: ' + errorMsg);
     }
   };
