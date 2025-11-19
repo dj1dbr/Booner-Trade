@@ -1498,7 +1498,7 @@ const Dashboard = () => {
             </div>
             <p className="text-3xl font-bold text-white">{stats?.total_trades || 0}</p>
             <p className="text-xs text-slate-500 mt-1">
-              Offen: {stats?.open_positions || 0} | Geschlossen: {stats?.closed_positions || 0}
+              Offen: {stats?.open_trades || 0} | Geschlossen: {stats?.closed_trades || 0}
             </p>
           </Card>
 
