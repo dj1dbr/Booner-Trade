@@ -586,10 +586,14 @@ const Dashboard = () => {
   const fetchMT5LibertexAccount = async () => {
     try {
       const response = await axios.get(`${API}/platforms/MT5_LIBERTEX/account`);
+      console.log('🔍 MT5 Libertex response:', response.data);
       if (response.data && response.data.account) {
         setMt5LibertexAccount(response.data.account);
         setMt5LibertexConnected(true);
         console.log('✅ MT5 Libertex account loaded:', response.data.account.balance);
+      } else {
+        console.warn('❌ MT5 Libertex: No account data in response');
+        setMt5LibertexConnected(false);
       }
     } catch (error) {
       console.error('Error fetching MT5 Libertex account:', error);
