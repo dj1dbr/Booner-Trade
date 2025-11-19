@@ -1163,7 +1163,7 @@ const Dashboard = () => {
                         const commodity = commodities[commodityId];
                         
                         // For MT5 trades, use the current price from trade data if available, otherwise from market
-                        const currentPrice = trade.price || allMarkets[commodityId]?.price || trade.entry_price;
+                        const currentPrice = trade.current_price || trade.price || allMarkets[commodityId]?.price || trade.entry_price;
                         
                         // Calculate P&L
                         const pl = trade.status === 'OPEN' 
