@@ -1165,12 +1165,12 @@ const Dashboard = () => {
                         // For MT5 trades, use the current price from trade data if available, otherwise from market
                         const currentPrice = trade.current_price || trade.price || allMarkets[commodityId]?.price || trade.entry_price;
                         
-                        // Calculate P&L
-                        const pl = trade.status === 'OPEN' 
-                          ? (trade.profit_loss !== undefined && trade.profit_loss !== null)
-                            ? trade.profit_loss  // Use MT5's calculated P&L if available
-                            : (trade.type === 'BUY' ? currentPrice - trade.entry_price : trade.entry_price - currentPrice) * trade.quantity
-                          : trade.profit_loss || 0;
+                        // Calculate P&L - Use MT5's pnl field directly
+                        const pl = trade.pnl !== undefined && trade.pnl !== null
+                          ? trade.pnl  // Use MT5's calculated P&L (profit field)
+                          : trade.profit_loss !== undefined && trade.profit_loss !== null
+                            ? trade.profit_loss
+                            : (trade.type === 'BUY' ? currentPrice - trade.entry_price : trade.entry_price - currentPrice) * trade.quantity;
                         
                         return (
                           <tr key={trade.id} className="border-b border-slate-800 hover:bg-slate-800/30">
