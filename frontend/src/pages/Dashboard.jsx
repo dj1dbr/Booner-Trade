@@ -605,10 +605,14 @@ const Dashboard = () => {
   const fetchMT5ICMarketsAccount = async () => {
     try {
       const response = await axios.get(`${API}/platforms/MT5_ICMARKETS/account`);
+      console.log('🔍 MT5 ICMarkets response:', response.data);
       if (response.data && response.data.account) {
         setMt5Account(response.data.account);
         setMt5Connected(true);
         console.log('✅ MT5 ICMarkets account loaded:', response.data.account.balance);
+      } else {
+        console.warn('❌ MT5 ICMarkets: No account data in response');
+        setMt5Connected(false);
       }
     } catch (error) {
       console.error('Error fetching MT5 ICMarkets account:', error);
