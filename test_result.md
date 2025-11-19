@@ -1010,6 +1010,44 @@ frontend:
           - Tested "0.75" in Take Profit field ✅
           - Both fields now work correctly with decimal input
 
+  - task: "Frontend Platform Balance Display Bug Fix"
+    implemented: false
+    working: false
+    file: "Dashboard.jsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ CRITICAL BUG IDENTIFIED (Nov 19, 2025):
+          
+          USER COMPLAINT: "Immer noch keine Verbindung zu den Brokern"
+          
+          ISSUE CONFIRMED:
+          - Backend APIs working: MT5_LIBERTEX: €49,110.32, MT5_ICMARKETS: €2,565.93
+          - Frontend displaying: All platforms showing €0.00
+          - 3 occurrences of €0.00 found in UI instead of real balances
+          
+          ROOT CAUSE:
+          Frontend is not properly fetching or displaying backend platform data.
+          Possible causes:
+          1. API timeout in frontend data fetching
+          2. Component state management issue
+          3. Data binding problem in platform cards
+          4. Async data loading not completing
+          
+          IMPACT:
+          User sees "no broker connection" when backend is actually connected with healthy balances.
+          This creates false impression that the trading system is not working.
+          
+          NEEDS IMPLEMENTATION:
+          - Fix frontend data fetching for platform balances
+          - Ensure proper error handling and loading states
+          - Verify API timeout configuration
+          - Test data binding in platform cards component
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
