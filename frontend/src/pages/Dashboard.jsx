@@ -566,11 +566,13 @@ const Dashboard = () => {
   // Fetch all platform data from status endpoint (more efficient)
   const fetchAllPlatformData = async () => {
     try {
-      const response = await axios.get(`${API}/platforms/status`);
+      console.log('🔍 Making API call to:', `${API}/platforms/status`);
+      const response = await axios.get(`${API}/platforms/status`, { timeout: 30000 }); // 30 second timeout
       console.log('🔍 Platform status response:', response.data);
       
       if (response.data && response.data.platforms) {
         const platforms = response.data.platforms;
+        console.log('🔍 Found platforms:', platforms.map(p => `${p.name}: €${p.balance}`));
         
         // Find MT5_LIBERTEX platform
         const libertexPlatform = platforms.find(p => p.name === 'MT5_LIBERTEX');
@@ -578,6 +580,8 @@ const Dashboard = () => {
           setMt5LibertexAccount(libertexPlatform);
           setMt5LibertexConnected(libertexPlatform.connected);
           console.log('✅ MT5 Libertex account loaded:', libertexPlatform.balance);
+        } else {
+          console.warn('❌ MT5_LIBERTEX platform not found in response');
         }
         
         // Find MT5_ICMARKETS platform
@@ -586,10 +590,14 @@ const Dashboard = () => {
           setMt5Account(icmarketsPlatform);
           setMt5Connected(icmarketsPlatform.connected);
           console.log('✅ MT5 ICMarkets account loaded:', icmarketsPlatform.balance);
+        } else {
+          console.warn('❌ MT5_ICMARKETS platform not found in response');
         }
+      } else {
+        console.warn('❌ No platforms data in response:', response.data);
       }
     } catch (error) {
-      console.error('Error fetching platform status:', error);
+      console.error('❌ Error fetching platform status:', error.message, error.code);
       setMt5LibertexConnected(false);
       setMt5Connected(false);
     }
