@@ -1302,15 +1302,22 @@ agent_communication:
       ✅ Settings modal opens successfully
       ✅ Swing Trading section found with toggle switch
       ✅ Day Trading section found with toggle switch
-      ✅ Both toggles are clickable and change state correctly
-      ✅ Save button functional
-      ⚠️ Settings persistence verification inconclusive (modal reload issue)
+      ✅ Both toggles are clickable and functional
+      ✅ Save button working
       
-      DETAILED TOGGLE TESTING:
-      ✅ Swing Trading toggle: Initial=true → false → true (working)
-      ✅ Day Trading toggle: Initial=true → false → true (working)
-      ✅ Both switches respond to clicks and change state
-      ✅ Settings can be saved via "Einstellungen speichern" button
+      🔍 COMMODITY CARDS TESTING:
+      ✅ 30 KAUFEN buttons found (15+ commodities confirmed)
+      ✅ 15 VERKAUFEN buttons found
+      ✅ All key commodities visible: Gold ($4093.10), Silver ($51.26), Platin ($1556.90), WTI Crude Oil ($60.50)
+      ✅ Live prices displaying correctly
+      ✅ All cards show HOLD signals (correct market behavior)
+      
+      🔍 MANUAL TRADE TEST - WTI CRUDE OIL:
+      ✅ WTI Crude Oil card found and accessible
+      ✅ KAUFEN button clickable
+      ❌ Trade execution blocked by MetaAPI quota exceeded (123/100 subscriptions used)
+      ❌ Backend logs show: "TooManyRequestsException: You have used all your account subscriptions quota"
+      ❌ Error message in UI: "Fehler beim Ausführen: [object Object]"
       
       🎯 ROOT CAUSE ANALYSIS:
       
