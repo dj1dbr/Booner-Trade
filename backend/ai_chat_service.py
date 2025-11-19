@@ -40,6 +40,15 @@ DUAL TRADING STRATEGY (NEU!):
 MARKTDATEN (Live):
 """
     
+    # Add market hours info
+    from commodity_processor import is_market_open, get_next_market_open
+    context += "\n⏰ HANDELSZEITEN (wichtig für Trading-Entscheidungen):\n"
+    context += "- Edelmetalle (Gold, Silber, Platin, Palladium): 24/5 (So 22:00 - Fr 21:00 UTC)\n"
+    context += "- Energie (WTI, Brent, Gas): 24/5 (So 22:00 - Fr 21:00 UTC)\n"
+    context += "- Agrar (Weizen, Mais, Soja, etc.): Mo-Fr 08:30-20:00 UTC\n"
+    context += "- Forex (EUR/USD): 24/5 (So 22:00 - Fr 21:00 UTC)\n"
+    context += "- Crypto (Bitcoin): 24/7\n\n"
+    
     # Add market data for ALL available commodities
     if latest_market_data:
         commodity_count = 0
@@ -48,6 +57,7 @@ MARKTDATEN (Live):
                 price = data.get('price', 0)
                 signal = data.get('signal', 'HOLD')
                 rsi = data.get('rsi', 50)
+                market_status = "🟢 OFFEN" if is_market_open(commodity_id) else "🔴 GESCHLOSSEN"
                 context += f"\n{commodity_id}: ${price:.2f}, Signal: {signal}, RSI: {rsi:.1f}"
                 commodity_count += 1
         
