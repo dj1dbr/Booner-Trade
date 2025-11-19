@@ -928,23 +928,67 @@ async def close_trade_v2(request: CloseTradeRequest):
 
 @api_router.get("/trades/list")
 async def list_trades():
-    """List all trades from database"""
-    trades = await db.trades.find().to_list(length=None)
-    
-    # Convert timestamps to ISO format
-    for trade in trades:
-        trade.pop('_id', None)
-        if isinstance(trade.get('timestamp'), str):
-            pass
-        elif hasattr(trade.get('timestamp'), 'isoformat'):
-            trade['timestamp'] = trade['timestamp'].isoformat()
+    """List all trades: OPEN from MT5 live, CLOSED from database"""
+    try:
+        from multi_platform_connector import multi_platform
         
-        if isinstance(trade.get('closed_at'), str):
-            pass
-        elif trade.get('closed_at') and hasattr(trade['closed_at'], 'isoformat'):
-            trade['closed_at'] = trade['closed_at'].isoformat()
+        all_trades = []
+        
+        # 1. Get OPEN positions from MT5 platforms (LIVE data)
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            try:
+                if platform_name in multi_platform.platforms:
+                    connector = multi_platform.platforms[platform_name].get('connector')
+                    if connector:
+                        positions = await connector.get_positions()
+                        
+                        # Convert MT5 positions to trade format
+                        for pos in positions:
+                            all_trades.append({
+                                'id': pos.get('positionId') or pos.get('ticket'),
+                                'commodity': pos.get('symbol', 'UNKNOWN'),
+                                'type': pos.get('type', '').replace('POSITION_TYPE_', ''),
+                                'price': pos.get('openPrice') or pos.get('price_open'),
+                                'quantity': pos.get('volume'),
+                                'timestamp': pos.get('time') or pos.get('openTime'),
+                                'platform': platform_name,
+                                'entry_price': pos.get('openPrice') or pos.get('price_open'),
+                                'current_price': pos.get('currentPrice') or pos.get('price_current'),
+                                'stop_loss': pos.get('stopLoss') or pos.get('sl'),
+                                'take_profit': pos.get('takeProfit') or pos.get('tp'),
+                                'mt5_ticket': str(pos.get('positionId') or pos.get('ticket')),
+                                'status': 'OPEN',
+                                'pnl': pos.get('profit') or pos.get('unrealizedProfit'),
+                                'swap': pos.get('swap'),
+                                'magic': pos.get('magic')
+                            })
+            except Exception as e:
+                logger.error(f"Error fetching positions from {platform_name}: {e}")
+        
+        # 2. Get CLOSED trades from database
+        closed_trades = await db.trades.find({'status': 'CLOSED'}).to_list(length=None)
+        
+        for trade in closed_trades:
+            trade.pop('_id', None)
+            if isinstance(trade.get('timestamp'), str):
+                pass
+            elif hasattr(trade.get('timestamp'), 'isoformat'):
+                trade['timestamp'] = trade['timestamp'].isoformat()
+            
+            if isinstance(trade.get('closed_at'), str):
+                pass
+            elif trade.get('closed_at') and hasattr(trade['closed_at'], 'isoformat'):
+                trade['closed_at'] = trade['closed_at'].isoformat()
+            
+            all_trades.append(trade)
+        
+        logger.info(f"📊 Returning {len(all_trades)} trades: {sum(1 for t in all_trades if t.get('status') == 'OPEN')} open, {len(closed_trades)} closed")
+        
+        return {"trades": all_trades, "count": len(all_trades)}
     
-    return {"trades": trades, "count": len(trades)}
+    except Exception as e:
+        logger.error(f"Error listing trades: {e}")
+        return {"trades": [], "count": 0}
 
 @api_router.get("/trades/stats")
 async def get_trade_stats():
