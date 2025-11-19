@@ -1200,6 +1200,71 @@ agent_communication:
       Both reported issues are RESOLVED. The broker connections are working with healthy balances,
       and the Day/Swing settings are fully functional and changeable. The system is operating normally.
   
+  - agent: "testing"
+    message: |
+      🔥 USER-REPORTED ISSUES VERIFICATION COMPLETED (Nov 19, 2025)
+      
+      ✅ COMPREHENSIVE TESTING RESULTS (6/8 tests - 75% success rate):
+      
+      🔍 PROBLEM 1: "Immer noch keine Verbindung zu den Brokern" - ❌ CONFIRMED
+      
+      BACKEND API STATUS:
+      ✅ GET /api/platforms/status: MT5_LIBERTEX: €49,110.32, MT5_ICMARKETS: €2,565.93
+      ✅ GET /api/platforms/MT5_LIBERTEX/account: Balance=49,110.32 EUR, connected=true
+      ✅ GET /api/platforms/MT5_ICMARKETS/account: Balance=2,565.93 EUR, connected=true
+      ✅ Backend APIs working perfectly with correct balance data
+      
+      FRONTEND DISPLAY ISSUE:
+      ❌ CRITICAL: All platform cards showing €0.00 instead of real balances
+      ❌ Frontend not fetching/displaying backend data correctly
+      ❌ 3 occurrences of €0.00 found in UI (should show €49,110 and €2,566)
+      ❌ Data binding or API timeout issue in frontend
+      
+      🔍 PROBLEM 2: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar" - ✅ MOSTLY RESOLVED
+      
+      BACKEND API STATUS:
+      ✅ GET /api/settings: swing_trading_enabled=true, day_trading_enabled=true
+      ✅ Settings API fully functional
+      
+      FRONTEND SETTINGS MODAL:
+      ✅ Settings button accessible (Einstellungen)
+      ✅ Settings modal opens successfully
+      ✅ Swing Trading section found with toggle switch
+      ✅ Day Trading section found with toggle switch
+      ✅ Both toggles are clickable and change state correctly
+      ✅ Save button functional
+      ⚠️ Settings persistence verification inconclusive (modal reload issue)
+      
+      DETAILED TOGGLE TESTING:
+      ✅ Swing Trading toggle: Initial=true → false → true (working)
+      ✅ Day Trading toggle: Initial=true → false → true (working)
+      ✅ Both switches respond to clicks and change state
+      ✅ Settings can be saved via "Einstellungen speichern" button
+      
+      🎯 ROOT CAUSE ANALYSIS:
+      
+      PROBLEM 1 - FRONTEND DATA BINDING ISSUE:
+      - Backend: ✅ Working perfectly (correct balances via API)
+      - Frontend: ❌ Not displaying backend data (shows €0.00 instead)
+      - Likely causes: API timeout, component state management, data fetching logic
+      - Impact: User sees "no connection" when backend is actually connected
+      
+      PROBLEM 2 - SETTINGS MOSTLY WORKING:
+      - Backend: ✅ Settings API fully functional
+      - Frontend: ✅ Modal accessible, toggles working, save functional
+      - Minor issue: Persistence verification needs improvement
+      - Impact: User can change Day/Swing settings successfully
+      
+      🔧 IMMEDIATE ACTION NEEDED:
+      1. CRITICAL: Fix frontend platform balance display (€0.00 → real balances)
+      2. MEDIUM: Improve settings persistence verification
+      3. LOW: Investigate frontend API timeout handling
+      
+      RECOMMENDATION: 
+      - PROBLEM 1: ❌ NOT RESOLVED - Frontend display issue confirmed
+      - PROBLEM 2: ✅ MOSTLY RESOLVED - Settings are changeable and functional
+      - Backend systems working correctly, frontend needs data binding fix
+  
   - agent: "main"
     message: |
       DUAL TRADING STRATEGY IMPLEMENTATION COMPLETED (Nov 18, 2025)
