@@ -1286,12 +1286,12 @@ agent_communication:
       ✅ Backend APIs working perfectly with correct balance data
       
       FRONTEND DISPLAY ISSUE:
-      ❌ CRITICAL: All platform cards showing €0.00 instead of real balances
+      ❌ CRITICAL: All 3 platform cards showing €0.00 instead of real balances
       ❌ Frontend not fetching/displaying backend data correctly
-      ❌ 3 occurrences of €0.00 found in UI (should show €49,110 and €2,566)
-      ❌ Data binding or API timeout issue in frontend
+      ❌ User sees "no connection" when backend is actually connected with healthy balances
+      ❌ Data binding or API timeout issue in frontend component
       
-      🔍 PROBLEM 2: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar" - ✅ MOSTLY RESOLVED
+      🔍 PROBLEM 2: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar" - ✅ RESOLVED
       
       BACKEND API STATUS:
       ✅ GET /api/settings: swing_trading_enabled=true, day_trading_enabled=true
