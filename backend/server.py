@@ -901,7 +901,7 @@ async def list_trades():
         elif trade.get('closed_at') and hasattr(trade['closed_at'], 'isoformat'):
             trade['closed_at'] = trade['closed_at'].isoformat()
     
-    return trades
+    return {"trades": trades, "count": len(trades)}
 
 @api_router.get("/trades/stats")
 async def get_trade_stats():
