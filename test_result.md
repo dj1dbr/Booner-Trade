@@ -938,6 +938,39 @@ frontend:
           
           RECOMMENDATION: Frontend implementation is COMPLETE and WORKING. 
           Issues are backend infrastructure related (MetaAPI quota), not frontend defects.
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ USER-REPORTED ISSUES VERIFICATION - CRITICAL FRONTEND DATA BINDING ISSUE (Nov 19, 2025):
+          
+          🔍 PROBLEM 1: "Immer noch keine Verbindung zu den Brokern" - ❌ CONFIRMED
+          
+          BACKEND vs FRONTEND DISCREPANCY:
+          - Backend API: ✅ MT5_LIBERTEX: €49,110.32, MT5_ICMARKETS: €2,565.93
+          - Frontend UI: ❌ All platforms showing €0.00 (3 occurrences)
+          - Root cause: Frontend not fetching/displaying backend data correctly
+          - Impact: User sees "no connection" when backend is actually connected
+          
+          🔍 PROBLEM 2: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar" - ✅ MOSTLY RESOLVED
+          
+          SETTINGS FUNCTIONALITY:
+          ✅ Settings modal accessible and functional
+          ✅ Both Day Trading and Swing Trading toggles working
+          ✅ Toggles change state correctly (true → false → true)
+          ✅ Save button functional
+          ⚠️ Settings persistence verification inconclusive
+          
+          🎯 CRITICAL FINDINGS:
+          - Frontend has a critical data binding issue preventing balance display
+          - Backend APIs working perfectly with correct data
+          - Settings functionality mostly working (toggles responsive)
+          - User complaint #1 is valid - frontend shows €0.00 instead of real balances
+          - User complaint #2 is mostly resolved - settings are changeable
+          
+          IMMEDIATE ACTION NEEDED:
+          1. CRITICAL: Fix frontend platform balance display logic
+          2. MEDIUM: Investigate API timeout handling in frontend
+          3. LOW: Improve settings persistence verification
   
   - task: "Chart Timeframe Options Expansion"
     implemented: true
