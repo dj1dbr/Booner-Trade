@@ -1244,6 +1244,63 @@ frontend:
           - Fix trade status parsing logic in Dashboard.jsx
           - Fix trade list rendering components
           - Verify data binding between API and UI state management
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ QUICK DEBUG TEST COMPLETED - CONSOLE LOGS ANALYSIS (Nov 19, 2025):
+          
+          🔍 CONSOLE LOG VERIFICATION RESULTS:
+          
+          ✅ ALL REQUESTED CONSOLE LOGS FOUND:
+          - "✅ Fetched 1 trades from unified endpoint" ✅ CONFIRMED
+          - "📊 Trades data: [Object]" ✅ CONFIRMED  
+          - "📊 Open trades: [Object]" ✅ CONFIRMED
+          - "📊 Closed trades: []" ✅ CONFIRMED
+          
+          ✅ WTI_CRUDE TRADE VERIFICATION:
+          - WTI_CRUDE trade IS PRESENT in console data ✅
+          - Status is exactly "OPEN" ✅
+          - Ticket: #72811939 ✅
+          - Platform: MT5_LIBERTEX ✅
+          - Type: BUY, Quantity: 0.01, Price: $60.00 ✅
+          
+          🎯 DETAILED TRADE DATA FROM CONSOLE:
+          ```json
+          {
+            "id": "9b294b50-4e5c-49ba-a312-39b6c9aa4242",
+            "commodity": "WTI_CRUDE",
+            "type": "BUY",
+            "price": 60,
+            "quantity": 0.01,
+            "status": "OPEN",
+            "mt5_ticket": "72811939",
+            "platform": "MT5_LIBERTEX",
+            "stop_loss": 58.8,
+            "take_profit": 62.4
+          }
+          ```
+          
+          ✅ FRONTEND DATA FETCHING WORKING:
+          - Console logs show data is being fetched correctly from backend
+          - WTI_CRUDE trade appears in both "Trades data" and "Open trades" arrays
+          - Backend API integration is functioning properly
+          - Data reaches frontend successfully
+          
+          ❌ CRITICAL FINDING - UI DISPLAY ISSUE CONFIRMED:
+          - Console shows 1 open WTI_CRUDE trade with status "OPEN"
+          - UI shows "Offene Trades (1)" tab but displays "Offen: 0 | Geschlossen: 0"
+          - Trade is visible in trade table as "WTI Crude Oil #72811939 BUY"
+          - Issue is in frontend status counting/categorization logic, NOT data fetching
+          
+          🎯 ROOT CAUSE IDENTIFIED:
+          The console logs prove that:
+          1. Backend API is working correctly ✅
+          2. Frontend successfully fetches trade data ✅  
+          3. WTI_CRUDE trade with status "OPEN" is present in frontend ✅
+          4. Issue is in UI rendering/counting logic that shows "Offen: 0" instead of "Offen: 1"
+          
+          RECOMMENDATION: 
+          Fix frontend trade status counting logic in Dashboard.jsx - data fetching is working perfectly.
 
 metadata:
   created_by: "main_agent"
