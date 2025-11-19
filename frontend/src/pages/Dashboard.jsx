@@ -588,7 +588,39 @@ const Dashboard = () => {
     }
   };
   
-  // Fetch MT5 Libertex Account
+  // Fetch all platform data from status endpoint (more efficient)
+  const fetchAllPlatformData = async () => {
+    try {
+      const response = await axios.get(`${API}/platforms/status`);
+      console.log('🔍 Platform status response:', response.data);
+      
+      if (response.data && response.data.platforms) {
+        const platforms = response.data.platforms;
+        
+        // Find MT5_LIBERTEX platform
+        const libertexPlatform = platforms.find(p => p.name === 'MT5_LIBERTEX');
+        if (libertexPlatform) {
+          setMt5LibertexAccount(libertexPlatform);
+          setMt5LibertexConnected(libertexPlatform.connected);
+          console.log('✅ MT5 Libertex account loaded:', libertexPlatform.balance);
+        }
+        
+        // Find MT5_ICMARKETS platform
+        const icmarketsPlatform = platforms.find(p => p.name === 'MT5_ICMARKETS');
+        if (icmarketsPlatform) {
+          setMt5Account(icmarketsPlatform);
+          setMt5Connected(icmarketsPlatform.connected);
+          console.log('✅ MT5 ICMarkets account loaded:', icmarketsPlatform.balance);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching platform status:', error);
+      setMt5LibertexConnected(false);
+      setMt5Connected(false);
+    }
+  };
+
+  // Legacy individual account fetchers (fallback)
   const fetchMT5LibertexAccount = async () => {
     try {
       const response = await axios.get(`${API}/platforms/MT5_LIBERTEX/account`);
