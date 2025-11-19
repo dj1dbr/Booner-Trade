@@ -1058,11 +1058,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Manual Trade Execution Test - WTI Crude Oil - COMPLETED"
+    - "Frontend Platform Balance Display Bug Fix"
   stuck_tasks: 
-    - "Manual Trade Execution - Blocked by MetaAPI quota exceeded"
-  test_all: true
-  test_priority: "completed"
+    - "Frontend Platform Balance Display Bug Fix - Critical data binding issue"
+  test_all: false
+  test_priority: "critical_first"
 
 agent_communication:
   - agent: "testing"
