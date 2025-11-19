@@ -88,6 +88,7 @@ const Dashboard = () => {
 
   // Load account data when settings change or component mounts
   useEffect(() => {
+    console.log('🔍 Settings loaded:', settings);
     if (settings?.active_platforms && settings.active_platforms.length > 0) {
       console.log('Loading account data for platforms:', settings.active_platforms);
       
@@ -100,6 +101,11 @@ const Dashboard = () => {
       if (settings.active_platforms.includes('BITPANDA')) {
         fetchBitpandaAccount();
       }
+    } else {
+      // Always try to fetch account data regardless of settings
+      console.log('🔍 No active_platforms in settings, fetching all accounts anyway');
+      fetchMT5LibertexAccount();
+      fetchMT5ICMarketsAccount();
     }
   }, [settings?.active_platforms]);
 
