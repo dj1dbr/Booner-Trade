@@ -832,5 +832,38 @@ async def main():
     else:
         logger.error("❌ Bot konnte nicht initialisiert werden")
 
+# Bot Manager für FastAPI Integration
+class BotManager:
+    def __init__(self):
+        self.bot = None
+        self.bot_task = None
+        
+    def is_running(self):
+        return self.bot is not None and self.bot.running
+    
+    async def start(self):
+        if self.is_running():
+            logger.warning("Bot läuft bereits")
+            return False
+        
+        self.bot = AITradingBot()
+        if await self.bot.initialize():
+            self.bot_task = asyncio.create_task(self.bot.run_forever())
+            logger.info("✅ Bot Manager gestartet")
+            return True
+        return False
+    
+    async def stop(self):
+        if self.bot:
+            self.bot.stop()
+            if self.bot_task:
+                self.bot_task.cancel()
+            self.bot = None
+            self.bot_task = None
+            logger.info("✅ Bot Manager gestoppt")
+
+# Global bot manager instance
+bot_manager = BotManager()
+
 if __name__ == "__main__":
     asyncio.run(main())
