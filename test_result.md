@@ -1296,11 +1296,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Open Positions Display Bug"
-  stuck_tasks: 
-    - "Open Positions Display Bug - Frontend data parsing/rendering issue"
+    - "Minor frontend stats counter fix needed"
+  stuck_tasks: []
   test_all: false
-  test_priority: "critical_first"
+  test_priority: "architecture_verified"
 
 agent_communication:
   - agent: "testing"
