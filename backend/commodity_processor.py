@@ -20,6 +20,110 @@ def set_platform_connector(connector):
     global _platform_connector
     _platform_connector = connector
 
+
+# Handelszeiten (UTC) - Wichtig für AI Trading Bot
+MARKET_HOURS = {
+    # Edelmetalle - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
+    "GOLD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "SILVER": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "PLATINUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "PALLADIUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    
+    # Energie - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
+    "WTI_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "BRENT_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "NATURAL_GAS": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    
+    # Agrar - Börsenzeiten (Montag-Freitag 08:30-20:00 UTC)
+    "WHEAT": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "CORN": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "SOYBEANS": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "COFFEE": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "SUGAR": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "COCOA": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    
+    # Forex - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
+    "EURUSD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    
+    # Crypto - 24/7
+    "BITCOIN": {"opens": "00:00", "closes": "23:59", "days": [0,1,2,3,4,5,6], "24_7": True}
+}
+
+def is_market_open(commodity_id: str) -> bool:
+    """
+    Prüft ob der Markt für ein Commodity aktuell geöffnet ist
+    
+    Returns:
+        True wenn Markt offen, False wenn geschlossen
+    """
+    try:
+        if commodity_id not in MARKET_HOURS:
+            logger.warning(f"Keine Handelszeiten für {commodity_id} definiert - assume open")
+            return True
+        
+        hours = MARKET_HOURS[commodity_id]
+        now_utc = datetime.now(timezone.utc)
+        current_weekday = now_utc.weekday()  # 0=Montag, 6=Sonntag
+        current_time = now_utc.strftime("%H:%M")
+        
+        # Crypto 24/7
+        if hours.get("24_7"):
+            return True
+        
+        # Prüfe Wochentag
+        if current_weekday not in hours["days"]:
+            return False
+        
+        # 24/5 Märkte (z.B. Gold, Öl)
+        if hours.get("24_5"):
+            # Sonntag ab 22:00 UTC bis Freitag 21:00 UTC
+            if current_weekday == 6:  # Sonntag
+                return current_time >= hours["opens"]
+            elif current_weekday == 4:  # Freitag
+                return current_time <= hours["closes"]
+            else:  # Mo-Do
+                return True
+        
+        # Normale Börsenzeiten
+        return hours["opens"] <= current_time <= hours["closes"]
+        
+    except Exception as e:
+        logger.error(f"Fehler bei Marktzeiten-Prüfung für {commodity_id}: {e}")
+        return True  # Im Zweifel als offen annehmen
+
+def get_next_market_open(commodity_id: str) -> str:
+    """
+    Gibt die nächste Marktöffnungszeit zurück
+    
+    Returns:
+        String mit nächster Öffnungszeit (z.B. "Sonntag 22:00 UTC")
+    """
+    try:
+        if commodity_id not in MARKET_HOURS:
+            return "Unbekannt"
+        
+        hours = MARKET_HOURS[commodity_id]
+        
+        if hours.get("24_7"):
+            return "24/7 geöffnet"
+        
+        if hours.get("24_5"):
+            return "Sonntag 22:00 UTC"
+        
+        now_utc = datetime.now(timezone.utc)
+        current_weekday = now_utc.weekday()
+        
+        # Wenn heute ein Handelstag
+        if current_weekday in hours["days"]:
+            return f"Heute {hours['opens']} UTC"
+        
+        # Nächster Handelstag (Montag)
+        return f"Montag {hours['opens']} UTC"
+        
+    except Exception as e:
+        logger.error(f"Fehler bei nächster Öffnungszeit für {commodity_id}: {e}")
+        return "Unbekannt"
+
 # Commodity definitions - Multi-Platform Support mit separaten MT5 Brokern
 # MT5 Libertex: Erweiterte Auswahl
 # MT5 ICMarkets: Nur Edelmetalle + WTI_F6, BRENT_F6
