@@ -1184,9 +1184,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Frontend Platform Balance Display Bug Fix"
+    - "Open Positions Display Bug"
+    - "Charts Data Loading Issue"
   stuck_tasks: 
-    - "Frontend Platform Balance Display Bug Fix - Critical data binding issue"
+    - "Charts Data Loading Issue - MetaAPI quota exceeded (infrastructure)"
   test_all: false
   test_priority: "critical_first"
 
