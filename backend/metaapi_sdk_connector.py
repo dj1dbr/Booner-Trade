@@ -54,29 +54,35 @@ class MetaAPISDKConnector:
         """Hole Account-Informationen"""
         try:
             if not self.connection:
-                return None
+                return getattr(self, '_cached_account_info', None)
             
             # Get terminal state which contains account information
             terminal_state = self.connection.terminal_state
             if not terminal_state:
                 logger.warning("Terminal state not available yet")
-                return None
+                return getattr(self, '_cached_account_info', None)
             
             # Access account information from terminal state
             account_info = terminal_state.account_information
             
-            return {
+            result = {
                 'balance': account_info.get('balance', 0) if account_info else 0,
                 'equity': account_info.get('equity', 0) if account_info else 0,
                 'margin': account_info.get('margin', 0) if account_info else 0,
                 'freeMargin': account_info.get('freeMargin', 0) if account_info else 0,
+                'free_margin': account_info.get('freeMargin', 0) if account_info else 0,
                 'leverage': account_info.get('leverage', 0) if account_info else 0,
                 'connected': terminal_state.connected if hasattr(terminal_state, 'connected') else False,
                 'connectedToBroker': terminal_state.connected_to_broker if hasattr(terminal_state, 'connected_to_broker') else False
             }
+            
+            # Cache the result for fast access
+            self._cached_account_info = result
+            
+            return result
         except Exception as e:
             logger.error(f"Error getting account info: {e}", exc_info=True)
-            return None
+            return getattr(self, '_cached_account_info', None)
     
     async def get_positions(self) -> List[Dict[str, Any]]:
         """Hole offene Positionen"""
