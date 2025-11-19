@@ -1248,10 +1248,10 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 3
+  test_sequence: 4
   run_ui: true
   last_tested: "2025-11-19"
-  testing_agent: "charts_and_open_positions_diagnosis_completed"
+  testing_agent: "final_verification_charts_fixed_positions_broken"
 
 test_plan:
   current_focus:
