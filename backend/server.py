@@ -481,18 +481,36 @@ async def analyze_commodity(commodity_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Cache für Chart-Daten (5 Minuten)
+_chart_cache = {}
+_chart_cache_time = {}
+
 @api_router.get("/market/ohlcv/{commodity_id}")
 async def get_market_ohlcv(commodity_id: str, timeframe: str = "1d", period: str = "1mo"):
-    """Get OHLCV (candlestick) data for charts"""
+    """Get OHLCV (candlestick) data for charts with caching"""
     from commodity_processor import COMMODITIES
+    import time
     
     if commodity_id not in COMMODITIES:
         raise HTTPException(status_code=404, detail="Commodity not found")
     
     commodity = COMMODITIES[commodity_id]
+    cache_key = f"{commodity_id}_{period}"
+    
+    # Check cache (5 Minuten)
+    if cache_key in _chart_cache:
+        cache_age = time.time() - _chart_cache_time.get(cache_key, 0)
+        if cache_age < 300:  # 5 Minuten
+            logger.info(f"📊 Returning cached chart data for {commodity_id}")
+            return _chart_cache[cache_key]
     
     try:
+        import time as time_module
         ticker = yf.Ticker(commodity['symbol'])
+        
+        # Add delay to avoid rate limiting
+        time_module.sleep(0.5)
+        
         df = ticker.history(period=period)
         
         if df.empty:
@@ -511,10 +529,23 @@ async def get_market_ohlcv(commodity_id: str, timeframe: str = "1d", period: str
                 "volume": float(row['Volume']) if not pd.isna(row['Volume']) else 0
             })
         
-        return {"success": True, "data": chart_data, "commodity": commodity_id}
+        result = {"success": True, "data": chart_data, "commodity": commodity_id}
+        
+        # Cache the result
+        _chart_cache[cache_key] = result
+        _chart_cache_time[cache_key] = time.time()
+        
+        return result
     
     except Exception as e:
         logger.error(f"Error fetching OHLCV data for {commodity_id}: {e}")
+        # Wenn yfinance Rate Limit, versuche aus market_data DB zu laden
+        try:
+            data = await db.market_data.find_one({"commodity": commodity_id}, sort=[("timestamp", -1)])
+            if data:
+                return {"success": True, "data": [{"time": data.get('timestamp'), "close": data.get('price', 0), "open": data.get('price', 0), "high": data.get('price', 0), "low": data.get('price', 0), "volume": 0}], "commodity": commodity_id}
+        except:
+            pass
         return {"success": False, "data": [], "error": str(e)}
 
 @api_router.get("/market/ohlcv-simple/{commodity_id}")
