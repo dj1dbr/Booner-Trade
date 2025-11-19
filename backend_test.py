@@ -1,29 +1,19 @@
 #!/usr/bin/env python3
 """
 Booner-Trade Backend API Test Suite
-BROKER CONNECTION & SETTINGS TEST
+COMPREHENSIVE SYSTEM TEST - Everything Must Work
 
-PROBLEM 1: Broker-Verbindung
-User sagt: "Immer noch keine Verbindung zu den Brokern"
+**CRITICAL TESTS:**
 
-Test:
-1. GET /api/platforms/status - Check connection status
-2. GET /api/platforms/MT5_LIBERTEX/account - Get Libertex account balance
-3. GET /api/platforms/MT5_ICMARKETS/account - Get ICMarkets account balance
-4. Verify balances are NOT €0.00
+1. **Commodities:** GET /api/commodities → Should return 15 items
+2. **Settings Save:** POST /api/settings with {auto_trading: true} → Should return success
+3. **Settings Load:** GET /api/settings → Should return all settings
+4. **Broker Status:** GET /api/platforms/status → MT5_LIBERTEX and MT5_ICMARKETS connected
+5. **Open Trades:** GET /api/trades/list → Should show trades with TP/SL
+6. **AI Chat:** POST /api/ai-chat with message "Test" → Should get response (not timeout)
+7. **Charts:** GET /api/market/ohlcv-simple/GOLD → Should return chart data
 
-PROBLEM 2: Day/Swing Settings nicht änderbar
-User sagt: "Day und Swift Einstellungen sind plötzlich nicht mehr änderbar"
-
-Test:
-1. GET /api/settings - Check if swing_trading_enabled and day_trading_enabled are present
-2. POST /api/settings - Try to update day_trading_enabled to true
-3. GET /api/settings again - Verify the change persisted
-
-FOCUS:
-- Why are platform balances showing €0?
-- Why can't user change Day/Swing settings?
-- Check backend logs for connection errors
+**TEST EVERYTHING - THIS IS THE FINAL VERIFICATION**
 """
 
 import asyncio
