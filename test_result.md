@@ -1296,10 +1296,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Minor frontend stats counter fix needed"
-  stuck_tasks: []
+    - "Open Trades Display Bug - CRITICAL"
+    - "AI Bot Status Indicators - URGENT"
+    - "MetaAPI Quota Exceeded - INFRASTRUCTURE"
+  stuck_tasks:
+    - "Open Trades Display Bug"
   test_all: false
-  test_priority: "architecture_verified"
+  test_priority: "critical_user_issues"
 
 agent_communication:
   - agent: "testing"
