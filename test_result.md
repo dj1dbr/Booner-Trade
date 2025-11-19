@@ -1256,9 +1256,8 @@ metadata:
 test_plan:
   current_focus:
     - "Open Positions Display Bug"
-    - "Charts Data Loading Issue"
   stuck_tasks: 
-    - "Charts Data Loading Issue - MetaAPI quota exceeded (infrastructure)"
+    - "Open Positions Display Bug - Frontend data parsing/rendering issue"
   test_all: false
   test_priority: "critical_first"
 
