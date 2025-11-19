@@ -316,6 +316,9 @@ const Dashboard = () => {
       const allTrades = response.data.trades || [];
       
       console.log(`✅ Fetched ${allTrades.length} trades from unified endpoint`);
+      console.log('📊 Trades data:', allTrades);
+      console.log('📊 Open trades:', allTrades.filter(t => t.status === 'OPEN'));
+      console.log('📊 Closed trades:', allTrades.filter(t => t.status === 'CLOSED'));
       
       // ALTE LOGIK ENTFERNT - würde Duplikate erzeugen!
       // Die separaten MT5 Position Calls sind nicht mehr nötig,
