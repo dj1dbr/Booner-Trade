@@ -958,55 +958,81 @@ async def get_trade_stats():
 # Multi-Platform Endpoints
 @api_router.get("/platforms/status")
 async def get_platforms_status():
-    """Get connection status of all platforms"""
+    """Get connection status of all platforms - FAST version using cached data"""
     try:
         from multi_platform_connector import multi_platform
         
         platforms = []
         
-        # MT5 Libertex
+        # MT5 Libertex - Check if already connected
         try:
-            await multi_platform.connect_platform('MT5_LIBERTEX')
             if 'MT5_LIBERTEX' in multi_platform.platforms:
                 connector = multi_platform.platforms['MT5_LIBERTEX'].get('connector')
-                if connector:
-                    account_info = await connector.get_account_info()
+                if connector and hasattr(connector, '_cached_account_info'):
+                    # Use cached account info for fast response
+                    account_info = connector._cached_account_info
                     platforms.append({
                         'name': 'MT5_LIBERTEX',
                         'connected': True,
                         'balance': account_info.get('balance', 0) if account_info else 0,
                         'equity': account_info.get('equity', 0) if account_info else 0,
-                        'leverage': account_info.get('leverage', 0) if account_info else 0
+                        'leverage': account_info.get('leverage', 0) if account_info else 0,
+                        'free_margin': account_info.get('free_margin', 0) if account_info else 0
                     })
                 else:
-                    platforms.append({'name': 'MT5_LIBERTEX', 'connected': False})
+                    # Try quick account fetch with timeout
+                    try:
+                        account_info = await asyncio.wait_for(connector.get_account_info(), timeout=3.0)
+                        platforms.append({
+                            'name': 'MT5_LIBERTEX',
+                            'connected': True,
+                            'balance': account_info.get('balance', 0) if account_info else 0,
+                            'equity': account_info.get('equity', 0) if account_info else 0,
+                            'leverage': account_info.get('leverage', 0) if account_info else 0,
+                            'free_margin': account_info.get('free_margin', 0) if account_info else 0
+                        })
+                    except:
+                        platforms.append({'name': 'MT5_LIBERTEX', 'connected': False, 'balance': 0})
             else:
-                platforms.append({'name': 'MT5_LIBERTEX', 'connected': False})
+                platforms.append({'name': 'MT5_LIBERTEX', 'connected': False, 'balance': 0})
         except Exception as e:
             logger.error(f"Error getting MT5_LIBERTEX status: {e}")
-            platforms.append({'name': 'MT5_LIBERTEX', 'connected': False, 'error': str(e)})
+            platforms.append({'name': 'MT5_LIBERTEX', 'connected': False, 'error': str(e), 'balance': 0})
         
-        # MT5 ICMarkets
+        # MT5 ICMarkets - Check if already connected
         try:
-            await multi_platform.connect_platform('MT5_ICMARKETS')
             if 'MT5_ICMARKETS' in multi_platform.platforms:
                 connector = multi_platform.platforms['MT5_ICMARKETS'].get('connector')
-                if connector:
-                    account_info = await connector.get_account_info()
+                if connector and hasattr(connector, '_cached_account_info'):
+                    # Use cached account info for fast response
+                    account_info = connector._cached_account_info
                     platforms.append({
                         'name': 'MT5_ICMARKETS',
                         'connected': True,
                         'balance': account_info.get('balance', 0) if account_info else 0,
                         'equity': account_info.get('equity', 0) if account_info else 0,
-                        'leverage': account_info.get('leverage', 0) if account_info else 0
+                        'leverage': account_info.get('leverage', 0) if account_info else 0,
+                        'free_margin': account_info.get('free_margin', 0) if account_info else 0
                     })
                 else:
-                    platforms.append({'name': 'MT5_ICMARKETS', 'connected': False})
+                    # Try quick account fetch with timeout
+                    try:
+                        account_info = await asyncio.wait_for(connector.get_account_info(), timeout=3.0)
+                        platforms.append({
+                            'name': 'MT5_ICMARKETS',
+                            'connected': True,
+                            'balance': account_info.get('balance', 0) if account_info else 0,
+                            'equity': account_info.get('equity', 0) if account_info else 0,
+                            'leverage': account_info.get('leverage', 0) if account_info else 0,
+                            'free_margin': account_info.get('free_margin', 0) if account_info else 0
+                        })
+                    except:
+                        platforms.append({'name': 'MT5_ICMARKETS', 'connected': False, 'balance': 0})
             else:
-                platforms.append({'name': 'MT5_ICMARKETS', 'connected': False})
+                platforms.append({'name': 'MT5_ICMARKETS', 'connected': False, 'balance': 0})
         except Exception as e:
             logger.error(f"Error getting MT5_ICMARKETS status: {e}")
-            platforms.append({'name': 'MT5_ICMARKETS', 'connected': False, 'error': str(e)})
+            platforms.append({'name': 'MT5_ICMARKETS', 'connected': False, 'error': str(e), 'balance': 0})
         
         return {'platforms': platforms}
         
