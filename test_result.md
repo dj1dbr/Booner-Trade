@@ -1089,6 +1089,91 @@ frontend:
           Primary user complaint is RESOLVED. User can now see their main account balances.
           The platform balance display bug fix is WORKING for the critical accounts.
 
+  - task: "Charts Data Loading Issue"
+    implemented: true
+    working: false
+    file: "Dashboard.jsx, PriceChart.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ CHARTS LOADING ISSUE IDENTIFIED (Nov 19, 2025):
+          
+          USER COMPLAINT: "Charts laden nicht" (Charts not loading)
+          
+          🔍 TESTING RESULTS:
+          ✅ Charts tab accessible and functional
+          ✅ WTI Crude Oil and other commodities visible in Charts section
+          ✅ Chart buttons (15 total) present and clickable
+          ✅ Chart modal opens successfully
+          ✅ Technical indicators working (RSI, MACD, SMA, EMA values displayed)
+          ✅ Timeframe selectors present (Interval and Zeitraum dropdowns)
+          ❌ Chart data not loading - shows "Lade Chart-Daten für Gold..." indefinitely
+          ❌ Timeframe changes timeout after 30 seconds
+          
+          🔍 ROOT CAUSE ANALYSIS:
+          Backend logs show MetaAPI quota exceeded:
+          - Error: "TooManyRequestsException: You have used all your account subscriptions quota"
+          - Quota: 101/100 subscriptions used
+          - Impact: Chart data cannot be retrieved from MetaAPI
+          - Status: Infrastructure limitation, not code defect
+          
+          🎯 EXACT ERROR:
+          Chart functionality is blocked by MetaAPI rate limiting. The frontend chart modal
+          works correctly but cannot load data due to backend API quota exhaustion.
+          
+          RECOMMENDATION: 
+          This is an infrastructure issue requiring MetaAPI quota resolution, not a code fix.
+          Chart UI components are functioning correctly.
+
+  - task: "Open Positions Display Bug"
+    implemented: true
+    working: false
+    file: "Dashboard.jsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ CRITICAL OPEN POSITIONS DISPLAY BUG IDENTIFIED (Nov 19, 2025):
+          
+          USER COMPLAINT: "Offene Positionen bei MT5 werden nicht angezeigt" (Open positions not displayed)
+          
+          🔍 TESTING RESULTS:
+          ✅ Trades tab accessible and clickable
+          ✅ Backend API working: GET /api/trades/list returns 1 open trade
+          ✅ Trade data: WTI_CRUDE BUY (Status: OPEN) available in backend
+          ❌ "Offene Trades" sub-tab not found in frontend UI
+          ❌ Open positions not displayed despite backend data
+          ❌ Shows "Keine offenen Trades" message when 1 trade exists
+          ❌ Critical frontend-backend data synchronization failure
+          
+          🔍 ROOT CAUSE ANALYSIS:
+          Frontend data binding issue in Trades section:
+          1. Backend correctly returns 1 open WTI_CRUDE trade via API
+          2. Frontend fails to render the "Offene Trades" sub-tab properly
+          3. Trade data not being displayed in UI despite being available
+          4. User sees "no trades" when trades actually exist
+          
+          🎯 EXACT ERROR:
+          This is a critical frontend rendering bug where the open positions data
+          is not being synchronized from backend to frontend display.
+          
+          IMPACT:
+          User cannot see their actual open trading positions, creating false impression
+          that no trades are active when trades are actually running.
+          
+          NEEDS IMMEDIATE FIX:
+          - Fix frontend trade data rendering in Dashboard.jsx
+          - Ensure "Offene Trades" sub-tab displays correctly
+          - Verify trade data binding from API to UI components
+          - Test open positions table rendering logic
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
