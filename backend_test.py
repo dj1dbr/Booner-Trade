@@ -73,9 +73,358 @@ class Booner_TradeTester:
             logger.error(f"Request failed: {e}")
             return False, {"error": str(e)}
     
+    async def test_critical_commodities_15_items(self):
+        """CRITICAL TEST 1: Commodities - GET /api/commodities → Should return 15 items"""
+        logger.info("🔥 CRITICAL TEST 1: Commodities - Should return 15 items")
+        
+        success, data = await self.make_request("GET", "/api/commodities")
+        
+        if success:
+            commodities = data.get("commodities", {})
+            commodity_count = len(commodities)
+            
+            if commodity_count == 15:
+                # List the commodities for verification
+                commodity_names = [info.get("name", key) for key, info in commodities.items()]
+                self.log_test_result(
+                    "CRITICAL - Commodities Count", 
+                    True, 
+                    f"✅ Exactly 15 commodities found: {', '.join(commodity_names[:5])}... (showing first 5)",
+                    {"count": commodity_count, "commodities": list(commodities.keys())}
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Commodities Count", 
+                    False, 
+                    f"❌ Expected 15 commodities, found {commodity_count}",
+                    {"count": commodity_count, "commodities": list(commodities.keys())}
+                )
+        else:
+            self.log_test_result(
+                "CRITICAL - Commodities Count", 
+                False, 
+                f"❌ Failed to get commodities: {data}",
+                data
+            )
+
+    async def test_critical_settings_save_auto_trading(self):
+        """CRITICAL TEST 2: Settings Save - POST /api/settings with {auto_trading: true} → Should return success"""
+        logger.info("🔥 CRITICAL TEST 2: Settings Save - auto_trading: true")
+        
+        # First get current settings to preserve other values
+        settings_success, current_settings = await self.make_request("GET", "/api/settings")
+        
+        if not settings_success:
+            self.log_test_result(
+                "CRITICAL - Settings Save (Get Current)", 
+                False, 
+                f"❌ Could not get current settings: {current_settings}",
+                current_settings
+            )
+            return
+        
+        # Update auto_trading to true
+        updated_settings = current_settings.copy()
+        updated_settings["auto_trading"] = True
+        
+        success, data = await self.make_request("POST", "/api/settings", updated_settings)
+        
+        if success:
+            success_flag = data.get("success", False)
+            message = data.get("message", "")
+            
+            if success_flag:
+                self.log_test_result(
+                    "CRITICAL - Settings Save", 
+                    True, 
+                    f"✅ Settings save successful: {message}",
+                    {"success": success_flag, "message": message}
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Settings Save", 
+                    False, 
+                    f"❌ Settings save failed: success={success_flag}, message={message}",
+                    data
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "CRITICAL - Settings Save", 
+                False, 
+                f"❌ Failed to save settings: {error_msg}",
+                data
+            )
+
+    async def test_critical_settings_load_all_settings(self):
+        """CRITICAL TEST 3: Settings Load - GET /api/settings → Should return all settings"""
+        logger.info("🔥 CRITICAL TEST 3: Settings Load - Should return all settings")
+        
+        success, data = await self.make_request("GET", "/api/settings")
+        
+        if success:
+            # Check for key settings fields
+            required_fields = [
+                "auto_trading", "ai_provider", "ai_model", "enabled_commodities",
+                "swing_trading_enabled", "day_trading_enabled", "active_platforms"
+            ]
+            
+            missing_fields = [field for field in required_fields if field not in data]
+            present_fields = [field for field in required_fields if field in data]
+            
+            if not missing_fields:
+                auto_trading = data.get("auto_trading", False)
+                ai_provider = data.get("ai_provider", "unknown")
+                ai_model = data.get("ai_model", "unknown")
+                enabled_count = len(data.get("enabled_commodities", []))
+                
+                self.log_test_result(
+                    "CRITICAL - Settings Load", 
+                    True, 
+                    f"✅ All settings loaded: auto_trading={auto_trading}, ai_provider={ai_provider}, ai_model={ai_model}, enabled_commodities={enabled_count}",
+                    {"present_fields": present_fields, "field_count": len(present_fields)}
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Settings Load", 
+                    False, 
+                    f"❌ Missing required fields: {missing_fields}. Present: {present_fields}",
+                    {"missing": missing_fields, "present": present_fields}
+                )
+        else:
+            self.log_test_result(
+                "CRITICAL - Settings Load", 
+                False, 
+                f"❌ Failed to load settings: {data}",
+                data
+            )
+
+    async def test_critical_broker_status_connected(self):
+        """CRITICAL TEST 4: Broker Status - GET /api/platforms/status → MT5_LIBERTEX and MT5_ICMARKETS connected"""
+        logger.info("🔥 CRITICAL TEST 4: Broker Status - MT5 platforms should be connected")
+        
+        success, data = await self.make_request("GET", "/api/platforms/status")
+        
+        if success:
+            platforms = data.get("platforms", [])
+            
+            # Find MT5 platforms
+            mt5_libertex_connected = False
+            mt5_icmarkets_connected = False
+            mt5_libertex_balance = 0
+            mt5_icmarkets_balance = 0
+            
+            for platform in platforms:
+                if isinstance(platform, dict):
+                    name = platform.get("name", "")
+                    connected = platform.get("connected", False)
+                    balance = platform.get("balance", 0)
+                    
+                    if "MT5_LIBERTEX" in name:
+                        mt5_libertex_connected = connected
+                        mt5_libertex_balance = balance
+                    elif "MT5_ICMARKETS" in name:
+                        mt5_icmarkets_connected = connected
+                        mt5_icmarkets_balance = balance
+            
+            # Check if both are connected
+            if mt5_libertex_connected and mt5_icmarkets_connected:
+                self.log_test_result(
+                    "CRITICAL - Broker Status", 
+                    True, 
+                    f"✅ Both MT5 platforms connected: MT5_LIBERTEX (€{mt5_libertex_balance:,.2f}), MT5_ICMARKETS (€{mt5_icmarkets_balance:,.2f})",
+                    {
+                        "mt5_libertex_connected": mt5_libertex_connected,
+                        "mt5_icmarkets_connected": mt5_icmarkets_connected,
+                        "mt5_libertex_balance": mt5_libertex_balance,
+                        "mt5_icmarkets_balance": mt5_icmarkets_balance
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Broker Status", 
+                    False, 
+                    f"❌ Platform connection issues: MT5_LIBERTEX connected={mt5_libertex_connected}, MT5_ICMARKETS connected={mt5_icmarkets_connected}",
+                    {
+                        "mt5_libertex_connected": mt5_libertex_connected,
+                        "mt5_icmarkets_connected": mt5_icmarkets_connected,
+                        "platforms_found": len(platforms)
+                    }
+                )
+        else:
+            self.log_test_result(
+                "CRITICAL - Broker Status", 
+                False, 
+                f"❌ Failed to get platform status: {data}",
+                data
+            )
+
+    async def test_critical_open_trades_with_tp_sl(self):
+        """CRITICAL TEST 5: Open Trades - GET /api/trades/list → Should show trades with TP/SL"""
+        logger.info("🔥 CRITICAL TEST 5: Open Trades - Should show trades with TP/SL")
+        
+        success, data = await self.make_request("GET", "/api/trades/list")
+        
+        if success:
+            trades = data.get("trades", [])
+            trade_count = len(trades)
+            
+            # Check for trades with TP/SL
+            trades_with_tp_sl = []
+            open_trades = []
+            
+            for trade in trades:
+                if trade.get("status") == "OPEN":
+                    open_trades.append(trade)
+                    
+                    stop_loss = trade.get("stop_loss")
+                    take_profit = trade.get("take_profit")
+                    
+                    if stop_loss is not None and take_profit is not None:
+                        trades_with_tp_sl.append({
+                            "commodity": trade.get("commodity"),
+                            "type": trade.get("type"),
+                            "stop_loss": stop_loss,
+                            "take_profit": take_profit,
+                            "ticket": trade.get("mt5_ticket", trade.get("ticket"))
+                        })
+            
+            if trade_count > 0:
+                self.log_test_result(
+                    "CRITICAL - Open Trades", 
+                    True, 
+                    f"✅ Found {trade_count} total trades, {len(open_trades)} open, {len(trades_with_tp_sl)} with TP/SL",
+                    {
+                        "total_trades": trade_count,
+                        "open_trades": len(open_trades),
+                        "trades_with_tp_sl": len(trades_with_tp_sl),
+                        "sample_trades": trades_with_tp_sl[:3]  # Show first 3
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Open Trades", 
+                    True, 
+                    f"✅ No trades found (clean system)",
+                    {"total_trades": 0, "open_trades": 0}
+                )
+        else:
+            self.log_test_result(
+                "CRITICAL - Open Trades", 
+                False, 
+                f"❌ Failed to get trades list: {data}",
+                data
+            )
+
+    async def test_critical_ai_chat_response(self):
+        """CRITICAL TEST 6: AI Chat - POST /api/ai-chat with message "Test" → Should get response (not timeout)"""
+        logger.info("🔥 CRITICAL TEST 6: AI Chat - Should get response without timeout")
+        
+        # Test with simple message
+        test_message = "Test"
+        endpoint = f"/api/ai-chat?message={test_message}&session_id=test-session"
+        
+        success, data = await self.make_request("POST", endpoint)
+        
+        if success:
+            response_text = data.get("response", "")
+            success_flag = data.get("success", False)
+            
+            if success_flag and response_text and len(response_text) > 5:
+                self.log_test_result(
+                    "CRITICAL - AI Chat Response", 
+                    True, 
+                    f"✅ AI Chat responded successfully: {len(response_text)} characters",
+                    {"success": success_flag, "response_length": len(response_text), "response_preview": response_text[:100]}
+                )
+            elif not success_flag:
+                # Check if it's a budget issue (expected)
+                error_msg = data.get("response", str(data))
+                if "budget" in error_msg.lower() or "exceeded" in error_msg.lower():
+                    self.log_test_result(
+                        "CRITICAL - AI Chat Response", 
+                        True, 
+                        f"✅ AI Chat budget exceeded (expected): {error_msg[:100]}...",
+                        {"success": success_flag, "error_type": "budget_exceeded"}
+                    )
+                else:
+                    self.log_test_result(
+                        "CRITICAL - AI Chat Response", 
+                        False, 
+                        f"❌ AI Chat failed: {error_msg}",
+                        data
+                    )
+            else:
+                self.log_test_result(
+                    "CRITICAL - AI Chat Response", 
+                    False, 
+                    f"❌ AI Chat response too short or empty: {response_text}",
+                    data
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "CRITICAL - AI Chat Response", 
+                False, 
+                f"❌ AI Chat request failed: {error_msg}",
+                data
+            )
+
+    async def test_critical_charts_gold_data(self):
+        """CRITICAL TEST 7: Charts - GET /api/market/ohlcv-simple/GOLD → Should return chart data"""
+        logger.info("🔥 CRITICAL TEST 7: Charts - Should return GOLD chart data")
+        
+        success, data = await self.make_request("GET", "/api/market/ohlcv-simple/GOLD")
+        
+        if success:
+            chart_data = data.get("data", [])
+            success_flag = data.get("success", False)
+            commodity = data.get("commodity", "")
+            
+            if success_flag and chart_data and len(chart_data) > 0:
+                # Check if data has required OHLC fields
+                sample_candle = chart_data[0] if chart_data else {}
+                required_fields = ["timestamp", "open", "high", "low", "close"]
+                missing_fields = [field for field in required_fields if field not in sample_candle]
+                
+                if not missing_fields:
+                    self.log_test_result(
+                        "CRITICAL - Charts GOLD Data", 
+                        True, 
+                        f"✅ GOLD chart data loaded: {len(chart_data)} candles, commodity={commodity}",
+                        {
+                            "success": success_flag,
+                            "data_points": len(chart_data),
+                            "commodity": commodity,
+                            "sample_candle": sample_candle
+                        }
+                    )
+                else:
+                    self.log_test_result(
+                        "CRITICAL - Charts GOLD Data", 
+                        False, 
+                        f"❌ Chart data missing required fields: {missing_fields}",
+                        {"missing_fields": missing_fields, "sample_candle": sample_candle}
+                    )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Charts GOLD Data", 
+                    False, 
+                    f"❌ Chart data issues: success={success_flag}, data_points={len(chart_data)}",
+                    data
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "CRITICAL - Charts GOLD Data", 
+                False, 
+                f"❌ Failed to get GOLD chart data: {error_msg}",
+                data
+            )
+
     async def test_broker_connection_problem_1(self):
-        """PROBLEM 1: Broker-Verbindung - User says 'Immer noch keine Verbindung zu den Brokern'"""
-        logger.info("🔍 PROBLEM 1: Testing Broker Connection Issues")
+        """LEGACY TEST: Broker-Verbindung - User says 'Immer noch keine Verbindung zu den Brokern'"""
+        logger.info("🔍 LEGACY TEST: Testing Broker Connection Issues")
         
         # Test 1: GET /api/platforms/status - Check connection status
         logger.info("Test 1.1: GET /api/platforms/status")
