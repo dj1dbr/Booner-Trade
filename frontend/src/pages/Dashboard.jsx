@@ -436,7 +436,7 @@ const Dashboard = () => {
       const response = await axios.post(`${API}/trades/execute`, {
         trade_type: type,
         price: market.price,
-        quantity: null,  // Auto-berechnet
+        quantity: 0.01,  // Standard-Menge (Backend berechnet automatisch basierend auf Risk Management)
         commodity: commodityId
       }, {
         timeout: 45000  // 45 Sekunden Timeout für Trade-Execution
