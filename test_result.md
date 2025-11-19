@@ -1162,7 +1162,7 @@ frontend:
 
   - task: "Open Positions Display Bug"
     implemented: true
-    working: false
+    working: true
     file: "Dashboard.jsx"
     stuck_count: 1
     priority: "critical"
