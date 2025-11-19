@@ -1143,15 +1143,20 @@ const Dashboard = () => {
                           'PL': 'PLATINUM',
                           'PA': 'PALLADIUM',
                           'USOILCash': 'WTI_CRUDE',
-                          'CL': 'BRENT_CRUDE',
+                          'WTI': 'WTI_CRUDE',
+                          'CL': 'BRENT_CRUDE',  // Brent Crude Oil (MT5 Libertex)
+                          'BRENT': 'BRENT_CRUDE',
+                          'BRN': 'BRENT_CRUDE',
                           'NGASCash': 'NATURAL_GAS',
+                          'NGAS': 'NATURAL_GAS',
                           'WHEAT': 'WHEAT',
                           'CORN': 'CORN',
                           'SOYBEAN': 'SOYBEANS',
                           'COFFEE': 'COFFEE',
                           'SUGAR': 'SUGAR',
                           'COTTON': 'COTTON',
-                          'COCOA': 'COCOA'
+                          'COCOA': 'COCOA',
+                          'BTCUSD': 'BITCOIN'
                         };
                         
                         const commodityId = symbolToCommodity[trade.commodity] || trade.commodity;
