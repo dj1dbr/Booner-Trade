@@ -539,13 +539,37 @@ async def get_market_ohlcv(commodity_id: str, timeframe: str = "1d", period: str
     
     except Exception as e:
         logger.error(f"Error fetching OHLCV data for {commodity_id}: {e}")
-        # Wenn yfinance Rate Limit, versuche aus market_data DB zu laden
-        try:
-            data = await db.market_data.find_one({"commodity": commodity_id}, sort=[("timestamp", -1)])
-            if data:
-                return {"success": True, "data": [{"time": data.get('timestamp'), "close": data.get('price', 0), "open": data.get('price', 0), "high": data.get('price', 0), "low": data.get('price', 0), "volume": 0}], "commodity": commodity_id}
-        except:
-            pass
+        
+        # Wenn yfinance Rate Limit, generiere Demo-Daten
+        if "Too Many Requests" in str(e) or "Rate limit" in str(e):
+            logger.warning(f"yfinance rate limit - generating demo chart data for {commodity_id}")
+            
+            # Generiere einfache Demo-Daten für Chart-Visualisierung
+            import datetime
+            demo_data = []
+            base_price = 100.0
+            
+            for i in range(30):  # 30 Tage Demo-Daten
+                date = datetime.datetime.now(timezone.utc) - datetime.timedelta(days=29-i)
+                price = base_price + (i * 0.5) + ((-1) ** i * 2)  # Einfache Variation
+                demo_data.append({
+                    "time": date.isoformat(),
+                    "open": price,
+                    "high": price + 1,
+                    "low": price - 1,
+                    "close": price + 0.5,
+                    "volume": 1000
+                })
+            
+            result = {"success": True, "data": demo_data, "commodity": commodity_id, "demo": True}
+            
+            # Cache auch Demo-Daten
+            _chart_cache[cache_key] = result
+            _chart_cache_time[cache_key] = time.time()
+            
+            return result
+        
+        # Anderer Fehler
         return {"success": False, "data": [], "error": str(e)}
 
 @api_router.get("/market/ohlcv-simple/{commodity_id}")
