@@ -1164,7 +1164,7 @@ frontend:
     implemented: true
     working: false
     file: "Dashboard.jsx"
-    stuck_count: 0
+    stuck_count: 1
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -1204,6 +1204,46 @@ frontend:
           - Ensure "Offene Trades" sub-tab displays correctly
           - Verify trade data binding from API to UI components
           - Test open positions table rendering logic
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ OPEN POSITIONS DISPLAY BUG STILL NOT FIXED (Nov 19, 2025):
+          
+          FINAL VERIFICATION TEST RESULTS:
+          
+          ✅ BACKEND FIX VERIFIED:
+          - API /api/trades/list returns correct format: {"trades": [...], "count": 1}
+          - Trade data present: WTI_CRUDE BUY, Ticket #72811939, Status: "OPEN"
+          - Backend implementation is working correctly
+          
+          ❌ FRONTEND DISPLAY STILL BROKEN:
+          - Trades tab shows "Trades (1)" correctly
+          - "Gesamt Trades: 1" displayed correctly
+          - CRITICAL BUG: Shows "Offen: 0 | Geschlossen: 0" instead of "Offen: 1"
+          - No individual trade details visible (WTI_CRUDE, #72811939, BUY not shown)
+          - Platform cards show "Offene Positionen: €0.00 (1)" - partially correct
+          
+          🔍 ROOT CAUSE ANALYSIS:
+          Frontend has critical data processing bugs:
+          1. Trade status parsing: "OPEN" status not being counted as "Offen"
+          2. Trade list rendering: Individual trades not displayed in UI
+          3. Data binding: API response not properly mapped to UI components
+          4. Status categorization: Frontend logic incorrectly categorizes open trades
+          
+          🎯 EXACT TECHNICAL ISSUE:
+          - Backend returns: {"trades": [{"status": "OPEN", ...}], "count": 1}
+          - Frontend displays: "Offen: 0" instead of "Offen: 1"
+          - Trade details (WTI_CRUDE, Ticket #72811939) not rendered in trade list
+          
+          IMPACT:
+          User still cannot see their actual open positions despite backend fix.
+          This is a critical frontend bug preventing trade visibility.
+          
+          RECOMMENDATION:
+          Backend fix is working, but frontend needs immediate attention:
+          - Fix trade status parsing logic in Dashboard.jsx
+          - Fix trade list rendering components
+          - Verify data binding between API and UI state management
 
 metadata:
   created_by: "main_agent"
