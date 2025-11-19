@@ -3214,12 +3214,70 @@ class Booner_TradeTester:
         logger.info("="*80)
 
 async def main():
-    """Main test execution"""
-    # Backend URL from environment (external URL)
+    """Main test runner - COMPREHENSIVE SYSTEM TEST"""
+    # Get backend URL from environment
     backend_url = "https://aistrategy-1.preview.emergentagent.com"
     
+    logger.info(f"🚀 Starting Booner-Trade COMPREHENSIVE SYSTEM TEST")
+    logger.info(f"Backend URL: {backend_url}")
+    logger.info("="*80)
+    logger.info("🔥 CRITICAL TESTS - Everything Must Work")
+    logger.info("="*80)
+    
     async with Booner_TradeTester(backend_url) as tester:
-        await tester.run_all_tests()
+        # Run CRITICAL TESTS first
+        logger.info("🔥 Running CRITICAL TESTS...")
+        await tester.test_critical_commodities_15_items()
+        await tester.test_critical_settings_save_auto_trading()
+        await tester.test_critical_settings_load_all_settings()
+        await tester.test_critical_broker_status_connected()
+        await tester.test_critical_open_trades_with_tp_sl()
+        await tester.test_critical_ai_chat_response()
+        await tester.test_critical_charts_gold_data()
+        
+        # Run additional verification tests
+        logger.info("\n🔍 Running ADDITIONAL VERIFICATION TESTS...")
+        await tester.test_api_root()
+        await tester.test_broker_connection_problem_1()
+        await tester.test_day_swing_settings_problem_2()
+        await tester.test_manual_trade_execution_critical()
+        await tester.test_backend_logs_connection_errors()
+        
+        # Print summary
+        logger.info("\n" + "="*80)
+        logger.info("🎯 COMPREHENSIVE TEST SUMMARY")
+        logger.info("="*80)
+        
+        total_tests = len(tester.test_results)
+        passed_tests = sum(1 for result in tester.test_results if result["success"])
+        failed_tests = total_tests - passed_tests
+        
+        # Separate critical tests from additional tests
+        critical_tests = [r for r in tester.test_results if "CRITICAL" in r["test"]]
+        critical_passed = sum(1 for r in critical_tests if r["success"])
+        critical_failed = len(critical_tests) - critical_passed
+        
+        logger.info(f"🔥 CRITICAL TESTS: {critical_passed}/{len(critical_tests)} PASSED ({(critical_passed/len(critical_tests)*100):.1f}%)")
+        logger.info(f"📊 TOTAL TESTS: {passed_tests}/{total_tests} PASSED ({(passed_tests/total_tests)*100:.1f}%)")
+        
+        # Show critical test results
+        logger.info("\n🔥 CRITICAL TEST RESULTS:")
+        for result in critical_tests:
+            status = "✅ PASS" if result["success"] else "❌ FAIL"
+            logger.info(f"  {status} {result['test']}: {result['details']}")
+        
+        # Show failed tests (if any)
+        if failed_tests > 0:
+            logger.info("\n❌ ALL FAILED TESTS:")
+            for result in tester.test_results:
+                if not result["success"]:
+                    logger.info(f"  - {result['test']}: {result['details']}")
+        
+        # Final verdict
+        if critical_failed == 0:
+            logger.info("\n🎉 SYSTEM STATUS: ALL CRITICAL TESTS PASSED - SYSTEM READY")
+        else:
+            logger.info(f"\n⚠️  SYSTEM STATUS: {critical_failed} CRITICAL TESTS FAILED - NEEDS ATTENTION")
 
 if __name__ == "__main__":
     asyncio.run(main())
