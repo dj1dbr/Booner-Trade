@@ -1091,8 +1091,8 @@ frontend:
 
   - task: "Charts Data Loading Issue"
     implemented: true
-    working: false
-    file: "Dashboard.jsx, PriceChart.jsx"
+    working: true
+    file: "Dashboard.jsx, PriceChart.jsx, server.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
@@ -1128,6 +1128,37 @@ frontend:
           RECOMMENDATION: 
           This is an infrastructure issue requiring MetaAPI quota resolution, not a code fix.
           Chart UI components are functioning correctly.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ CHARTS DATA LOADING ISSUE RESOLVED (Nov 19, 2025):
+          
+          FINAL VERIFICATION TEST RESULTS:
+          
+          ✅ BACKEND FIX VERIFIED:
+          - New endpoint /api/market/ohlcv-simple/GOLD working correctly
+          - Returns proper OHLCV data with yfinance integration
+          - Chart fallback endpoint implemented successfully
+          - No more dependency on MetaAPI quota for chart data
+          
+          ✅ FRONTEND FUNCTIONALITY VERIFIED:
+          - Charts tab accessible and clickable
+          - GOLD chart loads successfully with SVG visualization
+          - Chart data displays properly (no infinite loading)
+          - Timeframe selectors present and functional
+          - All commodity chart buttons working (Gold, Silver, WTI, etc.)
+          
+          ✅ USER ISSUE RESOLVED:
+          - "Charts laden nicht" problem is FIXED
+          - Charts now load data successfully
+          - No more timeout issues or loading spinners
+          - Visual chart rendering working correctly
+          
+          🎯 OVERALL ASSESSMENT:
+          Charts Data Loading Issue is FULLY RESOLVED. The yfinance fallback endpoint
+          provides reliable chart data without MetaAPI quota limitations.
+          
+          RECOMMENDATION: Charts fix is COMPLETE and WORKING.
 
   - task: "Open Positions Display Bug"
     implemented: true
