@@ -886,21 +886,40 @@ async def close_trade_v2(request: CloseTradeRequest):
                 logger.error(f"Error closing position on {platform}: {e}")
                 raise HTTPException(status_code=500, detail=f"Error closing position: {str(e)}")
         
-        # Update trade in database
-        if trade_id:
-            result = await db.trades.update_one(
-                {"id": trade_id},
-                {
-                    "$set": {
-                        "status": "CLOSED",
-                        "closed_at": datetime.now(timezone.utc).isoformat(),
-                        "close_reason": "Manual close"
-                    }
-                }
-            )
+        # JETZT in DB speichern als CLOSED trade
+        # Hole Position Info von MT5 bevor sie geschlossen wird (falls noch verfügbar)
+        try:
+            from multi_platform_connector import multi_platform
             
-            if result.modified_count == 0:
-                logger.warning(f"Trade {trade_id} not found in database")
+            if platform in multi_platform.platforms:
+                connector = multi_platform.platforms[platform].get('connector')
+                if connector:
+                    # Versuche Position Info zu bekommen (kann bereits geschlossen sein)
+                    positions = await connector.get_positions()
+                    closed_position = next((p for p in positions if str(p.get('positionId') or p.get('ticket')) == str(ticket)), None)
+                    
+                    # Speichere geschlossenen Trade in DB
+                    closed_trade = {
+                        'id': str(uuid.uuid4()),
+                        'commodity': closed_position.get('symbol', 'UNKNOWN') if closed_position else 'UNKNOWN',
+                        'type': (closed_position.get('type', '').replace('POSITION_TYPE_', '')) if closed_position else 'UNKNOWN',
+                        'price': (closed_position.get('openPrice') or closed_position.get('price_open')) if closed_position else 0,
+                        'quantity': closed_position.get('volume') if closed_position else 0,
+                        'timestamp': (closed_position.get('time') or closed_position.get('openTime')) if closed_position else datetime.now(timezone.utc).isoformat(),
+                        'platform': platform,
+                        'entry_price': (closed_position.get('openPrice') or closed_position.get('price_open')) if closed_position else 0,
+                        'current_price': (closed_position.get('currentPrice') or closed_position.get('price_current')) if closed_position else 0,
+                        'mt5_ticket': str(ticket),
+                        'status': 'CLOSED',
+                        'closed_at': datetime.now(timezone.utc).isoformat(),
+                        'close_reason': 'Manual close',
+                        'pnl': closed_position.get('profit') or closed_position.get('unrealizedProfit') if closed_position else 0
+                    }
+                    
+                    await db.trades.insert_one(closed_trade)
+                    logger.info(f"✅ Geschlossener Trade in DB gespeichert: Ticket #{ticket}")
+        except Exception as e:
+            logger.warning(f"Could not save closed trade to DB: {e}")
         
         return {"success": True, "message": "Trade closed successfully"}
         
