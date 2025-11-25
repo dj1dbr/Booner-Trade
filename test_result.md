@@ -1545,6 +1545,38 @@ test_plan:
   test_priority: "critical_modal_system_failure"
 
 agent_communication:
+  - agent: "main"
+    message: |
+      🔧 MANUAL TRADE EXECUTION BUG FIX IMPLEMENTED (Nov 25, 2025):
+      
+      ROOT CAUSE IDENTIFIED:
+      - Code was sending SL/TP to MT5, which violates the "live-from-broker" architecture
+      - Per user requirements: "All trades are opened on MT5 without SL/TP"
+      - AI Bot should monitor positions and close them manually when targets are met
+      - MT5 was likely rejecting orders due to SL/TP parameters
+      
+      SOLUTION IMPLEMENTED IN server.py:
+      1. Changed create_market_order() call to send sl=None, tp=None
+      2. Added detailed logging: "Sende Trade OHNE SL/TP an MT5 (AI Bot überwacht Position)"
+      3. Enhanced error logging with SDK response type and content
+      4. Improved success detection with 3 fallback methods:
+         - Method 1: Explicit success key in dict
+         - Method 2: Check for orderId/positionId presence
+         - Method 3: Check for object attributes
+      5. Applied same fix to Bitpanda connector
+      
+      RATIONALE:
+      - Trades without SL/TP are more likely to be accepted by MT5
+      - Aligns with architecture where AI Bot monitors and closes positions
+      - Per-trade SL/TP settings stored in DB for AI Bot monitoring
+      - User can set per-trade overrides via Trade Detail Modal
+      
+      TESTING NEEDED:
+      - Test manual trade execution (WTI_CRUDE or GOLD)
+      - Verify trades execute successfully without SL/TP rejection
+      - Confirm backend logs show detailed SDK responses
+      - Validate that AI Bot can monitor and close positions correctly
+
   - agent: "testing"
     message: |
       🚨 CRITICAL SYSTEM FAILURE - FINAL COMPLETE SYSTEM TEST RESULTS (Nov 19, 2025)
