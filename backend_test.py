@@ -3609,34 +3609,38 @@ class Booner_TradeTester:
         logger.info("="*80)
 
 async def main():
-    """Main test runner - COMPREHENSIVE SYSTEM TEST"""
+    """🔧 MANUAL TRADE EXECUTION BUG FIX TESTING - CRITICAL PRIORITY"""
     # Get backend URL from environment
     backend_url = "https://smarttrade-hub-33.preview.emergentagent.com"
     
-    logger.info(f"🚀 Starting Booner-Trade COMPREHENSIVE SYSTEM TEST")
+    logger.info(f"🔧 Starting MANUAL TRADE EXECUTION BUG FIX TESTING")
     logger.info(f"Backend URL: {backend_url}")
     logger.info("="*80)
-    logger.info("🔥 CRITICAL TESTS - Everything Must Work")
+    logger.info("🔥 CRITICAL BUG FIX TESTS - SL/TP Removal Verification")
     logger.info("="*80)
     
     async with Booner_TradeTester(backend_url) as tester:
-        # Run CRITICAL TESTS first
-        logger.info("🔥 Running CRITICAL TESTS...")
-        await tester.test_critical_commodities_15_items()
-        await tester.test_critical_settings_save_auto_trading()
-        await tester.test_critical_settings_load_all_settings()
-        await tester.test_critical_broker_status_connected()
-        await tester.test_critical_open_trades_with_tp_sl()
-        await tester.test_critical_ai_chat_response()
-        await tester.test_critical_charts_gold_data()
+        # Run CRITICAL MANUAL TRADE EXECUTION BUG FIX TESTS FIRST
+        logger.info("🔥 Running MANUAL TRADE EXECUTION BUG FIX TESTS...")
+        logger.info("Testing that trades are sent WITHOUT SL/TP to MT5...")
         
-        # Run additional verification tests
-        logger.info("\n🔍 Running ADDITIONAL VERIFICATION TESTS...")
-        await tester.test_api_root()
+        # Test 1: Manual Trade Execution - GOLD
+        await tester.test_manual_trade_execution_gold_critical()
+        
+        # Test 2: Verify Trade Appears in MT5 Without SL/TP
+        await tester.test_verify_trade_appears_without_sl_tp()
+        
+        # Test 3: Backend Logs Analysis
+        await tester.test_backend_logs_analysis()
+        
+        # Test 4: Alternative Commodity Test - WTI_CRUDE
+        await tester.test_alternative_commodity_wti_crude()
+        
+        # Run supporting tests to verify system health
+        logger.info("\n🔍 Running SUPPORTING SYSTEM HEALTH TESTS...")
+        await tester.test_api_availability()
         await tester.test_broker_connection_problem_1()
-        await tester.test_day_swing_settings_problem_2()
-        await tester.test_manual_trade_execution_critical()
-        await tester.test_backend_logs_connection_errors()
+        await tester.test_error_handling_improvements()
         
         # Print summary
         logger.info("\n" + "="*80)
