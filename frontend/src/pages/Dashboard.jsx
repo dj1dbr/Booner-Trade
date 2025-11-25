@@ -2692,6 +2692,156 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
         )}
       </div>
 
+
+      {/* Trade Detail Modal */}
+      <Dialog open={tradeDetailModalOpen} onOpenChange={setTradeDetailModalOpen}>
+        <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-cyan-400">
+              Trade Einstellungen
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedTrade && (
+            <div className="space-y-6 py-4">
+              {/* Trade Info */}
+              <div className="bg-slate-800 rounded-lg p-4">
+                <h3 className="text-lg font-semibold mb-3">Trade Details</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-400">Symbol:</span>
+                    <span className="ml-2 font-semibold">{selectedTrade.commodity}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Typ:</span>
+                    <span className="ml-2 font-semibold">{selectedTrade.type}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Entry:</span>
+                    <span className="ml-2 font-semibold">${selectedTrade.entry_price?.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Menge:</span>
+                    <span className="ml-2 font-semibold">{selectedTrade.quantity} Lots</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Ticket:</span>
+                    <span className="ml-2 font-semibold">#{selectedTrade.mt5_ticket || selectedTrade.id}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400">Strategie:</span>
+                    <span className="ml-2 font-semibold">{tradeSettings.strategy_type === 'day' ? 'Day Trading' : 'Swing Trading'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Individual Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Individuelle Einstellungen</h3>
+                <p className="text-sm text-slate-400">
+                  Diese Einstellungen gelten nur für diesen Trade und überschreiben die globalen Settings.
+                  Die KI überwacht diese Werte automatisch.
+                </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="trade-sl" className="text-slate-300">
+                      Stop Loss (Preis)
+                    </Label>
+                    <Input
+                      id="trade-sl"
+                      type="number"
+                      step="0.01"
+                      value={tradeSettings.stop_loss || ''}
+                      onChange={(e) => setTradeSettings({...tradeSettings, stop_loss: parseFloat(e.target.value)})}
+                      className="bg-slate-800 border-slate-700 text-white mt-1"
+                      placeholder={selectedTrade.type === 'BUY' ? 'z.B. 55.00' : 'z.B. 65.00'}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="trade-tp" className="text-slate-300">
+                      Take Profit (Preis)
+                    </Label>
+                    <Input
+                      id="trade-tp"
+                      type="number"
+                      step="0.01"
+                      value={tradeSettings.take_profit || ''}
+                      onChange={(e) => setTradeSettings({...tradeSettings, take_profit: parseFloat(e.target.value)})}
+                      className="bg-slate-800 border-slate-700 text-white mt-1"
+                      placeholder={selectedTrade.type === 'BUY' ? 'z.B. 65.00' : 'z.B. 55.00'}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 bg-slate-800 rounded-lg p-4">
+                  <Switch
+                    id="trailing-stop"
+                    checked={tradeSettings.trailing_stop || false}
+                    onCheckedChange={(checked) => setTradeSettings({...tradeSettings, trailing_stop: checked})}
+                  />
+                  <Label htmlFor="trailing-stop" className="text-slate-300 cursor-pointer">
+                    Trailing Stop aktivieren
+                  </Label>
+                </div>
+
+                {tradeSettings.trailing_stop && (
+                  <div>
+                    <Label htmlFor="trailing-distance" className="text-slate-300">
+                      Trailing Stop Distanz (Pips)
+                    </Label>
+                    <Input
+                      id="trailing-distance"
+                      type="number"
+                      value={tradeSettings.trailing_stop_distance || 50}
+                      onChange={(e) => setTradeSettings({...tradeSettings, trailing_stop_distance: parseInt(e.target.value)})}
+                      className="bg-slate-800 border-slate-700 text-white mt-1"
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="trade-notes" className="text-slate-300">
+                    Notizen (optional)
+                  </Label>
+                  <textarea
+                    id="trade-notes"
+                    rows="3"
+                    value={tradeSettings.notes || ''}
+                    onChange={(e) => setTradeSettings({...tradeSettings, notes: e.target.value})}
+                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-3 mt-1"
+                    placeholder="Notizen zu diesem Trade..."
+                  />
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={handleSaveTradeSettings}
+                  className="flex-1 bg-cyan-600 hover:bg-cyan-500"
+                >
+                  💾 Einstellungen speichern
+                </Button>
+                <Button
+                  onClick={() => setTradeDetailModalOpen(false)}
+                  variant="outline"
+                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                >
+                  Abbrechen
+                </Button>
+              </div>
+
+              <p className="text-xs text-amber-400 text-center">
+                ⚡ Die KI überwacht diese Einstellungen in Echtzeit und schließt den Trade automatisch bei SL/TP
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
       <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500" data-testid="save-settings-button">
         Einstellungen speichern
       </Button>
