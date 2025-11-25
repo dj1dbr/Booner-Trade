@@ -1518,6 +1518,24 @@ agent_communication:
       🎯 FRONTEND STATUS: ❌ CRITICAL FAILURE (cannot display any data)
       
       SYSTEM IS NOT FUNCTIONAL FOR END USERS - IMMEDIATE FIXES REQUIRED
+  - agent: "testing"
+    message: |
+      ✅ URGENT SETTINGS MODAL BUG RESOLVED (Nov 25, 2025):
+      
+      PROBLEM: User reported "Einstellungen kann nicht geöffnet werden" (Settings cannot be opened)
+      
+      ROOT CAUSE: JavaScript ReferenceError in SettingsForm component due to undefined `backendUrl` variable
+      
+      FIXES APPLIED:
+      1. Fixed undefined variable references: `backendUrl` → `API` (2 instances in Dashboard.jsx)
+      2. Added conditional rendering to prevent SettingsForm crash
+      3. Added loading state for better UX
+      
+      VERIFICATION: Settings modal now opens successfully, displays loading state, and renders form elements properly.
+      
+      STATUS: CRITICAL BUG FIXED - Settings modal is fully functional.
+      
+      RECOMMENDATION: No further action needed for this issue. The settings modal bug is completely resolved.
       
       1. Open Trades Display Problem:
          - ❌ Shows "Offen: 11 | Geschlossen: 0" but NO individual trade details visible
