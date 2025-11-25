@@ -1535,9 +1535,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Open Trades Display Bug - CRITICAL"
-    - "AI Bot Status Indicators - URGENT"
-    - "MetaAPI Quota Exceeded - INFRASTRUCTURE"
+    - "Comprehensive Bug Diagnosis - 3 Critical User Issues"
+    - "Settings Modal JavaScript Error Fix"
+    - "Trade Row Click Handler Fix"
+    - "Chart Modal Click Handler Fix"
   stuck_tasks:
     - "Open Trades Display Bug"
   test_all: false
