@@ -473,6 +473,52 @@ const Dashboard = () => {
     }
   };
 
+
+
+  // Trade Detail Modal Handlers
+  const handleTradeClick = async (trade) => {
+    try {
+      setSelectedTrade(trade);
+      
+      // Lade individuelle Settings für diesen Trade
+      const ticket = trade.mt5_ticket || trade.id;
+      try {
+        const response = await axios.get(`${API}/trades/${ticket}/settings`);
+        setTradeSettings(response.data || {});
+      } catch (error) {
+        // Wenn keine Settings vorhanden, leeres Object
+        setTradeSettings({
+          stop_loss: null,
+          take_profit: null,
+          trailing_stop: false,
+          strategy_type: 'swing'
+        });
+      }
+      
+      setTradeDetailModalOpen(true);
+    } catch (error) {
+      console.error('Error loading trade details:', error);
+      toast.error('Fehler beim Laden der Trade-Details');
+    }
+  };
+
+  const handleSaveTradeSettings = async () => {
+    try {
+      const ticket = selectedTrade.mt5_ticket || selectedTrade.id;
+      
+      await axios.post(`${API}/trades/${ticket}/settings`, tradeSettings);
+      
+      toast.success('✅ Trade-Einstellungen gespeichert. KI überwacht jetzt diese Werte.');
+      setTradeDetailModalOpen(false);
+      
+      // Reload trades um aktualisierte Daten zu sehen
+      await fetchTrades();
+    } catch (error) {
+      console.error('Error saving trade settings:', error);
+      toast.error('Fehler beim Speichern der Einstellungen');
+    }
+  };
+
   const handleCloseTrade = async (trade) => {
     try {
       console.log('Closing trade:', trade);
