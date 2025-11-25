@@ -204,7 +204,7 @@ class ManualTradeTester:
 async def main():
     """Main test execution"""
     # Use the backend URL from frontend .env
-    backend_url = "https://aistrategy-1.preview.emergentagent.com"
+    backend_url = "https://smarttrade-hub-33.preview.emergentagent.com"
     
     async with ManualTradeTester(backend_url) as tester:
         passed, total, results = await tester.run_manual_trade_test()

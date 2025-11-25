@@ -3216,7 +3216,7 @@ class Booner_TradeTester:
 async def main():
     """Main test runner - COMPREHENSIVE SYSTEM TEST"""
     # Get backend URL from environment
-    backend_url = "https://aistrategy-1.preview.emergentagent.com"
+    backend_url = "https://smarttrade-hub-33.preview.emergentagent.com"
     
     logger.info(f"🚀 Starting Booner-Trade COMPREHENSIVE SYSTEM TEST")
     logger.info(f"Backend URL: {backend_url}")

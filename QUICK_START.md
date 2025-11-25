@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://aistrategy-1.preview.emergentagent.com
+https://smarttrade-hub-33.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.
