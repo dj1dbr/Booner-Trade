@@ -113,6 +113,361 @@ class Booner_TradeTester:
             logger.error(f"Request failed: {e}")
             return False, {"error": str(e)}
     
+    async def test_manual_trade_execution_gold_critical(self):
+        """🔥 CRITICAL TEST 1: Manual Trade Execution - GOLD WITHOUT SL/TP"""
+        logger.info("🔥 CRITICAL TEST 1: Manual Trade Execution - GOLD (should execute WITHOUT SL/TP)")
+        
+        trade_data = {
+            "commodity": "GOLD",
+            "trade_type": "BUY",
+            "quantity": 0.01
+        }
+        
+        success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
+        
+        if success:
+            # Check for successful trade execution
+            trade_success = data.get("success", False)
+            ticket = data.get("ticket")
+            platform = data.get("platform")
+            message = data.get("message", "")
+            
+            if trade_success and ticket:
+                self.log_test_result(
+                    "CRITICAL - Manual Trade GOLD Execution", 
+                    True, 
+                    f"✅ GOLD trade executed successfully - Ticket: {ticket}, Platform: {platform}",
+                    {
+                        "success": trade_success,
+                        "ticket": ticket,
+                        "platform": platform,
+                        "message": message,
+                        "commodity": "GOLD",
+                        "quantity": 0.01
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Manual Trade GOLD Execution", 
+                    False, 
+                    f"❌ GOLD trade failed - Success: {trade_success}, Ticket: {ticket}, Message: {message}",
+                    data
+                )
+        else:
+            # Check if it's a specific error (market closed, etc.) vs generic error
+            error_detail = data.get("detail", str(data))
+            
+            # Expected specific error messages (these are acceptable)
+            acceptable_errors = [
+                "market closed", "market is closed", "trading session", 
+                "insufficient margin", "invalid volume", "no money",
+                "TRADE_RETCODE_MARKET_CLOSED", "TRADE_RETCODE_NO_MONEY",
+                "TRADE_RETCODE_INVALID_VOLUME", "market hours"
+            ]
+            
+            # Generic error messages that indicate the bug is NOT fixed
+            bug_indicators = [
+                "trade konnte nicht ausgeführt werden", 
+                "broker rejected",
+                "sl/tp", "stop loss", "take profit"
+            ]
+            
+            is_acceptable_error = any(err.lower() in error_detail.lower() for err in acceptable_errors)
+            is_bug_indicator = any(bug.lower() in error_detail.lower() for bug in bug_indicators)
+            
+            if is_acceptable_error and not is_bug_indicator:
+                self.log_test_result(
+                    "CRITICAL - Manual Trade GOLD Execution", 
+                    True, 
+                    f"✅ GOLD trade failed with acceptable error (Market Closed/Margin): {error_detail}",
+                    {"error_detail": error_detail, "error_type": "acceptable"}
+                )
+            elif is_bug_indicator:
+                self.log_test_result(
+                    "CRITICAL - Manual Trade GOLD Execution", 
+                    False, 
+                    f"❌ GOLD trade failed with BUG INDICATOR: {error_detail}",
+                    {"error_detail": error_detail, "error_type": "bug_indicator"}
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Manual Trade GOLD Execution", 
+                    True, 
+                    f"✅ GOLD trade failed with specific error (not generic): {error_detail}",
+                    {"error_detail": error_detail, "error_type": "specific"}
+                )
+
+    async def test_verify_trade_appears_without_sl_tp(self):
+        """🔥 CRITICAL TEST 2: Verify Trade Appears in MT5 Without SL/TP"""
+        logger.info("🔥 CRITICAL TEST 2: Verify trades appear in /api/trades/list as OPEN")
+        
+        success, data = await self.make_request("GET", "/api/trades/list")
+        
+        if success:
+            trades = data.get("trades", [])
+            open_trades = [t for t in trades if t.get("status") == "OPEN"]
+            
+            # Look for recent GOLD trades
+            gold_trades = [t for t in open_trades if t.get("commodity") == "GOLD"]
+            
+            if gold_trades:
+                # Check the most recent GOLD trade
+                latest_gold_trade = gold_trades[-1]
+                ticket = latest_gold_trade.get("mt5_ticket") or latest_gold_trade.get("ticket")
+                stop_loss = latest_gold_trade.get("stop_loss")
+                take_profit = latest_gold_trade.get("take_profit")
+                
+                self.log_test_result(
+                    "CRITICAL - Trade Appears in List", 
+                    True, 
+                    f"✅ GOLD trade found in list - Ticket: {ticket}, SL: {stop_loss}, TP: {take_profit}",
+                    {
+                        "ticket": ticket,
+                        "stop_loss": stop_loss,
+                        "take_profit": take_profit,
+                        "total_open_trades": len(open_trades),
+                        "gold_trades": len(gold_trades)
+                    }
+                )
+            elif open_trades:
+                # No GOLD trades but other trades exist
+                other_commodities = [t.get("commodity") for t in open_trades]
+                self.log_test_result(
+                    "CRITICAL - Trade Appears in List", 
+                    True, 
+                    f"✅ No GOLD trades, but {len(open_trades)} other open trades: {other_commodities}",
+                    {"open_trades": len(open_trades), "commodities": other_commodities}
+                )
+            else:
+                # No open trades at all
+                self.log_test_result(
+                    "CRITICAL - Trade Appears in List", 
+                    True, 
+                    f"✅ No open trades found (clean system or trades closed)",
+                    {"total_trades": len(trades), "open_trades": 0}
+                )
+        else:
+            self.log_test_result(
+                "CRITICAL - Trade Appears in List", 
+                False, 
+                f"❌ Failed to get trades list: {data}",
+                data
+            )
+
+    async def test_backend_logs_analysis(self):
+        """🔥 CRITICAL TEST 3: Backend Logs Analysis - Check for specific log messages"""
+        logger.info("🔥 CRITICAL TEST 3: Backend Logs Analysis - Looking for SL/TP and SDK response logs")
+        
+        try:
+            # Check for the specific log messages mentioned in the review
+            log_checks = [
+                {
+                    "name": "SL/TP Removal Log",
+                    "pattern": "Sende Trade OHNE SL/TP an MT5",
+                    "expected": True,
+                    "description": "Trade sent WITHOUT SL/TP"
+                },
+                {
+                    "name": "SDK Response Type Log",
+                    "pattern": "📥 SDK Response Type",
+                    "expected": True,
+                    "description": "SDK response type logging"
+                },
+                {
+                    "name": "SDK Response Content Log", 
+                    "pattern": "📥 SDK Response:",
+                    "expected": True,
+                    "description": "SDK response content logging"
+                },
+                {
+                    "name": "Order Success Log",
+                    "pattern": "✅ Order an MT5_LIBERTEX gesendet: Ticket #",
+                    "expected": True,
+                    "description": "Successful order confirmation"
+                },
+                {
+                    "name": "SL/TP Rejection Errors",
+                    "pattern": "TRADE_RETCODE_INVALID_STOPS|SL/TP|stop loss.*reject|take profit.*reject",
+                    "expected": False,
+                    "description": "SL/TP rejection errors (should NOT appear)"
+                }
+            ]
+            
+            log_results = []
+            
+            for check in log_checks:
+                try:
+                    # Check both stdout and stderr logs
+                    result_out = subprocess.run(
+                        ["grep", "-i", check["pattern"], "/var/log/supervisor/backend.out.log"],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    result_err = subprocess.run(
+                        ["grep", "-i", check["pattern"], "/var/log/supervisor/backend.err.log"],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    
+                    found_out = result_out.returncode == 0 and result_out.stdout.strip()
+                    found_err = result_err.returncode == 0 and result_err.stdout.strip()
+                    found = found_out or found_err
+                    
+                    # Get recent matches (last 3 lines)
+                    recent_matches = []
+                    if found_out:
+                        recent_matches.extend(result_out.stdout.strip().split('\n')[-3:])
+                    if found_err:
+                        recent_matches.extend(result_err.stdout.strip().split('\n')[-3:])
+                    
+                    log_results.append({
+                        "name": check["name"],
+                        "pattern": check["pattern"],
+                        "expected": check["expected"],
+                        "found": found,
+                        "matches": recent_matches[-3:],  # Last 3 matches
+                        "description": check["description"]
+                    })
+                    
+                except Exception as e:
+                    log_results.append({
+                        "name": check["name"],
+                        "pattern": check["pattern"],
+                        "expected": check["expected"],
+                        "found": False,
+                        "error": str(e),
+                        "description": check["description"]
+                    })
+            
+            # Analyze results
+            critical_logs_found = 0
+            critical_logs_missing = 0
+            unwanted_logs_found = 0
+            
+            for result in log_results:
+                if result["expected"] and result.get("found"):
+                    critical_logs_found += 1
+                elif result["expected"] and not result.get("found"):
+                    critical_logs_missing += 1
+                elif not result["expected"] and result.get("found"):
+                    unwanted_logs_found += 1
+            
+            # Determine overall success
+            if critical_logs_found >= 2 and unwanted_logs_found == 0:
+                self.log_test_result(
+                    "CRITICAL - Backend Logs Analysis", 
+                    True, 
+                    f"✅ Found {critical_logs_found} critical logs, {unwanted_logs_found} unwanted logs",
+                    {
+                        "critical_found": critical_logs_found,
+                        "critical_missing": critical_logs_missing,
+                        "unwanted_found": unwanted_logs_found,
+                        "log_results": log_results
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Backend Logs Analysis", 
+                    False, 
+                    f"❌ Log analysis issues - Found: {critical_logs_found}, Missing: {critical_logs_missing}, Unwanted: {unwanted_logs_found}",
+                    {
+                        "critical_found": critical_logs_found,
+                        "critical_missing": critical_logs_missing,
+                        "unwanted_found": unwanted_logs_found,
+                        "log_results": log_results
+                    }
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "CRITICAL - Backend Logs Analysis", 
+                False, 
+                f"❌ Error analyzing logs: {str(e)}",
+                {"error": str(e)}
+            )
+
+    async def test_alternative_commodity_wti_crude(self):
+        """🔥 CRITICAL TEST 4: Alternative Commodity Test - WTI_CRUDE"""
+        logger.info("🔥 CRITICAL TEST 4: Alternative Commodity Test - WTI_CRUDE (compare with GOLD)")
+        
+        trade_data = {
+            "commodity": "WTI_CRUDE",
+            "trade_type": "BUY",
+            "quantity": 0.01
+        }
+        
+        success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
+        
+        if success:
+            # Check for successful trade execution
+            trade_success = data.get("success", False)
+            ticket = data.get("ticket")
+            platform = data.get("platform")
+            message = data.get("message", "")
+            
+            if trade_success and ticket:
+                self.log_test_result(
+                    "CRITICAL - Alternative Commodity WTI_CRUDE", 
+                    True, 
+                    f"✅ WTI_CRUDE trade executed successfully - Ticket: {ticket}, Platform: {platform}",
+                    {
+                        "success": trade_success,
+                        "ticket": ticket,
+                        "platform": platform,
+                        "message": message,
+                        "commodity": "WTI_CRUDE",
+                        "quantity": 0.01
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Alternative Commodity WTI_CRUDE", 
+                    False, 
+                    f"❌ WTI_CRUDE trade failed - Success: {trade_success}, Ticket: {ticket}, Message: {message}",
+                    data
+                )
+        else:
+            # Check if it's a specific error vs generic error
+            error_detail = data.get("detail", str(data))
+            
+            # Expected specific error messages (these are acceptable)
+            acceptable_errors = [
+                "market closed", "market is closed", "trading session", 
+                "insufficient margin", "invalid volume", "no money",
+                "TRADE_RETCODE_MARKET_CLOSED", "TRADE_RETCODE_NO_MONEY",
+                "TRADE_RETCODE_INVALID_VOLUME", "market hours"
+            ]
+            
+            # Generic error messages that indicate the bug is NOT fixed
+            bug_indicators = [
+                "trade konnte nicht ausgeführt werden", 
+                "broker rejected",
+                "sl/tp", "stop loss", "take profit"
+            ]
+            
+            is_acceptable_error = any(err.lower() in error_detail.lower() for err in acceptable_errors)
+            is_bug_indicator = any(bug.lower() in error_detail.lower() for bug in bug_indicators)
+            
+            if is_acceptable_error and not is_bug_indicator:
+                self.log_test_result(
+                    "CRITICAL - Alternative Commodity WTI_CRUDE", 
+                    True, 
+                    f"✅ WTI_CRUDE trade failed with acceptable error: {error_detail}",
+                    {"error_detail": error_detail, "error_type": "acceptable"}
+                )
+            elif is_bug_indicator:
+                self.log_test_result(
+                    "CRITICAL - Alternative Commodity WTI_CRUDE", 
+                    False, 
+                    f"❌ WTI_CRUDE trade failed with BUG INDICATOR: {error_detail}",
+                    {"error_detail": error_detail, "error_type": "bug_indicator"}
+                )
+            else:
+                self.log_test_result(
+                    "CRITICAL - Alternative Commodity WTI_CRUDE", 
+                    True, 
+                    f"✅ WTI_CRUDE trade failed with specific error: {error_detail}",
+                    {"error_detail": error_detail, "error_type": "specific"}
+                )
+
     async def test_critical_commodities_15_items(self):
         """CRITICAL TEST 1: Commodities - GET /api/commodities → Should return 15 items"""
         logger.info("🔥 CRITICAL TEST 1: Commodities - Should return 15 items")
