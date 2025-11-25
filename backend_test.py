@@ -3644,26 +3644,34 @@ async def main():
         
         # Print summary
         logger.info("\n" + "="*80)
-        logger.info("🎯 COMPREHENSIVE TEST SUMMARY")
+        logger.info("🔧 MANUAL TRADE EXECUTION BUG FIX TEST SUMMARY")
         logger.info("="*80)
         
         total_tests = len(tester.test_results)
         passed_tests = sum(1 for result in tester.test_results if result["success"])
         failed_tests = total_tests - passed_tests
         
-        # Separate critical tests from additional tests
-        critical_tests = [r for r in tester.test_results if "CRITICAL" in r["test"]]
-        critical_passed = sum(1 for r in critical_tests if r["success"])
-        critical_failed = len(critical_tests) - critical_passed
+        # Separate critical bug fix tests from supporting tests
+        bug_fix_tests = [r for r in tester.test_results if "CRITICAL" in r["test"]]
+        bug_fix_passed = sum(1 for r in bug_fix_tests if r["success"])
+        bug_fix_failed = len(bug_fix_tests) - bug_fix_passed
         
-        logger.info(f"🔥 CRITICAL TESTS: {critical_passed}/{len(critical_tests)} PASSED ({(critical_passed/len(critical_tests)*100):.1f}%)")
+        logger.info(f"🔧 BUG FIX TESTS: {bug_fix_passed}/{len(bug_fix_tests)} PASSED ({(bug_fix_passed/len(bug_fix_tests)*100):.1f}%)")
         logger.info(f"📊 TOTAL TESTS: {passed_tests}/{total_tests} PASSED ({(passed_tests/total_tests)*100:.1f}%)")
         
-        # Show critical test results
-        logger.info("\n🔥 CRITICAL TEST RESULTS:")
-        for result in critical_tests:
+        # Show bug fix test results
+        logger.info("\n🔧 BUG FIX TEST RESULTS:")
+        for result in bug_fix_tests:
             status = "✅ PASS" if result["success"] else "❌ FAIL"
             logger.info(f"  {status} {result['test']}: {result['details']}")
+        
+        # Show supporting test results
+        supporting_tests = [r for r in tester.test_results if "CRITICAL" not in r["test"]]
+        if supporting_tests:
+            logger.info("\n🔍 SUPPORTING TEST RESULTS:")
+            for result in supporting_tests:
+                status = "✅ PASS" if result["success"] else "❌ FAIL"
+                logger.info(f"  {status} {result['test']}: {result['details']}")
         
         # Show failed tests (if any)
         if failed_tests > 0:
@@ -3672,11 +3680,14 @@ async def main():
                 if not result["success"]:
                     logger.info(f"  - {result['test']}: {result['details']}")
         
-        # Final verdict
-        if critical_failed == 0:
-            logger.info("\n🎉 SYSTEM STATUS: ALL CRITICAL TESTS PASSED - SYSTEM READY")
+        # Final verdict for bug fix
+        if bug_fix_failed == 0:
+            logger.info("\n🎉 BUG FIX STATUS: ALL CRITICAL TESTS PASSED - MANUAL TRADE EXECUTION BUG IS FIXED")
+            logger.info("✅ Trades are now sent WITHOUT SL/TP to MT5 as intended")
+            logger.info("✅ AI Bot can monitor positions and close them manually")
         else:
-            logger.info(f"\n⚠️  SYSTEM STATUS: {critical_failed} CRITICAL TESTS FAILED - NEEDS ATTENTION")
+            logger.info(f"\n⚠️  BUG FIX STATUS: {bug_fix_failed} CRITICAL TESTS FAILED - BUG FIX NEEDS ATTENTION")
+            logger.info("❌ Manual trade execution may still have issues with SL/TP handling")
 
 if __name__ == "__main__":
     asyncio.run(main())
