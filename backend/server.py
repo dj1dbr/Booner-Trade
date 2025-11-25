@@ -1005,6 +1005,45 @@ async def get_current_market(commodity: str = "WTI_CRUDE"):
     """Get current market data for a specific commodity"""
     if commodity not in COMMODITIES:
         raise HTTPException(status_code=400, detail=f"Unknown commodity: {commodity}")
+
+
+@api_router.get("/settings")
+async def get_settings():
+    """Get trading settings"""
+    try:
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if not settings:
+            # Create default settings
+            default_settings = TradingSettings()
+            settings = default_settings.model_dump()
+            await db.trading_settings.insert_one(settings)
+            logger.info("✅ Default settings created")
+        
+        settings.pop('_id', None)
+        return settings
+    except Exception as e:
+        logger.error(f"Error getting settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/settings")
+async def update_settings(settings: TradingSettings):
+    """Update trading settings"""
+    try:
+        settings_dict = settings.model_dump()
+        
+        await db.trading_settings.update_one(
+            {"id": "trading_settings"},
+            {"$set": settings_dict},
+            upsert=True
+        )
+        
+        logger.info("✅ Settings updated")
+        
+        return settings_dict
+    except Exception as e:
+        logger.error(f"Error updating settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
     
     # Check if commodity is enabled
     settings = await db.trading_settings.find_one({"id": "trading_settings"})
