@@ -477,15 +477,21 @@ const Dashboard = () => {
 
   // Trade Detail Modal Handlers
   const handleTradeClick = async (trade) => {
+    console.log('🔍 Trade clicked:', trade);
     try {
       setSelectedTrade(trade);
+      console.log('✅ Selected trade set');
       
       // Lade individuelle Settings für diesen Trade
       const ticket = trade.mt5_ticket || trade.id;
+      console.log('📋 Loading settings for ticket:', ticket);
+      
       try {
         const response = await axios.get(`${API}/trades/${ticket}/settings`);
+        console.log('✅ Settings loaded:', response.data);
         setTradeSettings(response.data || {});
       } catch (error) {
+        console.log('⚠️ No settings found, using defaults');
         // Wenn keine Settings vorhanden, leeres Object
         setTradeSettings({
           stop_loss: null,
@@ -495,9 +501,11 @@ const Dashboard = () => {
         });
       }
       
+      console.log('🚀 Opening modal...');
       setTradeDetailModalOpen(true);
+      console.log('✅ Modal state set to true');
     } catch (error) {
-      console.error('Error loading trade details:', error);
+      console.error('❌ Error loading trade details:', error);
       toast.error('Fehler beim Laden der Trade-Details');
     }
   };
