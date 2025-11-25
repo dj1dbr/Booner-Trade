@@ -731,7 +731,14 @@ const Dashboard = () => {
                 <DialogHeader>
                   <DialogTitle className="text-2xl">Trading Einstellungen</DialogTitle>
                 </DialogHeader>
-                <SettingsForm settings={settings} onSave={handleUpdateSettings} commodities={commodities} balance={balance} />
+                {settings ? (
+                  <SettingsForm settings={settings} onSave={handleUpdateSettings} commodities={commodities} balance={balance} />
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
+                    <p className="mt-2 text-slate-400">Lade Einstellungen...</p>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
