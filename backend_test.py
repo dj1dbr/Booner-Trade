@@ -392,7 +392,8 @@ class Booner_TradeTester:
         trade_data = {
             "commodity": "WTI_CRUDE",
             "trade_type": "BUY",
-            "quantity": 0.01
+            "quantity": 0.01,
+            "price": 60.0  # Current approximate WTI price
         }
         
         success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
