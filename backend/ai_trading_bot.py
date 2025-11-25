@@ -189,21 +189,30 @@ class AITradingBot:
                         db_trade = await self.db.trades.find_one({"mt5_ticket": str(ticket), "status": "OPEN"})
                         strategy = db_trade.get('strategy', 'swing') if db_trade else 'swing'
                         
-                        # ⚡ IMMER aus Settings berechnen - KI nutzt AKTUELLE Settings!
-                        if strategy == 'day':
-                            tp_pct = self.settings.get('day_take_profit_percent', 2.5)
-                            sl_pct = self.settings.get('day_stop_loss_percent', 1.5)
-                        else:  # swing
-                            tp_pct = self.settings.get('swing_take_profit_percent', 4.0)
-                            sl_pct = self.settings.get('swing_stop_loss_percent', 2.0)
+                        # 🎯 INDIVIDUELLE TRADE SETTINGS haben Priorität!
+                        individual_settings = await self.db.trade_settings.find_one({'trade_id': str(ticket)})
                         
-                        # Berechne SL/TP basierend auf Entry-Preis und Settings
-                        if 'BUY' in pos_type:
-                            take_profit_price = entry_price * (1 + tp_pct / 100)
-                            stop_loss_price = entry_price * (1 - sl_pct / 100)
-                        else:  # SELL
-                            take_profit_price = entry_price * (1 - tp_pct / 100)
-                            stop_loss_price = entry_price * (1 + sl_pct / 100)
+                        if individual_settings and (individual_settings.get('stop_loss') or individual_settings.get('take_profit')):
+                            # Nutze individuelle Settings vom User
+                            stop_loss_price = individual_settings.get('stop_loss')
+                            take_profit_price = individual_settings.get('take_profit')
+                            logger.info(f"🎯 Nutze individuelle Settings für #{ticket}: SL={stop_loss_price}, TP={take_profit_price}")
+                        else:
+                            # ⚡ IMMER aus Settings berechnen - KI nutzt AKTUELLE Settings!
+                            if strategy == 'day':
+                                tp_pct = self.settings.get('day_take_profit_percent', 2.5)
+                                sl_pct = self.settings.get('day_stop_loss_percent', 1.5)
+                            else:  # swing
+                                tp_pct = self.settings.get('swing_take_profit_percent', 4.0)
+                                sl_pct = self.settings.get('swing_stop_loss_percent', 2.0)
+                            
+                            # Berechne SL/TP basierend auf Entry-Preis und Settings
+                            if 'BUY' in pos_type:
+                                take_profit_price = entry_price * (1 + tp_pct / 100)
+                                stop_loss_price = entry_price * (1 - sl_pct / 100)
+                            else:  # SELL
+                                take_profit_price = entry_price * (1 - tp_pct / 100)
+                                stop_loss_price = entry_price * (1 + sl_pct / 100)
                         
                         logger.debug(f"🤖 KI überwacht {symbol}: Entry={entry_price:.2f}, SL={stop_loss_price:.2f}, TP={take_profit_price:.2f}")
                         
