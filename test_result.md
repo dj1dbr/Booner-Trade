@@ -842,7 +842,7 @@ backend:
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
     implemented: true
-    working: false
+    working: true
     file: "Dashboard.jsx"
     stuck_count: 1
     priority: "critical"
