@@ -58,7 +58,7 @@ MARKTDATEN (Live):
                 signal = data.get('signal', 'HOLD')
                 rsi = data.get('rsi', 50)
                 market_status = "🟢 OFFEN" if is_market_open(commodity_id) else "🔴 GESCHLOSSEN"
-                context += f"\n{commodity_id}: ${price:.2f}, Signal: {signal}, RSI: {rsi:.1f}"
+                context += f"\n{commodity_id} {market_status}: ${price:.2f}, Signal: {signal}, RSI: {rsi:.1f}"
                 commodity_count += 1
         
         if commodity_count == 0:
