@@ -1956,6 +1956,71 @@ async def get_trades(status: Optional[str] = None):
         logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
         
         return {"trades": unique_trades}
+
+
+@api_router.post("/trades/{trade_id}/settings")
+async def update_trade_settings(trade_id: str, settings: dict):
+    """
+    Update individuelle Settings für einen spezifischen Trade
+    Diese werden von der KI überwacht und angewendet
+    """
+    try:
+        # Speichere individuelle Trade Settings
+        trade_settings = {
+            'trade_id': trade_id,
+            'stop_loss': settings.get('stop_loss'),
+            'take_profit': settings.get('take_profit'),
+            'trailing_stop': settings.get('trailing_stop', False),
+            'trailing_stop_distance': settings.get('trailing_stop_distance', 50),  # in Pips
+            'strategy_type': settings.get('strategy_type', 'swing'),
+            'notes': settings.get('notes', ''),
+            'updated_at': datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Upsert in DB
+        await db.trade_settings.update_one(
+            {'trade_id': trade_id},
+            {'$set': trade_settings},
+            upsert=True
+        )
+        
+        logger.info(f"✅ Trade Settings gespeichert für #{trade_id}: SL={settings.get('stop_loss')}, TP={settings.get('take_profit')}")
+        
+        return {
+            'success': True,
+            'message': 'Trade Settings gespeichert',
+            'settings': trade_settings
+        }
+    
+    except Exception as e:
+        logger.error(f"Error updating trade settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/trades/{trade_id}/settings")
+async def get_trade_settings(trade_id: str):
+    """
+    Hole individuelle Settings für einen Trade
+    """
+    try:
+        settings = await db.trade_settings.find_one({'trade_id': trade_id})
+        
+        if settings:
+            settings.pop('_id', None)
+            return settings
+        else:
+            # Keine individuellen Settings - return defaults
+            return {
+                'trade_id': trade_id,
+                'stop_loss': None,
+                'take_profit': None,
+                'trailing_stop': False,
+                'strategy_type': 'swing'
+            }
+    
+    except Exception as e:
+        logger.error(f"Error getting trade settings: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
     except Exception as e:
         logger.error(f"Error fetching trades: {e}")
         raise HTTPException(status_code=500, detail=str(e))
