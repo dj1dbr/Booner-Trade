@@ -1633,22 +1633,49 @@ async def execute_trade(request: TradeExecuteRequest):
                 if not connector:
                     raise HTTPException(status_code=503, detail=f"{default_platform} Connector nicht verfügbar")
                 
-                # Verwende create_market_order (SDK-Methode)
+                # WICHTIG: Trade OHNE SL/TP an MT5 senden (AI Bot übernimmt die Überwachung)
+                logger.info(f"🎯 Sende Trade OHNE SL/TP an MT5 (AI Bot überwacht Position)")
+                logger.info(f"📊 Berechnete Ziele (nur für Monitoring): SL={stop_loss}, TP={take_profit}")
+                
                 result = await connector.create_market_order(
                     symbol=mt5_symbol,
                     order_type=trade_type.upper(),
                     volume=quantity,
-                    sl=stop_loss,
-                    tp=take_profit
+                    sl=None,  # Kein SL an MT5 - AI Bot überwacht!
+                    tp=None   # Kein TP an MT5 - AI Bot überwacht!
                 )
                 
-                if result and result.get('success'):
-                    # SDK gibt orderId/positionId zurück
+                logger.info(f"📥 SDK Response Type: {type(result)}")
+                logger.info(f"📥 SDK Response: {result}")
+                
+                # Robuste Success-Prüfung (3 Fallback-Methoden)
+                is_success = False
+                platform_ticket = None
+                
+                # Method 1: Explicit success key in dict
+                if isinstance(result, dict) and result.get('success') == True:
+                    is_success = True
                     platform_ticket = result.get('orderId') or result.get('positionId')
+                    logger.info(f"✅ Success detection method: Explicit success key in dict")
+                
+                # Method 2: Check for orderId/positionId presence (implicit success)
+                elif isinstance(result, dict) and (result.get('orderId') or result.get('positionId')):
+                    is_success = True
+                    platform_ticket = result.get('orderId') or result.get('positionId')
+                    logger.info(f"✅ Success detection method: OrderId/PositionId present")
+                
+                # Method 3: Check for object attributes (SDK might return object instead of dict)
+                elif hasattr(result, 'orderId') or hasattr(result, 'positionId'):
+                    is_success = True
+                    platform_ticket = getattr(result, 'orderId', None) or getattr(result, 'positionId', None)
+                    logger.info(f"✅ Success detection method: Object attributes")
+                
+                if is_success and platform_ticket:
                     logger.info(f"✅ Order an {default_platform} gesendet: Ticket #{platform_ticket}")
                 else:
-                    error_msg = result.get('error', 'Unknown error') if result else 'No response'
+                    error_msg = result.get('error', 'Unknown error') if isinstance(result, dict) else 'SDK returned unexpected response'
                     logger.error(f"❌ {default_platform} Order fehlgeschlagen: {error_msg}")
+                    logger.error(f"❌ Result type: {type(result)}, Result: {result}")
                     raise HTTPException(status_code=500, detail=f"{default_platform} Order failed: {error_msg}")
                     
             except HTTPException:
