@@ -1956,6 +1956,10 @@ async def get_trades(status: Optional[str] = None):
         logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
         
         return {"trades": unique_trades}
+    
+    except Exception as e:
+        logger.error(f"Error in get_trades: {e}")
+        return {"trades": []}
 
 
 @api_router.post("/trades/{trade_id}/settings")
