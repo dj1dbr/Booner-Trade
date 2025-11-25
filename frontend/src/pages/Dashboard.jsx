@@ -1604,10 +1604,10 @@ const Dashboard = () => {
                               <div>
                                 <p className="text-xs text-slate-400">P&L</p>
                                 <p className={`font-bold ${
-                                  (trade.current_pl || trade.profit || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                                  (trade.profit_loss || trade.pnl || trade.profit || trade.current_pl || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                                 }`}>
-                                  {(trade.current_pl || trade.profit || 0) >= 0 ? '+' : ''}
-                                  {(trade.current_pl || trade.profit || 0)?.toFixed(2)} {trade.currency || 'EUR'}
+                                  {(trade.profit_loss || trade.pnl || trade.profit || trade.current_pl || 0) >= 0 ? '+' : ''}
+                                  ${(trade.profit_loss || trade.pnl || trade.profit || trade.current_pl || 0)?.toFixed(2)}
                                 </p>
                               </div>
                             </div>
