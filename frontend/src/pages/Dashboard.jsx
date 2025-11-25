@@ -33,9 +33,6 @@ const Dashboard = () => {
   const [historicalData, setHistoricalData] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null); // For chart modal
   const [chartModalOpen, setChartModalOpen] = useState(false);
-  const [selectedTrade, setSelectedTrade] = useState(null); // For trade detail modal
-  const [tradeDetailModalOpen, setTradeDetailModalOpen] = useState(false);
-  const [tradeSettings, setTradeSettings] = useState({});
   const [trades, setTrades] = useState([]);
   const [stats, setStats] = useState(null);
   const [settings, setSettings] = useState(null);
@@ -473,39 +470,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleTradeClick = async (trade) => {
-    try {
-      setSelectedTrade(trade);
-      
-      // Lade individuelle Settings für diesen Trade
-      const ticket = trade.mt5_ticket || trade.id;
-      const response = await axios.get(`${API}/trades/${ticket}/settings`);
-      setTradeSettings(response.data || {});
-      
-      setTradeDetailModalOpen(true);
-    } catch (error) {
-      console.error('Error loading trade settings:', error);
-      toast.error('Fehler beim Laden der Trade-Einstellungen');
-    }
-  };
-
-  const handleSaveTradeSettings = async () => {
-    try {
-      const ticket = selectedTrade.mt5_ticket || selectedTrade.id;
-      
-      await axios.post(`${API}/trades/${ticket}/settings`, tradeSettings);
-      
-      toast.success('✅ Trade-Einstellungen gespeichert. KI überwacht jetzt diese Werte.');
-      setTradeDetailModalOpen(false);
-      
-      // Reload trades
-      await fetchTrades();
-    } catch (error) {
-      console.error('Error saving trade settings:', error);
-      toast.error('Fehler beim Speichern');
-    }
-  };
-
   const handleCloseTrade = async (trade) => {
     try {
       console.log('Closing trade:', trade);
@@ -731,14 +695,7 @@ const Dashboard = () => {
                 <DialogHeader>
                   <DialogTitle className="text-2xl">Trading Einstellungen</DialogTitle>
                 </DialogHeader>
-                {settings ? (
-                  <SettingsForm settings={settings} onSave={handleUpdateSettings} commodities={commodities} balance={balance} />
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto"></div>
-                    <p className="mt-2 text-slate-400">Lade Einstellungen...</p>
-                  </div>
-                )}
+                <SettingsForm settings={settings} onSave={handleUpdateSettings} commodities={commodities} balance={balance} />
               </DialogContent>
             </Dialog>
           </div>
@@ -1169,12 +1126,7 @@ const Dashboard = () => {
                           : trade.profit_loss || 0;
                         
                         return (
-                          <tr 
-                            key={trade.id} 
-                            className="border-b border-slate-800 hover:bg-slate-800/30 cursor-pointer"
-                            onClick={() => handleTradeClick(trade)}
-                            title="Klicken für Trade-Einstellungen"
-                          >
+                          <tr key={trade.id} className="border-b border-slate-800 hover:bg-slate-800/30">
                             <td className="px-4 py-3 text-slate-200">
                               {commodity?.name || trade.commodity}
                               {trade.mt5_ticket && (
@@ -1662,7 +1614,7 @@ const Dashboard = () => {
                             <Button
                               onClick={async () => {
                                 try {
-                                  await axios.post(`${API}/trades/close`, {
+                                  await axios.post(`${backendUrl}/api/trades/close`, {
                                     trade_id: trade.id,
                                     ticket: trade.ticket,
                                     platform: trade.platform
@@ -1918,7 +1870,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
     }
 
     try {
-      const response = await axios.post(`${API}/settings/reset`);
+      const response = await axios.post(`${backendUrl}/api/settings/reset`);
       if (response.data.success) {
         // Update form with reset values
         setFormData(response.data.settings);
@@ -2698,164 +2650,6 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
           </div>
         )}
       </div>
-
-      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500" data-testid="save-settings-button">
-        Einstellungen speichern
-      </Button>
-    </form>
-  );
-};
-
-export default Dashboard;
-
-      {/* Trade Detail Modal - MOVED OUTSIDE SettingsForm */}
-      <Dialog open={tradeDetailModalOpen} onOpenChange={setTradeDetailModalOpen}>
-        <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-cyan-400">
-              Trade Einstellungen
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedTrade && (
-            <div className="space-y-6 py-4">
-              {/* Trade Info */}
-              <div className="bg-slate-800 rounded-lg p-4">
-                <h3 className="text-lg font-semibold mb-3">Trade Details</h3>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-slate-400">Symbol:</span>
-                    <span className="ml-2 font-semibold">{selectedTrade.commodity}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Typ:</span>
-                    <span className="ml-2 font-semibold">{selectedTrade.type}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Entry:</span>
-                    <span className="ml-2 font-semibold">${selectedTrade.entry_price?.toFixed(2)}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Menge:</span>
-                    <span className="ml-2 font-semibold">{selectedTrade.quantity} Lots</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Ticket:</span>
-                    <span className="ml-2 font-semibold">#{selectedTrade.mt5_ticket || selectedTrade.id}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400">Strategie:</span>
-                    <span className="ml-2 font-semibold">{tradeSettings.strategy_type === 'day' ? 'Day Trading' : 'Swing Trading'}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Individual Settings */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Individuelle Einstellungen</h3>
-                <p className="text-sm text-slate-400">
-                  Diese Einstellungen gelten nur für diesen Trade und überschreiben die globalen Settings.
-                  Die KI überwacht diese Werte automatisch.
-                </p>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="trade-sl" className="text-slate-300">
-                      Stop Loss (Preis)
-                    </Label>
-                    <Input
-                      id="trade-sl"
-                      type="number"
-                      step="0.01"
-                      value={tradeSettings.stop_loss || ''}
-                      onChange={(e) => setTradeSettings({...tradeSettings, stop_loss: parseFloat(e.target.value)})}
-                      className="bg-slate-800 border-slate-700 text-white mt-1"
-                      placeholder={selectedTrade.type === 'BUY' ? 'z.B. 55.00' : 'z.B. 65.00'}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="trade-tp" className="text-slate-300">
-                      Take Profit (Preis)
-                    </Label>
-                    <Input
-                      id="trade-tp"
-                      type="number"
-                      step="0.01"
-                      value={tradeSettings.take_profit || ''}
-                      onChange={(e) => setTradeSettings({...tradeSettings, take_profit: parseFloat(e.target.value)})}
-                      className="bg-slate-800 border-slate-700 text-white mt-1"
-                      placeholder={selectedTrade.type === 'BUY' ? 'z.B. 65.00' : 'z.B. 55.00'}
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3 bg-slate-800 rounded-lg p-4">
-                  <Switch
-                    id="trailing-stop"
-                    checked={tradeSettings.trailing_stop || false}
-                    onCheckedChange={(checked) => setTradeSettings({...tradeSettings, trailing_stop: checked})}
-                  />
-                  <Label htmlFor="trailing-stop" className="text-slate-300 cursor-pointer">
-                    Trailing Stop aktivieren
-                  </Label>
-                </div>
-
-                {tradeSettings.trailing_stop && (
-                  <div>
-                    <Label htmlFor="trailing-distance" className="text-slate-300">
-                      Trailing Stop Distanz (Pips)
-                    </Label>
-                    <Input
-                      id="trailing-distance"
-                      type="number"
-                      value={tradeSettings.trailing_stop_distance || 50}
-                      onChange={(e) => setTradeSettings({...tradeSettings, trailing_stop_distance: parseInt(e.target.value)})}
-                      className="bg-slate-800 border-slate-700 text-white mt-1"
-                    />
-                  </div>
-                )}
-
-                <div>
-                  <Label htmlFor="trade-notes" className="text-slate-300">
-                    Notizen (optional)
-                  </Label>
-                  <textarea
-                    id="trade-notes"
-                    rows="3"
-                    value={tradeSettings.notes || ''}
-                    onChange={(e) => setTradeSettings({...tradeSettings, notes: e.target.value})}
-                    className="w-full bg-slate-800 border border-slate-700 text-white rounded-lg p-3 mt-1"
-                    placeholder="Notizen zu diesem Trade..."
-                  />
-                </div>
-              </div>
-
-              {/* Buttons */}
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={handleSaveTradeSettings}
-                  className="flex-1 bg-cyan-600 hover:bg-cyan-500"
-                >
-                  💾 Einstellungen speichern
-                </Button>
-                <Button
-                  onClick={() => setTradeDetailModalOpen(false)}
-                  variant="outline"
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800"
-                >
-                  Abbrechen
-                </Button>
-              </div>
-
-              <p className="text-xs text-amber-400 text-center">
-                ⚡ Die KI überwacht diese Einstellungen in Echtzeit und schließt den Trade automatisch bei SL/TP
-              </p>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
 
       <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500" data-testid="save-settings-button">
         Einstellungen speichern
