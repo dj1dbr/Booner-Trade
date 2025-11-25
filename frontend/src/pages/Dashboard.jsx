@@ -33,6 +33,9 @@ const Dashboard = () => {
   const [historicalData, setHistoricalData] = useState([]);
   const [selectedCommodity, setSelectedCommodity] = useState(null); // For chart modal
   const [chartModalOpen, setChartModalOpen] = useState(false);
+  const [selectedTrade, setSelectedTrade] = useState(null); // For trade detail modal
+  const [tradeDetailModalOpen, setTradeDetailModalOpen] = useState(false);
+  const [tradeSettings, setTradeSettings] = useState({});
   const [trades, setTrades] = useState([]);
   const [stats, setStats] = useState(null);
   const [settings, setSettings] = useState(null);
