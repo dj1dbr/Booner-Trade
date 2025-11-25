@@ -1542,7 +1542,7 @@ test_plan:
   stuck_tasks:
     - "Open Trades Display Bug"
   test_all: false
-  test_priority: "critical_user_issues"
+  test_priority: "critical_modal_system_failure"
 
 agent_communication:
   - agent: "testing"
