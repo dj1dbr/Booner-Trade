@@ -1712,14 +1712,20 @@ async def execute_trade(request: TradeExecuteRequest):
                 if not connector:
                     raise HTTPException(status_code=503, detail="Bitpanda Connector nicht verfügbar")
                 
+                # WICHTIG: Trade OHNE SL/TP an Bitpanda senden (AI Bot übernimmt die Überwachung)
+                logger.info(f"🎯 Sende Trade OHNE SL/TP an Bitpanda (AI Bot überwacht Position)")
+                logger.info(f"📊 Berechnete Ziele (nur für Monitoring): SL={stop_loss}, TP={take_profit}")
+                
                 result = await connector.place_order(
                     symbol=bitpanda_symbol,
                     order_type=trade_type.upper(),
                     volume=quantity,
                     price=price,
-                    sl=stop_loss,
-                    tp=take_profit
+                    sl=None,  # Kein SL an Bitpanda - AI Bot überwacht!
+                    tp=None   # Kein TP an Bitpanda - AI Bot überwacht!
                 )
+                
+                logger.info(f"📥 SDK Response: {result}")
                 
                 if result and result.get('success'):
                     platform_ticket = result.get('order_id', result.get('ticket'))
