@@ -1707,34 +1707,20 @@ async def execute_trade(request: TradeExecuteRequest):
                 logger.error(f"❌ Fehler beim Senden an Bitpanda: {e}")
                 raise HTTPException(status_code=500, detail=f"Bitpanda Fehler: {str(e)}")
         
-        # Nur speichern wenn Order erfolgreich
+        # NICHT in DB speichern! Trade wird live von MT5 abgerufen
         if platform_ticket:
-            trade = Trade(
-                commodity=commodity,
-                type=trade_type.upper(),
-                price=price,
-                quantity=quantity,
-                mode=default_platform,
-                platform=default_platform,
-                entry_price=price,
-                stop_loss=stop_loss,
-                take_profit=take_profit,
-                strategy_signal=f"Manual - {default_platform} #{platform_ticket}",
-                mt5_ticket=str(platform_ticket)  # ← WICHTIG!
-            )
+            logger.info(f"✅ Trade erfolgreich an MT5 gesendet: {trade_type} {quantity:.4f} {commodity} @ {price}, Ticket #{platform_ticket}")
+            logger.info(f"📊 Trade wird NICHT in DB gespeichert - wird live von MT5 über /trades/list abgerufen")
             
-            doc = trade.model_dump()
-            doc['timestamp'] = doc['timestamp'].isoformat()
-            await db.trades.insert_one(doc)
-            
-            logger.info(f"✅ Trade gespeichert: {trade_type} {quantity:.4f} {commodity} @ {price}")
-            
-            # MongoDB _id entfernen für JSON Response
-            doc.pop('_id', None)
-            
-            return {"success": True, "trade": doc, "ticket": platform_ticket, "platform": default_platform}
+            return {
+                "success": True, 
+                "ticket": platform_ticket, 
+                "platform": default_platform,
+                "message": f"Trade erfolgreich an {default_platform} gesendet. Ticket: #{platform_ticket}"
+            }
         else:
-            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden")
+            logger.error(f"❌ platform_ticket ist None - Trade fehlgeschlagen")
+            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden - Broker hat Order abgelehnt")
             
     except HTTPException:
         raise
