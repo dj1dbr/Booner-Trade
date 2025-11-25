@@ -2699,8 +2699,16 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
         )}
       </div>
 
+      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-500" data-testid="save-settings-button">
+        Einstellungen speichern
+      </Button>
+    </form>
+  );
+};
 
-      {/* Trade Detail Modal */}
+export default Dashboard;
+
+      {/* Trade Detail Modal - MOVED OUTSIDE SettingsForm */}
       <Dialog open={tradeDetailModalOpen} onOpenChange={setTradeDetailModalOpen}>
         <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl">
           <DialogHeader>
