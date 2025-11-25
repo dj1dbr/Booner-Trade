@@ -134,6 +134,190 @@ Du kannst:
     return context
 
 
+
+# AI Trading Tools - Echte Funktionen die die KI aufrufen kann
+async def execute_trade_tool(symbol: str, direction: str, quantity: float = 0.01, db=None):
+    """
+    Führt einen Trade aus
+    
+    Args:
+        symbol: Rohstoff (z.B. "WTI_CRUDE", "GOLD")
+        direction: "BUY" oder "SELL"
+        quantity: Menge in Lots (default 0.01)
+    """
+    try:
+        from multi_platform_connector import multi_platform
+        from commodity_processor import COMMODITIES, is_market_open
+        
+        # Prüfe ob Markt offen
+        if not is_market_open(symbol):
+            return {"success": False, "message": f"Markt für {symbol} ist aktuell geschlossen"}
+        
+        # Hole Settings
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        default_platform = settings.get('default_platform', 'MT5_LIBERTEX') if settings else 'MT5_LIBERTEX'
+        
+        # Get commodity info
+        commodity = COMMODITIES.get(symbol)
+        if not commodity:
+            return {"success": False, "message": f"Unbekanntes Symbol: {symbol}"}
+        
+        # Get MT5 symbol
+        if default_platform == 'MT5_LIBERTEX':
+            mt5_symbol = commodity.get('mt5_libertex_symbol')
+        else:
+            mt5_symbol = commodity.get('mt5_icmarkets_symbol')
+        
+        if not mt5_symbol:
+            return {"success": False, "message": f"{symbol} nicht verfügbar auf {default_platform}"}
+        
+        # Connect to platform
+        await multi_platform.connect_platform(default_platform)
+        
+        if default_platform not in multi_platform.platforms:
+            return {"success": False, "message": f"{default_platform} nicht verbunden"}
+        
+        connector = multi_platform.platforms[default_platform].get('connector')
+        if not connector:
+            return {"success": False, "message": "Connector nicht verfügbar"}
+        
+        # Execute trade (OHNE SL/TP - KI überwacht)
+        result = await connector.create_market_order(
+            symbol=mt5_symbol,
+            order_type=direction.upper(),
+            volume=quantity,
+            sl=None,
+            tp=None
+        )
+        
+        if result and (result.get('success') or result.get('orderId') or result.get('positionId')):
+            ticket = result.get('orderId') or result.get('positionId')
+            return {
+                "success": True, 
+                "message": f"✅ Trade ausgeführt: {direction} {symbol} @ {quantity} Lots, Ticket #{ticket}",
+                "ticket": ticket
+            }
+        else:
+            return {"success": False, "message": "Trade fehlgeschlagen"}
+            
+    except Exception as e:
+        logger.error(f"Trade execution error: {e}")
+        return {"success": False, "message": str(e)}
+
+async def close_trade_tool(ticket: str, db=None):
+    """Schließt einen Trade per Ticket-Nummer"""
+    try:
+        from multi_platform_connector import multi_platform
+        
+        # Try both platforms
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            if platform_name in multi_platform.platforms:
+                connector = multi_platform.platforms[platform_name].get('connector')
+                if connector:
+                    success = await connector.close_position(ticket)
+                    if success:
+                        return {"success": True, "message": f"✅ Trade #{ticket} geschlossen"}
+        
+        return {"success": False, "message": f"Trade #{ticket} nicht gefunden"}
+        
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+async def close_all_trades_tool(db=None):
+    """Schließt ALLE offenen Trades"""
+    try:
+        from multi_platform_connector import multi_platform
+        
+        closed_count = 0
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            if platform_name in multi_platform.platforms:
+                connector = multi_platform.platforms[platform_name].get('connector')
+                if connector:
+                    positions = await connector.get_positions()
+                    for pos in positions:
+                        ticket = pos.get('positionId') or pos.get('ticket')
+                        success = await connector.close_position(str(ticket))
+                        if success:
+                            closed_count += 1
+        
+        return {"success": True, "message": f"✅ {closed_count} Trades geschlossen"}
+        
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+async def close_trades_by_symbol_tool(symbol: str, db=None):
+    """Schließt alle Trades eines bestimmten Symbols"""
+    try:
+        from multi_platform_connector import multi_platform
+        from commodity_processor import COMMODITIES
+        
+        commodity = COMMODITIES.get(symbol)
+        if not commodity:
+            return {"success": False, "message": f"Unbekanntes Symbol: {symbol}"}
+        
+        closed_count = 0
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            if platform_name in multi_platform.platforms:
+                connector = multi_platform.platforms[platform_name].get('connector')
+                if connector:
+                    positions = await connector.get_positions()
+                    
+                    # Get MT5 symbols for this commodity
+                    mt5_symbols = [
+                        commodity.get('mt5_libertex_symbol'),
+                        commodity.get('mt5_icmarkets_symbol')
+                    ]
+                    
+                    for pos in positions:
+                        pos_symbol = pos.get('symbol')
+                        if pos_symbol in mt5_symbols:
+                            ticket = pos.get('positionId') or pos.get('ticket')
+                            success = await connector.close_position(str(ticket))
+                            if success:
+                                closed_count += 1
+        
+        return {"success": True, "message": f"✅ {closed_count} {symbol} Trades geschlossen"}
+        
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+async def get_open_positions_tool(db=None):
+    """Zeigt alle offenen Positionen"""
+    try:
+        from multi_platform_connector import multi_platform
+        
+        all_positions = []
+        for platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            if platform_name in multi_platform.platforms:
+                connector = multi_platform.platforms[platform_name].get('connector')
+                if connector:
+                    positions = await connector.get_positions()
+                    for pos in positions:
+                        all_positions.append({
+                            "ticket": pos.get('positionId') or pos.get('ticket'),
+                            "symbol": pos.get('symbol'),
+                            "type": pos.get('type'),
+                            "volume": pos.get('volume'),
+                            "openPrice": pos.get('openPrice'),
+                            "currentPrice": pos.get('currentPrice'),
+                            "profit": pos.get('profit'),
+                            "platform": platform_name
+                        })
+        
+        if not all_positions:
+            return {"success": True, "message": "Keine offenen Positionen", "positions": []}
+        
+        # Format message
+        msg = f"📊 {len(all_positions)} offene Position(en):\n"
+        for pos in all_positions:
+            msg += f"- {pos['symbol']} {pos['type']} #{pos['ticket']}: {pos['volume']} @ {pos['openPrice']}, P/L: ${pos['profit']:.2f}\n"
+        
+        return {"success": True, "message": msg, "positions": all_positions}
+        
+    except Exception as e:
+        return {"success": False, "message": str(e)}
+
+
 async def get_ai_chat_instance(settings, ai_provider="openai", model="gpt-5", session_id="default-session"):
     """Get or create AI chat instance with session context"""
     global _chat_instance
