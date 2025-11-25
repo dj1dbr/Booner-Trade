@@ -172,8 +172,8 @@ class Booner_TradeTester:
                 "sl/tp", "stop loss", "take profit"
             ]
             
-            is_acceptable_error = any(err.lower() in error_detail.lower() for err in acceptable_errors)
-            is_bug_indicator = any(bug.lower() in error_detail.lower() for bug in bug_indicators)
+            is_acceptable_error = any(err.lower() in str(error_detail).lower() for err in acceptable_errors)
+            is_bug_indicator = any(bug.lower() in str(error_detail).lower() for bug in bug_indicators)
             
             if is_acceptable_error and not is_bug_indicator:
                 self.log_test_result(
@@ -443,8 +443,8 @@ class Booner_TradeTester:
                 "sl/tp", "stop loss", "take profit"
             ]
             
-            is_acceptable_error = any(err.lower() in error_detail.lower() for err in acceptable_errors)
-            is_bug_indicator = any(bug.lower() in error_detail.lower() for bug in bug_indicators)
+            is_acceptable_error = any(err.lower() in str(error_detail).lower() for err in acceptable_errors)
+            is_bug_indicator = any(bug.lower() in str(error_detail).lower() for bug in bug_indicators)
             
             if is_acceptable_error and not is_bug_indicator:
                 self.log_test_result(
@@ -1204,8 +1204,8 @@ class Booner_TradeTester:
             # Generic error messages (these are BAD - should be avoided)
             generic_errors = ["broker rejected", "trade konnte nicht ausgeführt werden", "unknown error"]
             
-            is_specific_error = any(err.lower() in error_detail.lower() for err in specific_errors)
-            is_generic_error = any(err.lower() in error_detail.lower() for err in generic_errors)
+            is_specific_error = any(err.lower() in str(error_detail).lower() for err in specific_errors)
+            is_generic_error = any(err.lower() in str(error_detail).lower() for err in generic_errors)
             
             if is_specific_error:
                 self.log_test_result(
