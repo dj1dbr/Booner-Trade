@@ -1,19 +1,59 @@
 #!/usr/bin/env python3
 """
-Booner-Trade Backend API Test Suite
-COMPREHENSIVE SYSTEM TEST - Everything Must Work
+🔧 MANUAL TRADE EXECUTION BUG FIX TESTING
 
-**CRITICAL TESTS:**
+**CONTEXT:**
+Fixed critical bug where trades were being sent to MT5 WITH SL/TP, which violated the "live-from-broker" architecture. 
+Trades should be opened WITHOUT SL/TP, and the AI Bot monitors positions to close them manually.
 
-1. **Commodities:** GET /api/commodities → Should return 15 items
-2. **Settings Save:** POST /api/settings with {auto_trading: true} → Should return success
-3. **Settings Load:** GET /api/settings → Should return all settings
-4. **Broker Status:** GET /api/platforms/status → MT5_LIBERTEX and MT5_ICMARKETS connected
-5. **Open Trades:** GET /api/trades/list → Should show trades with TP/SL
-6. **AI Chat:** POST /api/ai-chat with message "Test" → Should get response (not timeout)
-7. **Charts:** GET /api/market/ohlcv-simple/GOLD → Should return chart data
+**CHANGES MADE in server.py:**
+1. Changed create_market_order() to send sl=None, tp=None (line ~1640)
+2. Added detailed logging: "Sende Trade OHNE SL/TP an MT5"
+3. Enhanced SDK response logging with type and content
+4. Improved success detection with 3 fallback methods
 
-**TEST EVERYTHING - THIS IS THE FINAL VERIFICATION**
+**TESTING PRIORITY: CRITICAL**
+
+**TEST SCENARIOS (in order):**
+
+1. **Manual Trade Execution - GOLD**
+   - POST /api/trades/execute
+   - Body: {"commodity": "GOLD", "trade_type": "BUY", "quantity": 0.01}
+   - Expected: Trade executes successfully, returns ticket number
+   - Verify backend logs show: "Sende Trade OHNE SL/TP an MT5"
+   - Verify logs show SDK response details
+
+2. **Verify Trade Appears in MT5 Without SL/TP**
+   - GET /api/trades/list
+   - Expected: New GOLD trade visible with status "OPEN"
+   - Expected: Trade should NOT have SL/TP set on MT5 side
+
+3. **Backend Logs Analysis**
+   - Check for: "📥 SDK Response Type" and "📥 SDK Response:" messages
+   - Check for: "✅ Order an MT5_LIBERTEX gesendet: Ticket #"
+   - Verify no errors related to SL/TP rejection
+
+4. **Alternative Commodity Test - WTI_CRUDE**
+   - POST /api/trades/execute
+   - Body: {"commodity": "WTI_CRUDE", "trade_type": "BUY", "quantity": 0.01}
+   - Expected: Trade executes successfully
+   - Compare logs with GOLD execution
+
+**SUCCESS CRITERIA:**
+- ✅ Trades execute successfully without "Trade konnte nicht ausgeführt werden" error
+- ✅ Backend logs show "Sende Trade OHNE SL/TP an MT5"
+- ✅ SDK response logging shows detailed response data
+- ✅ Trades appear in /api/trades/list as OPEN
+- ✅ No SL/TP rejection errors from MT5
+
+**IMPORTANT NOTES:**
+- This fix aligns with architecture: AI Bot monitors positions and closes them manually
+- Per-trade SL/TP settings are stored in DB for AI Bot monitoring only
+- Do NOT test closing positions yet - focus only on opening trades
+
+**KNOWN ISSUES TO IGNORE:**
+- Platform account endpoints returning 500 (separate issue)
+- MetaAPI quota warnings (if any)
 """
 
 import asyncio
