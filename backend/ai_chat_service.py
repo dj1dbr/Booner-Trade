@@ -493,7 +493,14 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
     Parse user message and AI response for trading actions
     Simple keyword-based detection for MVP
     """
-    from ai_trading_functions import FUNCTION_MAP
+    # Function map for AI tools
+    FUNCTION_MAP = {
+        'execute_trade': lambda symbol, direction, quantity=0.01: execute_trade_tool(symbol, direction, quantity, db),
+        'close_trade': lambda ticket: close_trade_tool(ticket, db),
+        'close_all_trades': lambda: close_all_trades_tool(db),
+        'close_trades_by_symbol': lambda symbol: close_trades_by_symbol_tool(symbol, db),
+        'get_open_positions': lambda: get_open_positions_tool(db)
+    }
     
     user_lower = user_message.lower()
     
