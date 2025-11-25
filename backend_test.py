@@ -120,7 +120,8 @@ class Booner_TradeTester:
         trade_data = {
             "commodity": "GOLD",
             "trade_type": "BUY",
-            "quantity": 0.01
+            "quantity": 0.01,
+            "price": 4050.0  # Current approximate GOLD price
         }
         
         success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
