@@ -838,6 +838,46 @@ backend:
           RECOMMENDATION: 
           Both reported issues are RESOLVED. The broker connections are working with healthy balances,
           and the Day/Swing settings are fully functional and changeable. System operating normally.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ SETTINGS MODAL BUG FIXED - URGENT ISSUE RESOLVED (Nov 25, 2025):
+          
+          🔍 USER REPORTED PROBLEM: "Einstellungen kann nicht geöffnet werden" (Settings cannot be opened)
+          
+          ✅ CRITICAL BUG IDENTIFIED AND FIXED:
+          
+          ROOT CAUSE ANALYSIS:
+          1. JavaScript ReferenceError in SettingsForm component
+          2. Undefined variable `backendUrl` used instead of `BACKEND_URL` or `API`
+          3. Two instances found:
+             - Line 1658: `${backendUrl}/api/trades/close` → Fixed to `${API}/trades/close`
+             - Line 1914: `${backendUrl}/api/settings/reset` → Fixed to `${API}/settings/reset`
+          4. Added conditional rendering to prevent SettingsForm from rendering before settings data is loaded
+          
+          ✅ VERIFICATION TEST RESULTS (100% SUCCESS):
+          - Settings button found and clickable ✅
+          - Settings modal opens successfully ✅
+          - Modal title "Trading Einstellungen" visible ✅
+          - Loading state displays correctly ("Lade Einstellungen...") ✅
+          - Form elements load properly (11 elements, 3 toggles) ✅
+          - Modal closes successfully ✅
+          - No more JavaScript errors related to SettingsForm ✅
+          
+          🔧 FIXES IMPLEMENTED:
+          1. Fixed undefined variable references (`backendUrl` → `API`)
+          2. Added conditional rendering with loading state for SettingsForm
+          3. Prevented component crash by ensuring settings data is available before rendering
+          
+          🎯 FINAL STATUS:
+          The settings modal bug is COMPLETELY RESOLVED. Users can now:
+          - Click the "Einstellungen" button successfully
+          - Open the settings modal without JavaScript errors
+          - See proper loading state while settings are fetched
+          - Interact with form elements once loaded
+          - Close the modal properly
+          
+          RECOMMENDATION: Settings modal functionality is WORKING and the urgent user issue is RESOLVED.
 
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
