@@ -997,8 +997,8 @@ async def root():
 
 @api_router.get("/commodities")
 async def get_commodities():
-    """Get list of all available commodities"""
-    return {"commodities": COMMODITIES}
+    """Get list of all available commodities with trading hours"""
+    return {"commodities": get_commodities_with_hours()}
 
 @api_router.get("/market/current")
 async def get_current_market(commodity: str = "WTI_CRUDE"):
