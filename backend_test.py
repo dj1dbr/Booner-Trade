@@ -1055,12 +1055,10 @@ class Booner_TradeTester:
         """🔥 REVIEW TEST 4: AI Chat Trade Execution - EUR KAUFEN"""
         logger.info("🔥 REVIEW TEST 4: AI Chat - 'Kaufe EUR' should execute EURUSD trade")
         
-        chat_data = {
-            "message": "Kaufe EUR",
-            "session_id": "test-456"
-        }
+        # AI Chat uses query parameters, not JSON body
+        endpoint = "/api/ai-chat?message=Kaufe EUR&session_id=test-456"
         
-        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        success, data = await self.make_request("POST", endpoint)
         
         if success:
             response = data.get("response", "")
