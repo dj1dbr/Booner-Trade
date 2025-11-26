@@ -1761,6 +1761,108 @@ async def execute_trade(request: TradeExecuteRequest):
                     upsert=True
                 )
                 logger.info(f"💾 SL/TP Settings gespeichert für Trade #{platform_ticket}: SL={stop_loss:.2f}, TP={take_profit:.2f}")
+
+@api_router.post("/trades/auto-set-targets")
+async def auto_set_sl_tp_for_open_trades():
+    """
+    Automatisch SL/TP für alle offenen Trades berechnen und in DB speichern
+    Der AI Bot nutzt diese Werte dann zur Überwachung
+    """
+    try:
+        from multi_platform_connector import multi_platform
+        from commodity_processor import COMMODITIES
+        
+        # Get settings
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if not settings:
+            raise HTTPException(status_code=404, detail="Settings nicht gefunden")
+        
+        # Get TP/SL percentages from settings
+        tp_percent = settings.get('take_profit_percent', 4.0)
+        sl_percent = settings.get('stop_loss_percent', 2.0)
+        
+        updated_count = 0
+        errors = []
+        
+        # Check both platforms
+        for platform_name in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+            if platform_name not in settings.get('active_platforms', []):
+                continue
+            
+            try:
+                # Get open positions from platform
+                positions = await multi_platform.get_open_positions(platform_name)
+                
+                for pos in positions:
+                    ticket = pos.get('ticket') or pos.get('id') or pos.get('positionId')
+                    entry_price = pos.get('price_open') or pos.get('openPrice') or pos.get('entry_price')
+                    pos_type = str(pos.get('type', '')).upper()
+                    symbol = pos.get('symbol', '')
+                    
+                    if not ticket or not entry_price:
+                        continue
+                    
+                    # Check if settings already exist
+                    existing = await db.trade_settings.find_one({'trade_id': str(ticket)})
+                    if existing and existing.get('stop_loss') and existing.get('take_profit'):
+                        logger.info(f"ℹ️ Trade #{ticket} hat bereits SL/TP Settings - überspringe")
+                        continue
+                    
+                    # Calculate SL/TP based on position type
+                    if 'BUY' in pos_type:
+                        take_profit = entry_price * (1 + tp_percent / 100)
+                        stop_loss = entry_price * (1 - sl_percent / 100)
+                    else:  # SELL
+                        take_profit = entry_price * (1 - tp_percent / 100)
+                        stop_loss = entry_price * (1 + sl_percent / 100)
+                    
+                    # Map MT5 symbol to commodity
+                    commodity_id = None
+                    for comm_id, comm_data in COMMODITIES.items():
+                        if (comm_data.get('mt5_libertex_symbol') == symbol or 
+                            comm_data.get('mt5_icmarkets_symbol') == symbol):
+                            commodity_id = comm_id
+                            break
+                    
+                    # Save settings
+                    trade_settings = {
+                        'trade_id': str(ticket),
+                        'stop_loss': stop_loss,
+                        'take_profit': take_profit,
+                        'created_at': datetime.now(timezone.utc).isoformat(),
+                        'commodity': commodity_id or symbol,
+                        'entry_price': entry_price,
+                        'platform': platform_name
+                    }
+                    
+                    await db.trade_settings.update_one(
+                        {'trade_id': str(ticket)},
+                        {'$set': trade_settings},
+                        upsert=True
+                    )
+                    
+                    logger.info(f"✅ Auto-Set SL/TP für Trade #{ticket}: SL={stop_loss:.2f}, TP={take_profit:.2f}")
+                    updated_count += 1
+                    
+            except Exception as e:
+                error_msg = f"Fehler bei Platform {platform_name}: {str(e)}"
+                logger.error(error_msg)
+                errors.append(error_msg)
+        
+        return {
+            "success": True,
+            "updated_count": updated_count,
+            "message": f"✅ SL/TP automatisch gesetzt für {updated_count} Trade(s)",
+            "errors": errors if errors else None
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in auto-set SL/TP: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
             except Exception as e:
                 logger.error(f"⚠️ Fehler beim Speichern der Trade Settings: {e}")
                 # Continue anyway - trade was successful
