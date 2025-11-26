@@ -501,9 +501,22 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
         'get_open_positions': lambda: get_open_positions_tool(db)
     }
     
-    user_lower = user_message.lower()
+    user_lower = user_message.lower().strip()
     
     try:
+        # Check for confirmation words + symbol (e.g. "Ja, Gold kaufen")
+        # This handles cases where user confirms with additional context
+        is_confirmation = any(keyword in user_lower for keyword in ['ja', 'ok', 'okay', 'yes', 'mach', 'los', 'gut'])
+        
+        # If it's a confirmation AND there's a trading keyword, treat as command
+        if is_confirmation:
+            # Check if there's a trading keyword in this confirmation
+            has_trade_keyword = any(keyword in user_lower for keyword in ['kauf', 'verkauf', 'buy', 'sell', 'schließ', 'close', 'gold', 'silver', 'wti', 'eur', 'öl'])
+            if not has_trade_keyword:
+                # Pure confirmation without specific command - let AI handle context from history
+                logger.info(f"⚠️ Confirmation detected but no specific command: '{user_message}'")
+                # Don't return here - let the command detection below handle any embedded commands
+        
         # Close all positions
         if any(keyword in user_lower for keyword in ['schließe alle', 'close all', 'alle positionen schließen']):
             logger.info(f"🎯 Detected close all command")
