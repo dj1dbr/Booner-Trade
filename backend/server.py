@@ -350,8 +350,11 @@ class TradingSettings(BaseModel):
     # SWING TRADING Konfiguration (Langfristig)
     swing_trading_enabled: bool = True  # Swing Trading aktiviert
     swing_min_confidence_score: float = 0.45  # 45% Mindest-Konfidenz (niedriger für mehr Trades)
-    swing_stop_loss_percent: float = 2.0  # 2% Stop Loss
-    swing_take_profit_percent: float = 4.0  # 4% Take Profit
+    swing_tp_sl_mode: Literal["percent", "euro"] = "percent"  # Modus: Prozent oder Euro
+    swing_stop_loss_percent: float = 2.0  # 2% Stop Loss (wenn Prozent-Modus)
+    swing_take_profit_percent: float = 4.0  # 4% Take Profit (wenn Prozent-Modus)
+    swing_stop_loss_euro: float = 20.0  # €20 Stop Loss (wenn Euro-Modus)
+    swing_take_profit_euro: float = 50.0  # €50 Take Profit (wenn Euro-Modus)
     swing_max_positions: int = 8  # Max 8 Swing-Positionen gleichzeitig (mehr!)
     swing_position_hold_time_hours: int = 168  # Max 7 Tage Haltezeit (optional)
     swing_analysis_interval_seconds: int = 30  # Alle 30 Sekunden analysieren (schneller!)
