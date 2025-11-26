@@ -1144,12 +1144,9 @@ class Booner_TradeTester:
         await asyncio.sleep(1)
         
         # Now test AI Chat trade with auto_trading=false
-        chat_data = {
-            "message": "Kaufe WTI",
-            "session_id": "test-789"
-        }
+        endpoint = "/api/ai-chat?message=Kaufe WTI&session_id=test-789"
         
-        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        success, data = await self.make_request("POST", endpoint)
         
         if success:
             response = data.get("response", "")
