@@ -2444,19 +2444,33 @@ async def update_settings(settings: TradingSettings):
         try:
             logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
             
-            # Hole alle trade_settings für offene Trades
-            all_trade_settings = await db.trade_settings.find({}).to_list(1000)
+            # Hole ALLE offenen Positionen von allen Plattformen
+            from multi_platform_connector import multi_platform
+            all_open_positions = []
+            
+            for platform in settings.active_platforms:
+                try:
+                    positions = await multi_platform.get_open_positions(platform)
+                    for pos in positions:
+                        pos['platform'] = platform  # Tag mit Platform
+                        all_open_positions.append(pos)
+                except Exception as e:
+                    logger.warning(f"Konnte Positionen von {platform} nicht laden: {e}")
+            
+            logger.info(f"📊 Gefunden: {len(all_open_positions)} offene Positionen")
             
             updated_count = 0
-            for trade_setting in all_trade_settings:
-                trade_id = trade_setting.get('trade_id')
-                entry_price = trade_setting.get('entry_price')
+            for position in all_open_positions:
+                ticket = position.get('id') or position.get('ticket')
+                entry_price = position.get('price_open') or position.get('entry_price')
+                trade_type = position.get('type', 'BUY')  # 'BUY' oder 'SELL'
                 
-                if not entry_price:
+                if not ticket or not entry_price:
                     continue
                 
-                # Bestimme Strategie (Swing als Default)
-                strategy = trade_setting.get('strategy', 'swing')
+                # Hole trade_settings um Strategie zu bestimmen
+                trade_setting = await db.trade_settings.find_one({'trade_id': str(ticket)})
+                strategy = trade_setting.get('strategy', 'swing') if trade_setting else 'swing'
                 
                 # Hole neue TP/SL Settings basierend auf Strategie
                 if strategy == 'swing':
@@ -2470,35 +2484,38 @@ async def update_settings(settings: TradingSettings):
                     tp_percent = settings.swing_take_profit_percent
                     sl_percent = settings.swing_stop_loss_percent
                 
-                # Prüfe ob dieser Trade BUY oder SELL ist (aus platform oder type)
-                # Hole Trade-Info aus der Position oder trade_settings
-                trade_type = trade_setting.get('type', 'BUY')
-                
-                # Berechne neue SL/TP
-                if 'BUY' in trade_type.upper():
+                # Berechne neue SL/TP basierend auf Trade-Typ
+                if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
                     new_stop_loss = entry_price * (1 - sl_percent / 100)
                     new_take_profit = entry_price * (1 + tp_percent / 100)
                 else:  # SELL
                     new_stop_loss = entry_price * (1 + sl_percent / 100)
                     new_take_profit = entry_price * (1 - tp_percent / 100)
                 
-                # Update in DB
+                # Update in DB (upsert falls nicht existiert)
                 await db.trade_settings.update_one(
-                    {'trade_id': trade_id},
+                    {'trade_id': str(ticket)},
                     {'$set': {
                         'stop_loss': new_stop_loss,
                         'take_profit': new_take_profit,
+                        'entry_price': entry_price,
+                        'strategy': strategy,
+                        'type': trade_type,
+                        'platform': position.get('platform'),
                         'updated_at': datetime.now(timezone.utc).isoformat(),
                         'updated_by': 'SETTINGS_CHANGE'
-                    }}
+                    }},
+                    upsert=True
                 )
                 
                 updated_count += 1
-                logger.info(f"   ✅ Trade #{trade_id}: Neue SL={new_stop_loss:.2f}, TP={new_take_profit:.2f} ({strategy.upper()}: {sl_percent}%/{tp_percent}%)")
+                logger.info(f"   ✅ Trade #{ticket}: Neue SL=${new_stop_loss:.2f}, TP=${new_take_profit:.2f} ({strategy.upper()}: SL={sl_percent}%, TP={tp_percent}%)")
             
             logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
         except Exception as e:
             logger.error(f"⚠️ Fehler beim Aktualisieren bestehender Trades: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             # Nicht kritisch - Settings wurden gespeichert, nur Update fehlgeschlagen
         
         return settings
