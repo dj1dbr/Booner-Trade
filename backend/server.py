@@ -365,8 +365,11 @@ class TradingSettings(BaseModel):
     # DAY TRADING Konfiguration (Kurzfristig / Hochfrequenz) - AGGRESSIV!
     day_trading_enabled: bool = False  # Day Trading aktiviert (default: aus)
     day_min_confidence_score: float = 0.25  # 25% Mindest-Konfidenz (SEHR niedrig für schnelles Einsteigen!)
-    day_stop_loss_percent: float = 1.5  # 1.5% Stop Loss (Broker-kompatibel)
-    day_take_profit_percent: float = 2.5  # 2.5% Take Profit (Broker-kompatibel)
+    day_tp_sl_mode: Literal["percent", "euro"] = "percent"  # Modus: Prozent oder Euro
+    day_stop_loss_percent: float = 1.5  # 1.5% Stop Loss (Broker-kompatibel, wenn Prozent-Modus)
+    day_take_profit_percent: float = 2.5  # 2.5% Take Profit (Broker-kompatibel, wenn Prozent-Modus)
+    day_stop_loss_euro: float = 15.0  # €15 Stop Loss (wenn Euro-Modus)
+    day_take_profit_euro: float = 30.0  # €30 Take Profit (wenn Euro-Modus)
     day_max_positions: int = 15  # Max 15 Day-Trading-Positionen gleichzeitig (mehr!)
     day_position_hold_time_hours: int = 1  # Max 1 Stunde Haltezeit - dann schließen (schneller!)
     day_analysis_interval_seconds: int = 30  # Alle 30 Sekunden analysieren (schneller!)
