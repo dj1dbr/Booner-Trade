@@ -201,9 +201,12 @@ class AITradingBot:
                             # 🚨 KEINE SETTINGS GEFUNDEN - AUTOMATISCH ERSTELLEN!
                             logger.warning(f"⚠️ Trade #{ticket} hat keine SL/TP Settings - erstelle automatisch...")
                             
-                            # Berechne SL/TP basierend auf Settings
-                            tp_percent = self.settings.get('take_profit_percent', 4.0)
-                            sl_percent = self.settings.get('stop_loss_percent', 2.0)
+                            # Berechne SL/TP basierend auf DUAL TRADING STRATEGY Settings
+                            # Verwende Swing Trading Settings (Standard für längerfristige Trades)
+                            tp_percent = self.settings.get('swing_take_profit_percent', 4.0)
+                            sl_percent = self.settings.get('swing_stop_loss_percent', 2.0)
+                            
+                            logger.info(f"📊 Verwende Swing Trading Settings: TP={tp_percent}%, SL={sl_percent}%")
                             
                             if 'BUY' in pos_type:
                                 stop_loss_price = entry_price * (1 - sl_percent / 100)
