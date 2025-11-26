@@ -51,6 +51,12 @@ const TradesTable = ({ trades, onCloseTrade }) => {
               </TableCell>
               <TableCell className="text-slate-300">${trade.entry_price.toFixed(2)}</TableCell>
               <TableCell className="text-slate-300">{trade.quantity}</TableCell>
+              <TableCell className="text-amber-400">
+                {trade.stop_loss ? `$${trade.stop_loss.toFixed(2)}` : '-'}
+              </TableCell>
+              <TableCell className="text-emerald-400">
+                {trade.take_profit ? `$${trade.take_profit.toFixed(2)}` : '-'}
+              </TableCell>
               <TableCell>
                 <Badge 
                   className={trade.status === 'OPEN' ? 'bg-blue-600' : 'bg-slate-600'}
