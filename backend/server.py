@@ -3144,7 +3144,7 @@ async def startup_event():
     
 
     # Start connection health check background task
-    asyncio.create_task(connection_health_check())
+    _asyncio.create_task(connection_health_check())
     logger.info("✅ Connection health check started")
 
     # Initialize platform connector for commodity_processor
