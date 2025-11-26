@@ -1482,6 +1482,21 @@ const Dashboard = () => {
                                 {trade.type}
                               </Badge>
                             </td>
+                            <td className="px-4 py-3 text-center">
+                              {trade.strategy === 'swing' ? (
+                                <Badge className="bg-purple-600 text-xs">
+                                  📈 Swing
+                                </Badge>
+                              ) : trade.strategy === 'day' ? (
+                                <Badge className="bg-blue-600 text-xs">
+                                  ⚡ Day
+                                </Badge>
+                              ) : (
+                                <Badge className="bg-slate-600 text-xs">
+                                  ? Manual
+                                </Badge>
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-right text-slate-200">${trade.entry_price?.toFixed(2)}</td>
                             <td className="px-4 py-3 text-right text-slate-200">${trade.exit_price?.toFixed(2) || 'N/A'}</td>
                             <td className="px-4 py-3 text-right text-slate-200">{trade.quantity}</td>
