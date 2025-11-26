@@ -4085,6 +4085,38 @@ class Booner_TradeTester:
         # Summary
         self.print_test_summary()
 
+    async def run_review_request_tests(self):
+        """🔥 REVIEW REQUEST SPECIFIC TESTS - 3 PROBLEME BEHOBEN"""
+        logger.info("🔥 STARTING REVIEW REQUEST TESTS - 3 PROBLEME BEHOBEN")
+        logger.info("="*80)
+        
+        # Test 1: Manual Trade Execution - GOLD
+        logger.info("🔥 TEST 1: Manual Trade Execution - GOLD")
+        await self.test_review_1_manual_trade_execution_gold()
+        
+        # Test 2: Platform Connections Verification
+        logger.info("🔥 TEST 2: Platform Connections Verification")
+        await self.test_review_2_platform_connections_verification()
+        
+        # Test 3: AI Chat Trade Execution - GOLD KAUFEN
+        logger.info("🔥 TEST 3: AI Chat Trade Execution - GOLD KAUFEN")
+        await self.test_review_3_ai_chat_trade_gold_kaufen()
+        
+        # Test 4: AI Chat Trade Execution - EUR KAUFEN
+        logger.info("🔥 TEST 4: AI Chat Trade Execution - EUR KAUFEN")
+        await self.test_review_4_ai_chat_trade_eur_kaufen()
+        
+        # Test 5: AI Chat mit INAKTIVEM Auto-Trading
+        logger.info("🔥 TEST 5: AI Chat mit INAKTIVEM Auto-Trading")
+        await self.test_review_5_ai_chat_with_inactive_auto_trading()
+        
+        # Test 6: Backend Logs Analysis
+        logger.info("🔥 TEST 6: Backend Logs Analysis")
+        await self.test_review_6_backend_logs_analysis()
+        
+        logger.info("🔥 REVIEW REQUEST TESTS COMPLETED")
+        logger.info("="*80)
+
     async def run_all_tests(self):
         """Run all backend tests - FOCUS ON REVIEW REQUEST SCENARIOS"""
         await self.run_review_request_tests()
