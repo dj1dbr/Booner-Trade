@@ -2009,6 +2009,15 @@ async def cleanup_trades():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/ping")
+async def ping():
+    """Simple ping endpoint to test connectivity"""
+    return {
+        "status": "ok",
+        "message": "Backend is reachable",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+
 @api_router.get("/health")
 async def health_check():
     """Health check endpoint - Frontend kann regelmäßig abfragen"""
