@@ -2045,10 +2045,16 @@ async def get_trades(status: Optional[str] = None):
                     for pos in positions:
                         mt5_symbol = pos.get('symbol', 'UNKNOWN')
                         commodity_id = symbol_to_commodity.get(mt5_symbol, mt5_symbol)  # Fallback to MT5 symbol
+                        ticket = str(pos.get('ticket', pos.get('id')))
+                        
+                        # Hole SL/TP aus trade_settings (AI Bot Monitoring)
+                        trade_settings = await db.trade_settings.find_one({'trade_id': ticket})
+                        stop_loss_value = trade_settings.get('stop_loss') if trade_settings else None
+                        take_profit_value = trade_settings.get('take_profit') if trade_settings else None
                         
                         trade = {
-                            "id": f"mt5_{pos.get('ticket', pos.get('id'))}",
-                            "mt5_ticket": str(pos.get('ticket', pos.get('id'))),
+                            "id": f"mt5_{ticket}",
+                            "mt5_ticket": ticket,
                             "commodity": commodity_id,  # Unser internes Symbol!
                             "type": "BUY" if pos.get('type') == 'POSITION_TYPE_BUY' else "SELL",
                             "entry_price": pos.get('price_open', 0),
@@ -2058,8 +2064,8 @@ async def get_trades(status: Optional[str] = None):
                             "status": "OPEN",
                             "platform": platform_name,
                             "mode": platform_name,
-                            "stop_loss": pos.get('sl'),
-                            "take_profit": pos.get('tp'),
+                            "stop_loss": stop_loss_value,  # Aus DB (AI Bot Settings)
+                            "take_profit": take_profit_value,  # Aus DB (AI Bot Settings)
                             "timestamp": pos.get('time', datetime.now(timezone.utc).isoformat())
                         }
                         live_mt5_positions.append(trade)
