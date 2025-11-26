@@ -203,17 +203,40 @@ class AITradingBot:
                             
                             # Berechne SL/TP basierend auf DUAL TRADING STRATEGY Settings
                             # Verwende Swing Trading Settings (Standard für längerfristige Trades)
-                            tp_percent = self.settings.get('swing_take_profit_percent', 4.0)
-                            sl_percent = self.settings.get('swing_stop_loss_percent', 2.0)
                             
-                            logger.info(f"📊 Verwende Swing Trading Settings: TP={tp_percent}%, SL={sl_percent}%")
+                            # Prüfe Modus: Prozent oder Euro
+                            mode = self.settings.get('swing_tp_sl_mode', 'percent')
                             
-                            if 'BUY' in pos_type:
-                                stop_loss_price = entry_price * (1 - sl_percent / 100)
-                                take_profit_price = entry_price * (1 + tp_percent / 100)
-                            else:  # SELL
-                                stop_loss_price = entry_price * (1 + sl_percent / 100)
-                                take_profit_price = entry_price * (1 - tp_percent / 100)
+                            if mode == 'euro':
+                                # EURO-MODUS: Feste Euro-Beträge
+                                tp_euro = self.settings.get('swing_take_profit_euro', 50.0)
+                                sl_euro = self.settings.get('swing_stop_loss_euro', 20.0)
+                                
+                                logger.info(f"📊 Verwende Swing Trading Settings (EURO-Modus): TP=€{tp_euro}, SL=€{sl_euro}")
+                                
+                                # Berechne Price basierend auf Euro-Betrag
+                                # Volume und Contract Size berücksichtigen
+                                volume = pos.get('volume', 0.01)
+                                
+                                if 'BUY' in pos_type:
+                                    stop_loss_price = entry_price - (sl_euro / volume)
+                                    take_profit_price = entry_price + (tp_euro / volume)
+                                else:  # SELL
+                                    stop_loss_price = entry_price + (sl_euro / volume)
+                                    take_profit_price = entry_price - (tp_euro / volume)
+                            else:
+                                # PROZENT-MODUS: Prozentuale Berechnung (wie bisher)
+                                tp_percent = self.settings.get('swing_take_profit_percent', 4.0)
+                                sl_percent = self.settings.get('swing_stop_loss_percent', 2.0)
+                                
+                                logger.info(f"📊 Verwende Swing Trading Settings (PROZENT-Modus): TP={tp_percent}%, SL={sl_percent}%")
+                                
+                                if 'BUY' in pos_type:
+                                    stop_loss_price = entry_price * (1 - sl_percent / 100)
+                                    take_profit_price = entry_price * (1 + tp_percent / 100)
+                                else:  # SELL
+                                    stop_loss_price = entry_price * (1 + sl_percent / 100)
+                                    take_profit_price = entry_price * (1 - tp_percent / 100)
                             
                             # Speichere in DB
                             try:
