@@ -506,7 +506,9 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
     try:
         # Close all positions
         if any(keyword in user_lower for keyword in ['schließe alle', 'close all', 'alle positionen schließen']):
-            result = await FUNCTION_MAP['close_all_trades'](db)
+            logger.info(f"🎯 Detected close all command")
+            result = await close_all_trades_tool(db=db)
+            logger.info(f"📊 Close all result: {result}")
             return result.get('message', 'Aktion ausgeführt')
         
         # Close specific symbol
@@ -525,7 +527,9 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
         
         # Show positions
         if any(keyword in user_lower for keyword in ['zeige positionen', 'show positions', 'offene trades']):
-            result = await FUNCTION_MAP['get_open_positions'](db)
+            logger.info(f"🎯 Detected show positions command")
+            result = await get_open_positions_tool(db=db)
+            logger.info(f"📊 Positions result: {result}")
             return result.get('message', 'Aktion ausgeführt')
         
         # Buy/Sell detection - erweiterte Symbole
