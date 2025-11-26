@@ -1913,6 +1913,18 @@ const Dashboard = () => {
   );
 
 
+      {/* TEST BUTTON FÜR MODAL - TEMPORÄR */}
+      <button 
+        onClick={() => {
+          console.log('🧪 Test button clicked!');
+          setSelectedTrade({commodity: 'GOLD', entry_price: 4200, quantity: 0.01, mt5_ticket: '12345'});
+          setTradeDetailModalOpen(true);
+        }}
+        className="fixed bottom-4 right-4 z-50 bg-purple-600 text-white px-4 py-2 rounded-lg shadow-lg"
+      >
+        🧪 Test Modal
+      </button>
+
       {/* Trade Detail Modal */}
       <Dialog open={tradeDetailModalOpen} onOpenChange={setTradeDetailModalOpen}>
         <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl">
