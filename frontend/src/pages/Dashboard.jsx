@@ -1606,19 +1606,41 @@ const Dashboard = () => {
         </Tabs>
         
         {/* Portfolio Exposure Warning */}
-        {totalExposure > (balance * 0.2) && (
-          <Card className="bg-amber-900/20 border-amber-500/50 p-4 mb-8">
+        {/* Portfolio-Risiko Warnungen - PER PLATFORM */}
+        {mt5LibertexAccount && (libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100 > (settings?.combined_max_balance_percent_per_platform || 20) && (
+          <Card className="bg-amber-900/20 border-amber-500/50 p-4 mb-4">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-6 h-6 text-amber-400" />
               <div className="flex-1">
-                <h4 className="font-semibold text-amber-400">Portfolio-Risiko-Warnung</h4>
+                <h4 className="font-semibold text-amber-400">⚠️ Libertex Portfolio-Risiko zu hoch!</h4>
                 <p className="text-sm text-slate-300 mb-2">
-                  <strong>Offene Positionen:</strong> €{totalExposure.toFixed(2)} ({((totalExposure / balance) * 100).toFixed(1)}% Ihrer Balance)
+                  <strong>Offene Positionen:</strong> €{libertexExposure.toFixed(2)} 
+                  ({((libertexExposure / (mt5LibertexAccount?.balance || 1)) * 100).toFixed(1)}% Ihrer Libertex Balance)
                 </p>
                 <p className="text-xs text-slate-400">
-                  • Ihre Balance: €{balance.toFixed(2)}<br/>
-                  • Empfohlenes Maximum (20%): €{(balance * 0.2).toFixed(2)}<br/>
-                  • Sie sollten Positionen reduzieren, um Risiko zu minimieren
+                  • Ihre Libertex Balance: €{mt5LibertexAccount?.balance?.toFixed(2)}<br/>
+                  • Empfohlenes Maximum ({settings?.combined_max_balance_percent_per_platform || 20}%): €{((mt5LibertexAccount?.balance || 0) * (settings?.combined_max_balance_percent_per_platform || 20) / 100).toFixed(2)}<br/>
+                  • 🚫 <strong>AI Bot wird KEINE neuen Trades auf Libertex öffnen bis Risiko unter {settings?.combined_max_balance_percent_per_platform || 20}%</strong>
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
+        
+        {mt5Account && (icmarketsExposure / (mt5Account?.balance || 1)) * 100 > (settings?.combined_max_balance_percent_per_platform || 20) && (
+          <Card className="bg-amber-900/20 border-amber-500/50 p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-6 h-6 text-amber-400" />
+              <div className="flex-1">
+                <h4 className="font-semibold text-amber-400">⚠️ ICMarkets Portfolio-Risiko zu hoch!</h4>
+                <p className="text-sm text-slate-300 mb-2">
+                  <strong>Offene Positionen:</strong> €{icmarketsExposure.toFixed(2)} 
+                  ({((icmarketsExposure / (mt5Account?.balance || 1)) * 100).toFixed(1)}% Ihrer ICMarkets Balance)
+                </p>
+                <p className="text-xs text-slate-400">
+                  • Ihre ICMarkets Balance: €{mt5Account?.balance?.toFixed(2)}<br/>
+                  • Empfohlenes Maximum ({settings?.combined_max_balance_percent_per_platform || 20}%): €{((mt5Account?.balance || 0) * (settings?.combined_max_balance_percent_per_platform || 20) / 100).toFixed(2)}<br/>
+                  • 🚫 <strong>AI Bot wird KEINE neuen Trades auf ICMarkets öffnen bis Risiko unter {settings?.combined_max_balance_percent_per_platform || 20}%</strong>
                 </p>
               </div>
             </div>
