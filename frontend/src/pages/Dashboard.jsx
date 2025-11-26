@@ -1183,8 +1183,9 @@ const Dashboard = () => {
                         const commodityId = symbolToCommodity[trade.commodity] || trade.commodity;
                         const commodity = commodities[commodityId];
                         
-                        // For MT5 trades, use the current price from trade data if available, otherwise from market
-                        const currentPrice = trade.price || allMarkets[commodityId]?.price || trade.entry_price;
+                        // FIX: Use live price from allMarkets FIRST (updated every 5s), fallback to trade.price
+                        // This ensures we always show the CURRENT market price, not the entry price
+                        const currentPrice = allMarkets[commodityId]?.price || trade.price || trade.entry_price;
                         
                         // Calculate P&L
                         const pl = trade.status === 'OPEN' 
