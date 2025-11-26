@@ -510,14 +510,17 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
             return result.get('message', 'Aktion ausgeführt')
         
         # Close specific symbol
-        for symbol in ['gold', 'silver', 'wti', 'brent', 'platin', 'palladium']:
+        for symbol in ['gold', 'silver', 'wti', 'brent', 'platin', 'palladium', 'eur', 'euro']:
             if f'schließe {symbol}' in user_lower or f'close {symbol}' in user_lower:
                 symbol_map = {
                     'gold': 'GOLD', 'silver': 'SILVER', 
                     'wti': 'WTI_CRUDE', 'brent': 'BRENT_CRUDE',
-                    'platin': 'PLATINUM', 'palladium': 'PALLADIUM'
+                    'platin': 'PLATINUM', 'palladium': 'PALLADIUM',
+                    'eur': 'EURUSD', 'euro': 'EURUSD'
                 }
-                result = await FUNCTION_MAP['close_trades_by_symbol'](db, symbol_map.get(symbol, symbol.upper()))
+                logger.info(f"🎯 Detected close command for: {symbol}")
+                result = await close_trades_by_symbol_tool(symbol=symbol_map.get(symbol, symbol.upper()), db=db)
+                logger.info(f"📊 Close result: {result}")
                 return result.get('message', 'Aktion ausgeführt')
         
         # Show positions
