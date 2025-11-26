@@ -599,12 +599,17 @@ async def send_chat_message(message: str, settings: dict, latest_market_data: di
         
         logger.info(f"✅ AI Response generated (length: {len(response)})")
         
-        # Function calling: Check if user wants to execute trades (only if auto-trading active and db available)
-        if auto_trading_active and db is not None:
+        # Function calling: ALWAYS check if user wants to execute trades (AI Chat is independent of Auto-Trading)
+        # Auto-Trading controls the autonomous bot, not the AI Chat
+        if db is not None:
+            logger.info(f"🔍 Checking for trading actions in user message: '{message}'")
             action_result = await handle_trading_actions(message, response, db, settings, latest_market_data)
             if action_result:
+                logger.info(f"✅ Trading action executed: {action_result}")
                 # Append action result to response
                 response = f"{response}\n\n{action_result}"
+            else:
+                logger.info("ℹ️ No trading action detected in message")
         
         return {
             "success": True,
