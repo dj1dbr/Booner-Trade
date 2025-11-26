@@ -1209,7 +1209,13 @@ const Dashboard = () => {
                             key={trade.id} 
                             className="border-b border-slate-800 hover:bg-slate-800/30 cursor-pointer transition-colors"
                             onClick={(e) => {
+                              // Safari fix: Only handle clicks on the row itself, not on buttons
+                              if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                                return; // Let button handlers take over
+                              }
                               console.log('🖱️ Row clicked!', trade.commodity);
+                              e.preventDefault();
+                              e.stopPropagation();
                               handleTradeClick(trade);
                             }}
                           >
