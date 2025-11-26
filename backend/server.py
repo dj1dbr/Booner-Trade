@@ -1340,9 +1340,20 @@ async def ai_chat_endpoint(
         }
         
         # Fetch positions from active platforms (check without _DEMO/_REAL suffix)
+        # Remove duplicates: MT5_LIBERTEX_DEMO and MT5_LIBERTEX map to same base
+        seen_base_platforms = set()
+        
         for platform_name in active_platforms:
             # Map _DEMO/_REAL to base name for API calls
             base_platform = platform_name.replace('_DEMO', '').replace('_REAL', '')
+            
+            # Skip if we already processed this base platform
+            if base_platform in seen_base_platforms:
+                logger.info(f"⚠️ Skipping duplicate platform: {platform_name} (already processed {base_platform})")
+                continue
+            
+            seen_base_platforms.add(base_platform)
+            
             if base_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
                 try:
                     positions = await multi_platform.get_open_positions(base_platform)
