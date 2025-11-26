@@ -1025,42 +1025,7 @@ async def get_settings():
         logger.error(f"Error getting settings: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/settings")
-async def update_settings(settings: TradingSettings):
-    """Update trading settings"""
-    try:
-        settings_dict = settings.model_dump()
-        
-        await db.trading_settings.update_one(
-            {"id": "trading_settings"},
-            {"$set": settings_dict},
-            upsert=True
-        )
-        
-        logger.info("✅ Settings updated")
-        
-        return settings_dict
-    except Exception as e:
-        logger.error(f"Error updating settings: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-    
-    # Check if commodity is enabled
-    settings = await db.trading_settings.find_one({"id": "trading_settings"})
-    if settings and commodity not in settings.get('enabled_commodities', ["WTI_CRUDE"]):
-        raise HTTPException(status_code=403, detail=f"Commodity {commodity} is not enabled")
-    
-    # Fetch latest data from database
-    market_data = await db.market_data.find_one(
-        {"commodity": commodity},
-        sort=[("timestamp", -1)]
-    )
-    
-    if not market_data:
-        raise HTTPException(status_code=503, detail=f"Market data not available for {commodity}")
-    
-    market_data.pop('_id', None)
-    return market_data
+# REMOVED: Duplicate POST /settings endpoint - using the one at line 2383 instead
 
 @api_router.get("/market/all")
 async def get_all_markets():
