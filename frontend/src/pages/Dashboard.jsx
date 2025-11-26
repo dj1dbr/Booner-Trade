@@ -1320,8 +1320,11 @@ const Dashboard = () => {
                             </td>
                             <td className="px-4 py-3 text-center space-x-2">
                               <button
+                                type="button"
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
+                                  console.log('⚙️ Settings button clicked for:', trade.commodity);
                                   handleTradeClick(trade);
                                 }}
                                 className="text-blue-400 hover:text-blue-300 text-xs font-semibold px-2 py-1 bg-blue-900/20 rounded"
