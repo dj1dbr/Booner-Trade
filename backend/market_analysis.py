@@ -144,7 +144,7 @@ class MarketAnalyzer:
                 for word in event_words_bearish:
                     if word in text:
                         sentiment_score -= 2
-                        logger.info(f"🚨 EVENT erkannt: '{word}' in '{title[:80]}...'")!
+                        logger.info(f"🚨 EVENT erkannt: '{word}' in '{title[:80]}...'")
             
             # Normalisiere Score
             normalized_score = sentiment_score / max(article_count, 1) if article_count > 0 else 0
