@@ -57,7 +57,7 @@ const Dashboard = () => {
   const [mt5LibertexConnected, setMt5LibertexConnected] = useState(false);
   const [bitpandaAccount, setBitpandaAccount] = useState(null); // Bitpanda account
   const [bitpandaConnected, setBitpandaConnected] = useState(false);
-  const [totalExposure, setTotalExposure] = useState(0); // Total exposure for 20% limit
+  // REMOVED: const [totalExposure, setTotalExposure] = useState(0); - Using per-platform exposure instead
   const [libertexExposure, setLibertexExposure] = useState(0); // Libertex platform exposure
   const [icmarketsExposure, setIcmarketsExposure] = useState(0); // ICMarkets platform exposure
   const [bitpandaExposure, setBitpandaExposure] = useState(0); // Bitpanda platform exposure
