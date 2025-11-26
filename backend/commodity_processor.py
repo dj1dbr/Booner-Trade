@@ -294,6 +294,29 @@ COMMODITIES = {
 }
 
 
+
+def get_commodities_with_hours():
+    """
+    Gibt COMMODITIES mit Handelszeiten zurück
+    """
+    commodities_with_hours = {}
+    for commodity_id, commodity_data in COMMODITIES.items():
+        commodity_with_hours = commodity_data.copy()
+        
+        # Füge Handelszeiten hinzu
+        if commodity_id in MARKET_HOURS:
+            market_hours = MARKET_HOURS[commodity_id]
+            commodity_with_hours['market_hours'] = market_hours.get('display', 'Nicht verfügbar')
+            commodity_with_hours['market_open'] = is_market_open(commodity_id)
+        else:
+            commodity_with_hours['market_hours'] = 'Nicht verfügbar'
+            commodity_with_hours['market_open'] = True
+        
+        commodities_with_hours[commodity_id] = commodity_with_hours
+    
+    return commodities_with_hours
+
+
 def fetch_commodity_data(commodity_id: str):
     """Fetch commodity data from Yahoo Finance"""
     try:
