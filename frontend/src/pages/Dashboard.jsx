@@ -1954,7 +1954,7 @@ const Dashboard = () => {
 
       {/* Trade Detail Modal - MOVED INSIDE COMPONENT */}
       <Dialog open={tradeDetailModalOpen} onOpenChange={setTradeDetailModalOpen}>
-        <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl">
+        <DialogContent className="bg-slate-900 text-white border-slate-700 max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-cyan-400">
               📊 Trade Einstellungen
