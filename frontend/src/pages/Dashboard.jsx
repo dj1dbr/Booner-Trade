@@ -716,7 +716,7 @@ const Dashboard = () => {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold" style={{ color: '#2dd4bf' }} data-testid="dashboard-title">
-                Rohstoff Trader
+                Booner Trade
               </h1>
               {gpt5Active && (
                 <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white flex items-center gap-1 px-3 py-1 animate-pulse" data-testid="gpt5-active-badge">
