@@ -197,6 +197,36 @@ class AITradingBot:
                             stop_loss_price = individual_settings.get('stop_loss')
                             take_profit_price = individual_settings.get('take_profit')
                             logger.info(f"🎯 Nutze individuelle Settings für #{ticket}: SL={stop_loss_price}, TP={take_profit_price}")
+                        elif not individual_settings:
+                            # 🚨 KEINE SETTINGS GEFUNDEN - AUTOMATISCH ERSTELLEN!
+                            logger.warning(f"⚠️ Trade #{ticket} hat keine SL/TP Settings - erstelle automatisch...")
+                            
+                            # Berechne SL/TP basierend auf Settings
+                            tp_percent = self.settings.get('take_profit_percent', 4.0)
+                            sl_percent = self.settings.get('stop_loss_percent', 2.0)
+                            
+                            if 'BUY' in pos_type:
+                                stop_loss_price = entry_price * (1 - sl_percent / 100)
+                                take_profit_price = entry_price * (1 + tp_percent / 100)
+                            else:  # SELL
+                                stop_loss_price = entry_price * (1 + sl_percent / 100)
+                                take_profit_price = entry_price * (1 - tp_percent / 100)
+                            
+                            # Speichere in DB
+                            try:
+                                await self.db.trade_settings.insert_one({
+                                    'trade_id': str(ticket),
+                                    'stop_loss': stop_loss_price,
+                                    'take_profit': take_profit_price,
+                                    'created_at': datetime.now(timezone.utc).isoformat(),
+                                    'entry_price': entry_price,
+                                    'platform': platform,
+                                    'created_by': 'AI_MONITOR_AUTO'
+                                })
+                                logger.info(f"✅ Auto-created SL/TP für #{ticket}: SL={stop_loss_price:.2f}, TP={take_profit_price:.2f}")
+                            except Exception as e:
+                                logger.error(f"❌ Fehler beim Auto-Create SL/TP: {e}")
+                                # Verwende berechnete Werte trotzdem
                         else:
                             # ⚡ IMMER aus Settings berechnen - KI nutzt AKTUELLE Settings!
                             if strategy == 'day':
