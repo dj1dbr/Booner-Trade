@@ -1048,6 +1048,80 @@ backend:
           RECOMMENDATION: 
           Only 1 out of 3 problems appears to be fully resolved. Manual trade execution 
           and AI Chat trade execution require further investigation and fixes.
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ FRONTEND SAFARI BUG FIXES TESTING RESULTS (Nov 26, 2025):
+          
+          🔍 TESTING RESULTS FOR 3 KRITISCHE SAFARI BUG-FIXES:
+          
+          ❌ CRITICAL TESTING LIMITATION - NO EXISTING TRADES:
+          - Current trades count: 0 (shown as "Trades (0)" in UI)
+          - Cannot test TP/SL display fixes without existing trades
+          - Cannot test modal functionality without existing trades
+          - Trade creation fails with "Broker hat Order abgelehnt" error
+          
+          ✅ WHAT WAS SUCCESSFULLY TESTED:
+          
+          1. **UI Structure Verification: ✅ WORKING**
+             ✅ Trades table structure present with correct headers
+             ✅ "Offene Positionen" (Open Positions) table accessible
+             ✅ Table headers include "SL" and "TP" columns as expected
+             ✅ Modal dialog structure implemented in code
+          
+          2. **Live Price Updates: ✅ PARTIALLY WORKING**
+             ✅ Page title updated to "Booner-Trade | Multi-Commodity Trading"
+             ❌ UI still shows "Rohstoff Trader" instead of "Booner-Trade"
+             ✅ Live-Ticker toggle active (green indicator visible)
+             ✅ Commodity prices displayed: GOLD $4158.60, SILVER $53.60, etc.
+             ⚠️ Could not verify price changes due to testing limitations
+          
+          3. **Platform Status: ❌ MIXED RESULTS**
+             ❌ 3 platforms showing €0.00 balance (connection issues)
+             ✅ 1 platform showing non-zero balance
+             ❌ All platforms showing "Verbindung wird hergestellt..." status
+          
+          ❌ WHAT COULD NOT BE TESTED (CRITICAL GAPS):
+          
+          1. **TP/SL Display Fix: ❌ CANNOT TEST**
+             - No existing trades to verify TP/SL numerical values
+             - Cannot verify if values show "$4150.00" instead of "Kein TP"
+             - Cannot test robust rendering with Number() conversion
+          
+          2. **Modal Functionality Fix: ❌ CANNOT TEST**
+             - No trade rows to click for modal testing
+             - Cannot test Safari-optimized event handlers
+             - Cannot test synchronous modal opening
+             - Cannot verify settings button (⚙️) functionality
+          
+          3. **Live Price Priority Fix: ❌ CANNOT FULLY TEST**
+             - Cannot verify allMarkets state updates every 5 seconds
+             - Cannot test "Aktuell" column vs "Entry" price differences
+             - No trades to show live price updates in trades table
+          
+          🎯 CRITICAL FINDINGS:
+          
+          **BUG FIX 1 (TP/SL Display): ❌ CANNOT VERIFY** - No trades to test
+          **BUG FIX 2 (Modal Functionality): ❌ CANNOT VERIFY** - No trades to test  
+          **BUG FIX 3 (Live Prices): ⚠️ PARTIALLY VERIFIED** - UI structure working
+          
+          🚨 MAJOR BLOCKING ISSUE:
+          The review request requires testing with existing trades, but:
+          - Current system has 0 trades
+          - Manual trade creation fails with broker rejection
+          - AI Chat trade creation cannot be tested (budget exceeded)
+          - Cannot create the required test trade (GOLD/WTI_CRUDE BUY 0.01)
+          
+          IMMEDIATE ACTION REQUIRED:
+          1. Fix broker connection issues to enable trade creation
+          2. Create at least one test trade with TP/SL values
+          3. Update app name from "Rohstoff Trader" to "Booner-Trade" in UI
+          4. Re-test all 3 Safari bug fixes once trades are available
+          
+          RECOMMENDATION: 
+          The Safari bug fixes cannot be properly tested without existing trades. 
+          The underlying infrastructure issues (broker connections, trade execution) 
+          must be resolved first before the frontend fixes can be validated.
 
 frontend:
   - task: "Dashboard UI for Multi-Commodity Trading"
