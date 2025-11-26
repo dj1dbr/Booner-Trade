@@ -1912,10 +1912,45 @@ async def close_trade_v2(request: CloseTradeRequest):
             
             if platform_info and platform_info.get('connector'):
                 mt5_connector = platform_info['connector']
+                
+                # Get position details BEFORE closing (for DB storage)
+                positions = await connector.get_open_positions(platform)
+                position_data = None
+                for pos in positions:
+                    if str(pos.get('ticket') or pos.get('id')) == str(ticket):
+                        position_data = pos
+                        break
+                
+                # Close on MT5
                 success = await mt5_connector.close_position(str(ticket))
                 
                 if success:
                     logger.info(f"✅ Closed MT5 position {ticket} on {platform}")
+                    
+                    # WICHTIG: Speichere geschlossenen Trade in DB für Historie
+                    if position_data:
+                        try:
+                            closed_trade = {
+                                "id": f"mt5_{ticket}",
+                                "mt5_ticket": str(ticket),
+                                "commodity": position_data.get('symbol', 'UNKNOWN'),
+                                "type": "BUY" if position_data.get('type') == 'POSITION_TYPE_BUY' else "SELL",
+                                "entry_price": position_data.get('price_open', 0),
+                                "exit_price": position_data.get('price_current', position_data.get('price_open', 0)),
+                                "quantity": position_data.get('volume', 0),
+                                "profit_loss": position_data.get('profit', 0),
+                                "status": "CLOSED",
+                                "platform": platform,
+                                "opened_at": position_data.get('time', datetime.now(timezone.utc).isoformat()),
+                                "closed_at": datetime.now(timezone.utc).isoformat(),
+                                "closed_by": "MANUAL"
+                            }
+                            await db.trades.insert_one(closed_trade)
+                            logger.info(f"💾 Saved closed trade #{ticket} to DB (P/L: ${position_data.get('profit', 0):.2f})")
+                        except Exception as e:
+                            logger.error(f"⚠️ Failed to save closed trade to DB: {e}")
+                            # Continue anyway - trade was closed on MT5
+                    
                     return {
                         "success": True,
                         "message": f"Position {ticket} geschlossen",
