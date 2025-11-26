@@ -110,9 +110,13 @@ class MarketAnalyzer:
             if not feed.entries or len(feed.entries) == 0:
                 return {"sentiment": "neutral", "score": 0, "articles": 0, "source": "google_no_news"}
             
-            # Sentiment-Analyse
-            positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar', 'higher']
-            negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble', 'lower']
+            # Sentiment-Analyse - ERWEITERT mit Event-Wörtern
+            positive_words = ['surge', 'rally', 'rise', 'gain', 'up', 'bullish', 'high', 'jump', 'climb', 'strong', 'boost', 'soar', 'higher', 'demand', 'shortage', 'disruption', 'cut', 'opec']
+            negative_words = ['fall', 'drop', 'decline', 'loss', 'down', 'bearish', 'low', 'plunge', 'weak', 'crash', 'slump', 'tumble', 'lower', 'glut', 'oversupply', 'surplus', 'recession']
+            
+            # SPEZIELLE EVENT-WÖRTER (starkes Gewicht)
+            event_words_bullish = ['explosion', 'attack', 'war', 'conflict', 'strike', 'hurricane', 'disaster', 'sanctions']  # Für Rohstoffe oft bullish
+            event_words_bearish = ['peace', 'deal', 'agreement', 'recovery', 'resolution']
             
             sentiment_score = 0
             article_count = 0
