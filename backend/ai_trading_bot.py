@@ -804,7 +804,25 @@ Antworte NUR mit: JA oder NEIN
                     platform_usage[plat_info['platform']] = {'usage_percent': 100.0}  # Vermeide fehlerhafte Plattform
             
             # Wähle Plattform mit NIEDRIGSTER Nutzung (mehr verfügbares Kapital)
-            selected = min(available_platforms, 
+            # ABER: Prüfe ZUERST ob irgendeine Plattform unter dem Limit ist!
+            max_balance_percent = self.settings.get('combined_max_balance_percent_per_platform', 20.0)
+            
+            # Filtere Plattformen die noch Kapazität haben
+            available_capacity_platforms = [
+                p for p in available_platforms 
+                if platform_usage.get(p['platform'], {}).get('usage_percent', 100.0) < max_balance_percent
+            ]
+            
+            if not available_capacity_platforms:
+                # ALLE Plattformen über Limit!
+                logger.error(f"🚫 TRADE ABGELEHNT: Alle Plattformen über {max_balance_percent}% Portfolio-Risiko!")
+                for plat_info in available_platforms:
+                    usage = platform_usage.get(plat_info['platform'], {}).get('usage_percent', 0)
+                    logger.error(f"   {plat_info['name']}: {usage:.1f}% (Limit: {max_balance_percent}%)")
+                return  # Kein Trade ausführen!
+            
+            # Wähle die Plattform mit der niedrigsten Nutzung (unter dem Limit)
+            selected = min(available_capacity_platforms, 
                           key=lambda x: platform_usage.get(x['platform'], {}).get('usage_percent', 100.0))
             platform = selected['platform']
             symbol = selected['symbol']
@@ -813,7 +831,7 @@ Antworte NUR mit: JA oder NEIN
             logger.info(
                 f"✅ {commodity_id} → {selected['name']} "
                 f"(Symbol: {symbol}, "
-                f"Nutzung: {usage_info.get('usage_percent', 0):.1f}%, "
+                f"Nutzung: {usage_info.get('usage_percent', 0):.1f}% / {max_balance_percent}%, "
                 f"Balance: €{usage_info.get('balance', 0):,.2f}, "
                 f"Positionen: {usage_info.get('positions_count', 0)})"
             )
