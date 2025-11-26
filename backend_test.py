@@ -890,7 +890,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_detail = data.get("detail", str(data))
+            error_detail = str(data.get("detail", data))
             
             # Check if it's "Broker hat Order abgelehnt" (the old bug)
             if "broker hat order abgelehnt" in error_detail.lower():
