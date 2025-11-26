@@ -759,23 +759,61 @@ Antworte NUR mit: JA oder NEIN
                 logger.warning(f"⚠️  {commodity_id}: Kein verfügbares Symbol auf aktiven Plattformen")
                 return
             
-            # ROUND ROBIN: Wähle Plattform mit wenigsten offenen Positionen für Lastverteilung
+            # INTELLIGENTE LOAD BALANCING: Balance-gewichtete Plattform-Auswahl
             from multi_platform_connector import multi_platform
             
-            platform_positions = {}
+            platform_usage = {}
+            
             for plat_info in available_platforms:
                 try:
+                    # Hole Account Info für Balance
+                    account_info = await multi_platform.get_account_info(plat_info['platform'])
+                    balance = account_info.get('balance', 0) if account_info else 0
+                    
+                    if balance <= 0:
+                        platform_usage[plat_info['platform']] = 100.0  # Vermeide Plattform ohne Balance
+                        continue
+                    
+                    # Berechne genutzte Balance (alle offenen Positionen)
                     positions = await multi_platform.get_open_positions(plat_info['platform'])
-                    platform_positions[plat_info['platform']] = len(positions)
-                except:
-                    platform_positions[plat_info['platform']] = 0
+                    used_capital = 0
+                    
+                    for pos in positions:
+                        # Geschätztes genutztes Kapital: Volume * Entry Price * Contract Size (100 für Forex, 1000 für Commodities)
+                        volume = pos.get('volume', 0)
+                        price = pos.get('price_open', 0)
+                        # Vereinfacht: Nutze Margin oder schätze basierend auf Position
+                        used_capital += volume * price * 100  # Konservativer Schätzwert
+                    
+                    # Berechne Nutzungs-Prozentsatz
+                    usage_percent = (used_capital / balance) * 100
+                    platform_usage[plat_info['platform']] = {
+                        'usage_percent': usage_percent,
+                        'balance': balance,
+                        'used_capital': used_capital,
+                        'positions_count': len(positions)
+                    }
+                    
+                    logger.debug(f"📊 {plat_info['name']}: {usage_percent:.1f}% genutzt (€{used_capital:.2f} / €{balance:.2f}, {len(positions)} Positionen)")
+                    
+                except Exception as e:
+                    logger.error(f"Fehler beim Abrufen von {plat_info['platform']}: {e}")
+                    platform_usage[plat_info['platform']] = {'usage_percent': 100.0}  # Vermeide fehlerhafte Plattform
             
-            # Wähle Plattform mit wenigsten Positionen
-            selected = min(available_platforms, key=lambda x: platform_positions.get(x['platform'], 0))
+            # Wähle Plattform mit NIEDRIGSTER Nutzung (mehr verfügbares Kapital)
+            selected = min(available_platforms, 
+                          key=lambda x: platform_usage.get(x['platform'], {}).get('usage_percent', 100.0))
             platform = selected['platform']
             symbol = selected['symbol']
             
-            logger.info(f"✅ {commodity_id} → {selected['name']} (Symbol: {symbol}, Open Positions: {platform_positions.get(platform, 0)})")
+            usage_info = platform_usage.get(platform, {})
+            logger.info(
+                f"✅ {commodity_id} → {selected['name']} "
+                f"(Symbol: {symbol}, "
+                f"Nutzung: {usage_info.get('usage_percent', 0):.1f}%, "
+                f"Balance: €{usage_info.get('balance', 0):,.2f}, "
+                f"Positionen: {usage_info.get('positions_count', 0)})"
+            )
             
             # Risk Management: Positionsgröße berechnen
             account_info = await multi_platform.get_account_info(platform)
