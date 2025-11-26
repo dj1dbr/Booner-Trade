@@ -1745,6 +1745,26 @@ async def execute_trade(request: TradeExecuteRequest):
             logger.info(f"✅ Trade erfolgreich an MT5 gesendet: {trade_type} {quantity:.4f} {commodity} @ {price}, Ticket #{platform_ticket}")
             logger.info(f"📊 Trade wird NICHT in DB gespeichert - wird live von MT5 über /trades/list abgerufen")
             
+            # ABER: Speichere SL/TP Settings für AI Bot Monitoring
+            try:
+                trade_settings = {
+                    'trade_id': str(platform_ticket),
+                    'stop_loss': stop_loss,
+                    'take_profit': take_profit,
+                    'created_at': datetime.now(timezone.utc).isoformat(),
+                    'commodity': commodity,
+                    'entry_price': price
+                }
+                await db.trade_settings.update_one(
+                    {'trade_id': str(platform_ticket)},
+                    {'$set': trade_settings},
+                    upsert=True
+                )
+                logger.info(f"💾 SL/TP Settings gespeichert für Trade #{platform_ticket}: SL={stop_loss:.2f}, TP={take_profit:.2f}")
+            except Exception as e:
+                logger.error(f"⚠️ Fehler beim Speichern der Trade Settings: {e}")
+                # Continue anyway - trade was successful
+            
             return {
                 "success": True, 
                 "ticket": platform_ticket, 
