@@ -925,10 +925,11 @@ class Booner_TradeTester:
             
             for platform in platforms:
                 if isinstance(platform, dict):
+                    platform_name = platform.get("platform", "")
                     name = platform.get("name", "")
-                    if "MT5_LIBERTEX" in name and "DEMO" in name:
+                    if "MT5_LIBERTEX" in platform_name and "DEMO" in platform_name:
                         mt5_libertex_demo = platform
-                    elif "MT5_ICMARKETS" in name and "DEMO" in name:
+                    elif "MT5_ICMARKETS" in platform_name and "DEMO" in platform_name:
                         mt5_icmarkets_demo = platform
             
             # Check MT5_LIBERTEX_DEMO
