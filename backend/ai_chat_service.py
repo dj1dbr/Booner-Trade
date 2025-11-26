@@ -525,24 +525,27 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
             result = await FUNCTION_MAP['get_open_positions'](db)
             return result.get('message', 'Aktion ausgeführt')
         
-        # Buy/Sell detection
+        # Buy/Sell detection - erweiterte Symbole
         for direction in ['buy', 'kaufe', 'long', 'sell', 'verkaufe', 'short']:
             if direction in user_lower:
-                # Extract symbol
+                # Extract symbol - erweiterte Liste mit EUR
                 for symbol_key, symbol_value in {
                     'gold': 'GOLD', 'silver': 'SILVER', 'silber': 'SILVER',
                     'wti': 'WTI_CRUDE', 'öl': 'WTI_CRUDE', 'oil': 'WTI_CRUDE',
                     'brent': 'BRENT_CRUDE', 'platin': 'PLATINUM', 'platinum': 'PLATINUM',
-                    'palladium': 'PALLADIUM', 'kupfer': 'COPPER', 'copper': 'COPPER'
+                    'palladium': 'PALLADIUM', 'kupfer': 'COPPER', 'copper': 'COPPER',
+                    'eur': 'EURUSD', 'euro': 'EURUSD', 'eurusd': 'EURUSD'
                 }.items():
                     if symbol_key in user_lower:
                         trade_direction = 'BUY' if direction in ['buy', 'kaufe', 'long'] else 'SELL'
-                        result = await FUNCTION_MAP['execute_trade'](
-                            db=db,
-                            settings=settings,
+                        logger.info(f"🎯 Detected trade command: {trade_direction} {symbol_value}")
+                        result = await execute_trade_tool(
                             symbol=symbol_value,
-                            direction=trade_direction
+                            direction=trade_direction,
+                            quantity=0.01,
+                            db=db
                         )
+                        logger.info(f"📊 Trade result: {result}")
                         return result.get('message', 'Trade ausgeführt')
         
         return None
