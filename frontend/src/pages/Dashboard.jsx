@@ -50,7 +50,7 @@ const Dashboard = () => {
   const [trades, setTrades] = useState([]);
   const [stats, setStats] = useState(null);
   const [settings, setSettings] = useState(null);
-  const [balance, setBalance] = useState(10000); // Simulated balance
+  // REMOVED: const [balance, setBalance] = useState(10000); - Using real platform balances instead
   const [mt5Account, setMt5Account] = useState(null); // Real MT5 account data (ICMarkets)
   const [mt5Connected, setMt5Connected] = useState(false);
   const [mt5LibertexAccount, setMt5LibertexAccount] = useState(null); // Libertex account
