@@ -2440,6 +2440,67 @@ async def update_settings(settings: TradingSettings):
                             pass
                     logger.info("✅ AI Trading Bot gestoppt (via Settings)")
         
+        # 🔄 WICHTIG: Aktualisiere ALLE bestehenden offenen Trades mit neuen TP/SL Settings
+        try:
+            logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
+            
+            # Hole alle trade_settings für offene Trades
+            all_trade_settings = await db.trade_settings.find({}).to_list(1000)
+            
+            updated_count = 0
+            for trade_setting in all_trade_settings:
+                trade_id = trade_setting.get('trade_id')
+                entry_price = trade_setting.get('entry_price')
+                
+                if not entry_price:
+                    continue
+                
+                # Bestimme Strategie (Swing als Default)
+                strategy = trade_setting.get('strategy', 'swing')
+                
+                # Hole neue TP/SL Settings basierend auf Strategie
+                if strategy == 'swing':
+                    tp_percent = settings.swing_take_profit_percent
+                    sl_percent = settings.swing_stop_loss_percent
+                elif strategy == 'day':
+                    tp_percent = settings.day_take_profit_percent
+                    sl_percent = settings.day_stop_loss_percent
+                else:
+                    # Manual/Unknown - verwende Swing Settings als Default
+                    tp_percent = settings.swing_take_profit_percent
+                    sl_percent = settings.swing_stop_loss_percent
+                
+                # Prüfe ob dieser Trade BUY oder SELL ist (aus platform oder type)
+                # Hole Trade-Info aus der Position oder trade_settings
+                trade_type = trade_setting.get('type', 'BUY')
+                
+                # Berechne neue SL/TP
+                if 'BUY' in trade_type.upper():
+                    new_stop_loss = entry_price * (1 - sl_percent / 100)
+                    new_take_profit = entry_price * (1 + tp_percent / 100)
+                else:  # SELL
+                    new_stop_loss = entry_price * (1 + sl_percent / 100)
+                    new_take_profit = entry_price * (1 - tp_percent / 100)
+                
+                # Update in DB
+                await db.trade_settings.update_one(
+                    {'trade_id': trade_id},
+                    {'$set': {
+                        'stop_loss': new_stop_loss,
+                        'take_profit': new_take_profit,
+                        'updated_at': datetime.now(timezone.utc).isoformat(),
+                        'updated_by': 'SETTINGS_CHANGE'
+                    }}
+                )
+                
+                updated_count += 1
+                logger.info(f"   ✅ Trade #{trade_id}: Neue SL={new_stop_loss:.2f}, TP={new_take_profit:.2f} ({strategy.upper()}: {sl_percent}%/{tp_percent}%)")
+            
+            logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
+        except Exception as e:
+            logger.error(f"⚠️ Fehler beim Aktualisieren bestehender Trades: {e}")
+            # Nicht kritisch - Settings wurden gespeichert, nur Update fehlgeschlagen
+        
         return settings
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
