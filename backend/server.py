@@ -2478,25 +2478,63 @@ async def update_settings(settings: TradingSettings):
                 trade_setting = await db.trade_settings.find_one({'trade_id': str(ticket)})
                 strategy = trade_setting.get('strategy', 'swing') if trade_setting else 'swing'
                 
-                # Hole neue TP/SL Settings basierend auf Strategie
-                if strategy == 'swing':
-                    tp_percent = settings.swing_take_profit_percent
-                    sl_percent = settings.swing_stop_loss_percent
-                elif strategy == 'day':
-                    tp_percent = settings.day_take_profit_percent
-                    sl_percent = settings.day_stop_loss_percent
-                else:
-                    # Manual/Unknown - verwende Swing Settings als Default
-                    tp_percent = settings.swing_take_profit_percent
-                    sl_percent = settings.swing_stop_loss_percent
+                # Hole neue TP/SL Settings basierend auf Strategie UND Modus
+                volume = position.get('volume', 0.01)
                 
-                # Berechne neue SL/TP basierend auf Trade-Typ
-                if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
-                    new_stop_loss = entry_price * (1 - sl_percent / 100)
-                    new_take_profit = entry_price * (1 + tp_percent / 100)
-                else:  # SELL
-                    new_stop_loss = entry_price * (1 + sl_percent / 100)
-                    new_take_profit = entry_price * (1 - tp_percent / 100)
+                if strategy == 'swing':
+                    mode = settings.swing_tp_sl_mode
+                    if mode == 'euro':
+                        tp_euro = settings.swing_take_profit_euro
+                        sl_euro = settings.swing_stop_loss_euro
+                        # Euro-Modus Berechnung
+                        if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                            new_stop_loss = entry_price - (sl_euro / volume)
+                            new_take_profit = entry_price + (tp_euro / volume)
+                        else:
+                            new_stop_loss = entry_price + (sl_euro / volume)
+                            new_take_profit = entry_price - (tp_euro / volume)
+                    else:
+                        # Prozent-Modus
+                        tp_percent = settings.swing_take_profit_percent
+                        sl_percent = settings.swing_stop_loss_percent
+                        if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                            new_stop_loss = entry_price * (1 - sl_percent / 100)
+                            new_take_profit = entry_price * (1 + tp_percent / 100)
+                        else:
+                            new_stop_loss = entry_price * (1 + sl_percent / 100)
+                            new_take_profit = entry_price * (1 - tp_percent / 100)
+                elif strategy == 'day':
+                    mode = settings.day_tp_sl_mode
+                    if mode == 'euro':
+                        tp_euro = settings.day_take_profit_euro
+                        sl_euro = settings.day_stop_loss_euro
+                        # Euro-Modus Berechnung
+                        if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                            new_stop_loss = entry_price - (sl_euro / volume)
+                            new_take_profit = entry_price + (tp_euro / volume)
+                        else:
+                            new_stop_loss = entry_price + (sl_euro / volume)
+                            new_take_profit = entry_price - (tp_euro / volume)
+                    else:
+                        # Prozent-Modus
+                        tp_percent = settings.day_take_profit_percent
+                        sl_percent = settings.day_stop_loss_percent
+                        if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                            new_stop_loss = entry_price * (1 - sl_percent / 100)
+                            new_take_profit = entry_price * (1 + tp_percent / 100)
+                        else:
+                            new_stop_loss = entry_price * (1 + sl_percent / 100)
+                            new_take_profit = entry_price * (1 - tp_percent / 100)
+                else:
+                    # Manual/Unknown - verwende Swing Settings als Default (Prozent-Modus)
+                    tp_percent = settings.swing_take_profit_percent
+                    sl_percent = settings.swing_stop_loss_percent
+                    if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                        new_stop_loss = entry_price * (1 - sl_percent / 100)
+                        new_take_profit = entry_price * (1 + tp_percent / 100)
+                    else:
+                        new_stop_loss = entry_price * (1 + sl_percent / 100)
+                        new_take_profit = entry_price * (1 - tp_percent / 100)
                 
                 # Update in DB (upsert falls nicht existiert)
                 await db.trade_settings.update_one(
