@@ -1228,18 +1228,22 @@ const Dashboard = () => {
                             <td className="px-4 py-3 text-right text-slate-200">${currentPrice?.toFixed(2)}</td>
                             <td className="px-4 py-3 text-right text-slate-200">{trade.quantity}</td>
                             <td className="px-4 py-3 text-right">
-                              {trade.stop_loss ? (
-                                <span className="text-amber-400">${trade.stop_loss.toFixed(2)}</span>
-                              ) : (
-                                <span className="text-slate-600 text-xs">Kein SL</span>
-                              )}
+                              {(() => {
+                                const sl = trade.stop_loss;
+                                if (sl !== null && sl !== undefined && !isNaN(Number(sl))) {
+                                  return <span className="text-amber-400">${Number(sl).toFixed(2)}</span>;
+                                }
+                                return <span className="text-slate-600 text-xs">Kein SL</span>;
+                              })()}
                             </td>
                             <td className="px-4 py-3 text-right">
-                              {trade.take_profit ? (
-                                <span className="text-emerald-400">${trade.take_profit.toFixed(2)}</span>
-                              ) : (
-                                <span className="text-slate-600 text-xs">Kein TP</span>
-                              )}
+                              {(() => {
+                                const tp = trade.take_profit;
+                                if (tp !== null && tp !== undefined && !isNaN(Number(tp))) {
+                                  return <span className="text-emerald-400">${Number(tp).toFixed(2)}</span>;
+                                }
+                                return <span className="text-slate-600 text-xs">Kein TP</span>;
+                              })()}
                             </td>
                             <td className={`px-4 py-3 text-right font-semibold ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               {pl >= 0 ? '+' : ''}{pl.toFixed(2)} €
