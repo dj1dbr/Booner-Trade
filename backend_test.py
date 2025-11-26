@@ -4149,37 +4149,19 @@ class Booner_TradeTester:
         logger.info("="*80)
 
 async def main():
-    """🔧 MANUAL TRADE EXECUTION BUG FIX TESTING - CRITICAL PRIORITY"""
+    """🔧 UMFASSENDER FIX - 3 PROBLEME BEHOBEN - TESTING"""
     # Get backend URL from environment
     backend_url = "https://smarttrade-hub-33.preview.emergentagent.com"
     
-    logger.info(f"🔧 Starting MANUAL TRADE EXECUTION BUG FIX TESTING")
+    logger.info(f"🔧 Starting UMFASSENDER FIX TESTING - 3 PROBLEME BEHOBEN")
     logger.info(f"Backend URL: {backend_url}")
     logger.info("="*80)
-    logger.info("🔥 CRITICAL BUG FIX TESTS - SL/TP Removal Verification")
+    logger.info("🔥 REVIEW REQUEST TESTS - CRITICAL PRIORITY")
     logger.info("="*80)
     
     async with Booner_TradeTester(backend_url) as tester:
-        # Run CRITICAL MANUAL TRADE EXECUTION BUG FIX TESTS FIRST
-        logger.info("🔥 Running MANUAL TRADE EXECUTION BUG FIX TESTS...")
-        logger.info("Testing that trades are sent WITHOUT SL/TP to MT5...")
-        
-        # Test 1: Manual Trade Execution - GOLD
-        await tester.test_manual_trade_execution_gold_critical()
-        
-        # Test 2: Verify Trade Appears in MT5 Without SL/TP
-        await tester.test_verify_trade_appears_without_sl_tp()
-        
-        # Test 3: Backend Logs Analysis
-        await tester.test_backend_logs_analysis()
-        
-        # Test 4: Alternative Commodity Test - WTI_CRUDE
-        await tester.test_alternative_commodity_wti_crude()
-        
-        # Run supporting tests to verify system health
-        logger.info("\n🔍 Running SUPPORTING SYSTEM HEALTH TESTS...")
-        await tester.test_api_availability()
-        await tester.test_broker_connection_problem_1()
+        # Run REVIEW REQUEST SPECIFIC TESTS
+        await tester.run_review_request_tests()
         await tester.test_error_handling_improvements()
         
         # Print summary
