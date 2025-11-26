@@ -574,7 +574,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "CRITICAL - Settings Save", 
                 False, 
@@ -788,7 +788,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "CRITICAL - AI Chat Response", 
                 False, 
@@ -840,7 +840,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "CRITICAL - Charts GOLD Data", 
                 False, 
@@ -1043,7 +1043,7 @@ class Booner_TradeTester:
                     {"success": success_flag, "trade_executed": trade_executed}
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "REVIEW 3 - AI Chat GOLD Trade", 
                 False, 
@@ -1103,7 +1103,7 @@ class Booner_TradeTester:
                     {"success": success_flag, "eur_trade_executed": eur_trade_executed}
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "REVIEW 4 - AI Chat EUR Trade", 
                 False, 
@@ -1199,7 +1199,7 @@ class Booner_TradeTester:
                     {"success": success_flag, "wti_trade_executed": wti_trade_executed, "auto_trading": False}
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "REVIEW 5 - AI Chat Independent of Auto-Trading", 
                 False, 
@@ -2126,7 +2126,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             if "ERR_MARKET_UNKNOWN_SYMBOL" in error_msg:
                 self.log_test_result(
                     "Manual Trade WTI_CRUDE", 
@@ -2168,7 +2168,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result(
                 "Manual Trade GOLD", 
                 False, 
@@ -2256,7 +2256,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result("MT5 Libertex Account", False, f"Failed to get account: {error_msg}", data)
     
     async def test_mt5_icmarkets_account(self):
@@ -2285,7 +2285,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result("MT5 ICMarkets Account", False, f"Failed to get account: {error_msg}", data)
     
     async def test_settings_platforms(self):
@@ -2408,7 +2408,7 @@ class Booner_TradeTester:
                     data
                 )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result("AI Chat with Settings", False, f"AI Chat failed: {error_msg}", data)
     
     async def test_market_data_endpoint(self):
@@ -3618,7 +3618,7 @@ class Booner_TradeTester:
                         data
                     )
         else:
-            error_msg = data.get("detail", str(data))
+            error_msg = str(data.get("detail", data))
             self.log_test_result("AI Chat Context Generation", False, f"AI Chat request failed: {error_msg}", data)
     
     async def test_bot_trade_logic_analysis(self):
