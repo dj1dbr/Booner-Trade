@@ -24,29 +24,29 @@ def set_platform_connector(connector):
 # Handelszeiten (UTC) - Wichtig für AI Trading Bot
 MARKET_HOURS = {
     # Edelmetalle - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
-    "GOLD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
-    "SILVER": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
-    "PLATINUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
-    "PALLADIUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "GOLD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
+    "SILVER": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
+    "PLATINUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
+    "PALLADIUM": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
     
     # Energie - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
-    "WTI_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
-    "BRENT_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
-    "NATURAL_GAS": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "WTI_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
+    "BRENT_CRUDE": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
+    "NATURAL_GAS": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
     
     # Agrar - Börsenzeiten (Montag-Freitag 08:30-20:00 UTC)
-    "WHEAT": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
-    "CORN": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
-    "SOYBEANS": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
-    "COFFEE": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
-    "SUGAR": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
-    "COCOA": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False},
+    "WHEAT": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
+    "CORN": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
+    "SOYBEANS": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
+    "COFFEE": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
+    "SUGAR": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
+    "COCOA": {"opens": "08:30", "closes": "20:00", "days": [0,1,2,3,4], "24_5": False, "display": "Mo-Fr 08:30-20:00 UTC"},
     
     # Forex - 24/5 (Sonntag 22:00 - Freitag 21:00 UTC)
-    "EURUSD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True},
+    "EURUSD": {"opens": "22:00", "closes": "21:00", "days": [0,1,2,3,4], "24_5": True, "display": "24/5 (So 22:00 - Fr 21:00 UTC)"},
     
     # Crypto - 24/7
-    "BITCOIN": {"opens": "00:00", "closes": "23:59", "days": [0,1,2,3,4,5,6], "24_7": True}
+    "BITCOIN": {"opens": "00:00", "closes": "23:59", "days": [0,1,2,3,4,5,6], "24_7": True, "display": "24/7 (Immer geöffnet)"}
 }
 
 def is_market_open(commodity_id: str) -> bool:
