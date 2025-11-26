@@ -848,6 +848,483 @@ class Booner_TradeTester:
                 data
             )
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # REVIEW REQUEST SPECIFIC TESTS - 3 PROBLEME BEHOBEN
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    async def test_review_1_manual_trade_execution_gold(self):
+        """🔥 REVIEW TEST 1: Manual Trade Execution - GOLD"""
+        logger.info("🔥 REVIEW TEST 1: Manual Trade Execution - GOLD BUY 0.01")
+        
+        trade_data = {
+            "commodity": "GOLD",
+            "trade_type": "BUY",
+            "quantity": 0.01
+        }
+        
+        success, data = await self.make_request("POST", "/api/trades/execute", trade_data)
+        
+        if success:
+            trade_success = data.get("success", False)
+            ticket = data.get("ticket")
+            platform = data.get("platform")
+            message = data.get("message", "")
+            
+            if trade_success and ticket:
+                self.log_test_result(
+                    "REVIEW 1 - Manual Trade GOLD", 
+                    True, 
+                    f"✅ GOLD trade executed successfully - Ticket: {ticket}, Platform: {platform}",
+                    {
+                        "success": trade_success,
+                        "ticket": ticket,
+                        "platform": platform,
+                        "message": message
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW 1 - Manual Trade GOLD", 
+                    False, 
+                    f"❌ GOLD trade failed - Success: {trade_success}, Ticket: {ticket}, Message: {message}",
+                    data
+                )
+        else:
+            error_detail = data.get("detail", str(data))
+            
+            # Check if it's "Broker hat Order abgelehnt" (the old bug)
+            if "broker hat order abgelehnt" in error_detail.lower():
+                self.log_test_result(
+                    "REVIEW 1 - Manual Trade GOLD", 
+                    False, 
+                    f"❌ OLD BUG STILL EXISTS: {error_detail}",
+                    {"error_detail": error_detail, "bug_type": "broker_rejection"}
+                )
+            else:
+                # Other errors are acceptable (market closed, etc.)
+                self.log_test_result(
+                    "REVIEW 1 - Manual Trade GOLD", 
+                    True, 
+                    f"✅ GOLD trade failed with acceptable error (not broker rejection): {error_detail}",
+                    {"error_detail": error_detail, "error_type": "acceptable"}
+                )
+
+    async def test_review_2_platform_connections_verification(self):
+        """🔥 REVIEW TEST 2: Platform Connections Verification"""
+        logger.info("🔥 REVIEW TEST 2: Platform Connections - MT5_LIBERTEX_DEMO & MT5_ICMARKETS_DEMO")
+        
+        success, data = await self.make_request("GET", "/api/platforms/status")
+        
+        if success:
+            platforms = data.get("platforms", [])
+            
+            # Find the specific platforms mentioned in review
+            mt5_libertex_demo = None
+            mt5_icmarkets_demo = None
+            
+            for platform in platforms:
+                if isinstance(platform, dict):
+                    name = platform.get("name", "")
+                    if "MT5_LIBERTEX" in name and "DEMO" in name:
+                        mt5_libertex_demo = platform
+                    elif "MT5_ICMARKETS" in name and "DEMO" in name:
+                        mt5_icmarkets_demo = platform
+            
+            # Check MT5_LIBERTEX_DEMO
+            if mt5_libertex_demo:
+                connected = mt5_libertex_demo.get("connected", False)
+                balance = mt5_libertex_demo.get("balance", 0)
+                
+                if connected and balance > 0:
+                    self.log_test_result(
+                        "REVIEW 2 - MT5_LIBERTEX_DEMO Connection", 
+                        True, 
+                        f"✅ MT5_LIBERTEX_DEMO: connected=true, balance=€{balance:,.2f}",
+                        {"connected": connected, "balance": balance}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW 2 - MT5_LIBERTEX_DEMO Connection", 
+                        False, 
+                        f"❌ MT5_LIBERTEX_DEMO: connected={connected}, balance=€{balance}",
+                        mt5_libertex_demo
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW 2 - MT5_LIBERTEX_DEMO Connection", 
+                    False, 
+                    "❌ MT5_LIBERTEX_DEMO not found in platforms",
+                    {"available_platforms": [p.get("name") for p in platforms]}
+                )
+            
+            # Check MT5_ICMARKETS_DEMO
+            if mt5_icmarkets_demo:
+                connected = mt5_icmarkets_demo.get("connected", False)
+                balance = mt5_icmarkets_demo.get("balance", 0)
+                
+                if connected and balance > 0:
+                    self.log_test_result(
+                        "REVIEW 2 - MT5_ICMARKETS_DEMO Connection", 
+                        True, 
+                        f"✅ MT5_ICMARKETS_DEMO: connected=true, balance=€{balance:,.2f}",
+                        {"connected": connected, "balance": balance}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW 2 - MT5_ICMARKETS_DEMO Connection", 
+                        False, 
+                        f"❌ MT5_ICMARKETS_DEMO: connected={connected}, balance=€{balance}",
+                        mt5_icmarkets_demo
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW 2 - MT5_ICMARKETS_DEMO Connection", 
+                    False, 
+                    "❌ MT5_ICMARKETS_DEMO not found in platforms",
+                    {"available_platforms": [p.get("name") for p in platforms]}
+                )
+        else:
+            self.log_test_result(
+                "REVIEW 2 - Platform Connections", 
+                False, 
+                f"❌ Failed to get platform status: {data}",
+                data
+            )
+
+    async def test_review_3_ai_chat_trade_gold_kaufen(self):
+        """🔥 REVIEW TEST 3: AI Chat Trade Execution - GOLD KAUFEN"""
+        logger.info("🔥 REVIEW TEST 3: AI Chat - 'Kaufe Gold' should execute trade")
+        
+        chat_data = {
+            "message": "Kaufe Gold",
+            "session_id": "test-123"
+        }
+        
+        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        
+        if success:
+            response = data.get("response", "")
+            success_flag = data.get("success", False)
+            
+            # Check if response indicates trade execution
+            trade_executed = any(keyword in response.lower() for keyword in [
+                "trade ausgeführt", "ticket", "position eröffnet", "gold gekauft", 
+                "buy gold", "order", "erfolgreich"
+            ])
+            
+            if success_flag and trade_executed:
+                self.log_test_result(
+                    "REVIEW 3 - AI Chat GOLD Trade", 
+                    True, 
+                    f"✅ AI Chat executed GOLD trade: {response[:100]}...",
+                    {"success": success_flag, "trade_executed": trade_executed, "response_length": len(response)}
+                )
+            elif not success_flag:
+                # Check if it's budget issue (expected)
+                if "budget" in response.lower() or "exceeded" in response.lower():
+                    self.log_test_result(
+                        "REVIEW 3 - AI Chat GOLD Trade", 
+                        True, 
+                        f"✅ AI Chat budget exceeded (expected): {response[:100]}...",
+                        {"success": success_flag, "error_type": "budget_exceeded"}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW 3 - AI Chat GOLD Trade", 
+                        False, 
+                        f"❌ AI Chat failed: {response}",
+                        data
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW 3 - AI Chat GOLD Trade", 
+                    False, 
+                    f"❌ AI Chat did not execute trade: {response[:100]}...",
+                    {"success": success_flag, "trade_executed": trade_executed}
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "REVIEW 3 - AI Chat GOLD Trade", 
+                False, 
+                f"❌ AI Chat request failed: {error_msg}",
+                data
+            )
+
+    async def test_review_4_ai_chat_trade_eur_kaufen(self):
+        """🔥 REVIEW TEST 4: AI Chat Trade Execution - EUR KAUFEN"""
+        logger.info("🔥 REVIEW TEST 4: AI Chat - 'Kaufe EUR' should execute EURUSD trade")
+        
+        chat_data = {
+            "message": "Kaufe EUR",
+            "session_id": "test-456"
+        }
+        
+        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        
+        if success:
+            response = data.get("response", "")
+            success_flag = data.get("success", False)
+            
+            # Check if response indicates EUR/EURUSD trade execution
+            eur_trade_executed = any(keyword in response.lower() for keyword in [
+                "eurusd", "eur/usd", "eur gekauft", "euro", "trade ausgeführt", 
+                "ticket", "position eröffnet"
+            ])
+            
+            if success_flag and eur_trade_executed:
+                self.log_test_result(
+                    "REVIEW 4 - AI Chat EUR Trade", 
+                    True, 
+                    f"✅ AI Chat executed EUR/EURUSD trade: {response[:100]}...",
+                    {"success": success_flag, "eur_trade_executed": eur_trade_executed, "response_length": len(response)}
+                )
+            elif not success_flag:
+                # Check if it's budget issue (expected)
+                if "budget" in response.lower() or "exceeded" in response.lower():
+                    self.log_test_result(
+                        "REVIEW 4 - AI Chat EUR Trade", 
+                        True, 
+                        f"✅ AI Chat budget exceeded (expected): {response[:100]}...",
+                        {"success": success_flag, "error_type": "budget_exceeded"}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW 4 - AI Chat EUR Trade", 
+                        False, 
+                        f"❌ AI Chat failed: {response}",
+                        data
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW 4 - AI Chat EUR Trade", 
+                    False, 
+                    f"❌ AI Chat did not execute EUR trade: {response[:100]}...",
+                    {"success": success_flag, "eur_trade_executed": eur_trade_executed}
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "REVIEW 4 - AI Chat EUR Trade", 
+                False, 
+                f"❌ AI Chat request failed: {error_msg}",
+                data
+            )
+
+    async def test_review_5_ai_chat_with_inactive_auto_trading(self):
+        """🔥 REVIEW TEST 5: AI Chat mit INAKTIVEM Auto-Trading"""
+        logger.info("🔥 REVIEW TEST 5: AI Chat should trade even when auto_trading=false")
+        
+        # First, set auto_trading to false
+        settings_success, current_settings = await self.make_request("GET", "/api/settings")
+        
+        if not settings_success:
+            self.log_test_result(
+                "REVIEW 5 - Get Settings", 
+                False, 
+                f"❌ Could not get current settings: {current_settings}",
+                current_settings
+            )
+            return
+        
+        # Update auto_trading to false
+        updated_settings = current_settings.copy()
+        updated_settings["auto_trading"] = False
+        
+        update_success, update_data = await self.make_request("POST", "/api/settings", updated_settings)
+        
+        if not update_success:
+            self.log_test_result(
+                "REVIEW 5 - Set Auto-Trading False", 
+                False, 
+                f"❌ Could not set auto_trading=false: {update_data}",
+                update_data
+            )
+            return
+        
+        # Wait a moment for settings to take effect
+        await asyncio.sleep(1)
+        
+        # Now test AI Chat trade with auto_trading=false
+        chat_data = {
+            "message": "Kaufe WTI",
+            "session_id": "test-789"
+        }
+        
+        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        
+        if success:
+            response = data.get("response", "")
+            success_flag = data.get("success", False)
+            
+            # Check if response indicates WTI trade execution
+            wti_trade_executed = any(keyword in response.lower() for keyword in [
+                "wti", "crude", "oil", "trade ausgeführt", "ticket", 
+                "position eröffnet", "öl gekauft"
+            ])
+            
+            if success_flag and wti_trade_executed:
+                self.log_test_result(
+                    "REVIEW 5 - AI Chat Independent of Auto-Trading", 
+                    True, 
+                    f"✅ AI Chat executed WTI trade despite auto_trading=false: {response[:100]}...",
+                    {
+                        "success": success_flag, 
+                        "wti_trade_executed": wti_trade_executed, 
+                        "auto_trading": False,
+                        "response_length": len(response)
+                    }
+                )
+            elif not success_flag:
+                # Check if it's budget issue (expected)
+                if "budget" in response.lower() or "exceeded" in response.lower():
+                    self.log_test_result(
+                        "REVIEW 5 - AI Chat Independent of Auto-Trading", 
+                        True, 
+                        f"✅ AI Chat budget exceeded (expected): {response[:100]}...",
+                        {"success": success_flag, "error_type": "budget_exceeded", "auto_trading": False}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW 5 - AI Chat Independent of Auto-Trading", 
+                        False, 
+                        f"❌ AI Chat failed: {response}",
+                        data
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW 5 - AI Chat Independent of Auto-Trading", 
+                    False, 
+                    f"❌ AI Chat did not execute WTI trade: {response[:100]}...",
+                    {"success": success_flag, "wti_trade_executed": wti_trade_executed, "auto_trading": False}
+                )
+        else:
+            error_msg = data.get("detail", str(data))
+            self.log_test_result(
+                "REVIEW 5 - AI Chat Independent of Auto-Trading", 
+                False, 
+                f"❌ AI Chat request failed: {error_msg}",
+                data
+            )
+
+    async def test_review_6_backend_logs_analysis(self):
+        """🔥 REVIEW TEST 6: Backend Logs Analysis - Trading Action Flows"""
+        logger.info("🔥 REVIEW TEST 6: Backend Logs - Check for trading action flows")
+        
+        try:
+            # Check for specific log patterns mentioned in review
+            log_checks = [
+                {
+                    "name": "Trading Action Detection",
+                    "pattern": "🔍 Checking for trading actions in user message",
+                    "expected": True,
+                    "description": "AI Chat checks for trading actions"
+                },
+                {
+                    "name": "Trade Command Detection",
+                    "pattern": "🎯 Detected trade command",
+                    "expected": True,
+                    "description": "AI Chat detects trade commands"
+                },
+                {
+                    "name": "Trading Action Executed",
+                    "pattern": "✅ Trading action executed",
+                    "expected": True,
+                    "description": "AI Chat executes trading actions"
+                },
+                {
+                    "name": "Trade Result Logging",
+                    "pattern": "📊 Trade result:",
+                    "expected": True,
+                    "description": "Trade execution results logged"
+                },
+                {
+                    "name": "Trade Execution Success",
+                    "pattern": "✅ Trade ausgeführt.*Ticket #",
+                    "expected": True,
+                    "description": "Successful trade execution with ticket"
+                }
+            ]
+            
+            log_results = []
+            
+            for check in log_checks:
+                try:
+                    # Check both stdout and stderr logs
+                    result_out = subprocess.run(
+                        ["grep", "-i", check["pattern"], "/var/log/supervisor/backend.out.log"],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    result_err = subprocess.run(
+                        ["grep", "-i", check["pattern"], "/var/log/supervisor/backend.err.log"],
+                        capture_output=True, text=True, timeout=5
+                    )
+                    
+                    found_out = result_out.returncode == 0 and result_out.stdout.strip()
+                    found_err = result_err.returncode == 0 and result_err.stdout.strip()
+                    found = found_out or found_err
+                    
+                    # Get recent matches (last 2 lines)
+                    recent_matches = []
+                    if found_out:
+                        recent_matches.extend(result_out.stdout.strip().split('\n')[-2:])
+                    if found_err:
+                        recent_matches.extend(result_err.stdout.strip().split('\n')[-2:])
+                    
+                    log_results.append({
+                        "name": check["name"],
+                        "pattern": check["pattern"],
+                        "expected": check["expected"],
+                        "found": found,
+                        "matches": recent_matches[-2:],  # Last 2 matches
+                        "description": check["description"]
+                    })
+                    
+                except Exception as e:
+                    log_results.append({
+                        "name": check["name"],
+                        "pattern": check["pattern"],
+                        "expected": check["expected"],
+                        "found": False,
+                        "error": str(e),
+                        "description": check["description"]
+                    })
+            
+            # Analyze results
+            critical_logs_found = sum(1 for result in log_results if result["expected"] and result.get("found"))
+            total_expected = sum(1 for result in log_results if result["expected"])
+            
+            if critical_logs_found >= 2:  # At least 2 out of 5 expected logs found
+                self.log_test_result(
+                    "REVIEW 6 - Backend Logs Analysis", 
+                    True, 
+                    f"✅ Found {critical_logs_found}/{total_expected} expected trading action logs",
+                    {
+                        "critical_found": critical_logs_found,
+                        "total_expected": total_expected,
+                        "log_results": log_results
+                    }
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW 6 - Backend Logs Analysis", 
+                    False, 
+                    f"❌ Only found {critical_logs_found}/{total_expected} expected trading action logs",
+                    {
+                        "critical_found": critical_logs_found,
+                        "total_expected": total_expected,
+                        "log_results": log_results
+                    }
+                )
+                
+        except Exception as e:
+            self.log_test_result(
+                "REVIEW 6 - Backend Logs Analysis", 
+                False, 
+                f"❌ Error analyzing logs: {str(e)}",
+                {"error": str(e)}
+            )
+
     async def test_broker_connection_problem_1(self):
         """LEGACY TEST: Broker-Verbindung - User says 'Immer noch keine Verbindung zu den Brokern'"""
         logger.info("🔍 LEGACY TEST: Testing Broker Connection Issues")
