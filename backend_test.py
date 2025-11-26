@@ -4086,8 +4086,8 @@ class Booner_TradeTester:
         self.print_test_summary()
 
     async def run_all_tests(self):
-        """Run all backend tests - FOCUS ON BROKER CONNECTION & SETTINGS"""
-        await self.run_broker_connection_and_settings_tests()
+        """Run all backend tests - FOCUS ON REVIEW REQUEST SCENARIOS"""
+        await self.run_review_request_tests()
     
     def print_test_summary(self):
         """Print comprehensive test summary"""
