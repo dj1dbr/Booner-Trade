@@ -997,12 +997,10 @@ class Booner_TradeTester:
         """🔥 REVIEW TEST 3: AI Chat Trade Execution - GOLD KAUFEN"""
         logger.info("🔥 REVIEW TEST 3: AI Chat - 'Kaufe Gold' should execute trade")
         
-        chat_data = {
-            "message": "Kaufe Gold",
-            "session_id": "test-123"
-        }
+        # AI Chat uses query parameters, not JSON body
+        endpoint = "/api/ai-chat?message=Kaufe Gold&session_id=test-123"
         
-        success, data = await self.make_request("POST", "/api/ai-chat", chat_data)
+        success, data = await self.make_request("POST", endpoint)
         
         if success:
             response = data.get("response", "")
