@@ -25,6 +25,17 @@ console.log('🔧 API URL:', API);
 // Configure axios defaults with timeout
 axios.defaults.timeout = 10000; // 10 second timeout for all requests
 
+// Test backend connectivity on load
+axios.get(`${API}/ping`)
+  .then(response => {
+    console.log('✅ Backend Verbindung OK:', response.data);
+  })
+  .catch(error => {
+    console.error('❌ Backend Verbindung FEHLER:', error.message);
+    console.error('   URL:', `${API}/ping`);
+    console.error('   Error Details:', error);
+  });
+
 const Dashboard = () => {
   const [marketData, setMarketData] = useState(null);
   const [allMarkets, setAllMarkets] = useState({});  // All commodity markets
