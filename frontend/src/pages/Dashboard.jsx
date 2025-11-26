@@ -1200,7 +1200,6 @@ const Dashboard = () => {
                               console.log('🖱️ Row clicked!', trade.commodity);
                               handleTradeClick(trade);
                             }}
-                            title="Klicken um Trade-Einstellungen zu bearbeiten"
                           >
                             <td className="px-4 py-3 text-slate-200">
                               {commodity?.name || trade.commodity}
