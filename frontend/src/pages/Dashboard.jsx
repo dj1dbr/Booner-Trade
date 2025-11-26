@@ -2361,7 +2361,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
                   ))}
                 </select>
                 <p className="text-xs text-slate-500">
-                  Stellen Sie sicher, dass das Modell mit &apos;ollama pull {formData.ollama_model || &apos;llama2&apos;}&apos; installiert ist
+                  Stellen Sie sicher, dass das Modell mit &lsquo;ollama pull {formData.ollama_model || 'llama2'}&rsquo; installiert ist
                 </p>
               </div>
             </div>
