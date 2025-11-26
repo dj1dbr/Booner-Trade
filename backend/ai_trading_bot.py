@@ -777,10 +777,6 @@ Antworte NUR mit: JA oder NEIN
             
             logger.info(f"✅ {commodity_id} → {selected['name']} (Symbol: {symbol}, Open Positions: {platform_positions.get(platform, 0)})")
             
-            if not platform or not symbol:
-                logger.warning(f"⚠️  {commodity_id}: Kein verfügbares Symbol auf aktiven Plattformen")
-                return
-            
             # Risk Management: Positionsgröße berechnen
             account_info = await multi_platform.get_account_info(platform)
             if not account_info:
