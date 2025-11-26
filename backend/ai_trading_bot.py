@@ -11,7 +11,7 @@ Features:
 """
 import asyncio
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 from dotenv import load_dotenv
