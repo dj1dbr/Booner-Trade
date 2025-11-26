@@ -1188,7 +1188,10 @@ const Dashboard = () => {
                           <tr 
                             key={trade.id} 
                             className="border-b border-slate-800 hover:bg-slate-800/30 cursor-pointer transition-colors"
-                            onClick={() => handleTradeClick(trade)}
+                            onClick={(e) => {
+                              console.log('🖱️ Row clicked!', trade.commodity);
+                              handleTradeClick(trade);
+                            }}
                             title="Klicken um Trade-Einstellungen zu bearbeiten"
                           >
                             <td className="px-4 py-3 text-slate-200">
