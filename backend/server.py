@@ -1761,6 +1761,25 @@ async def execute_trade(request: TradeExecuteRequest):
                     upsert=True
                 )
                 logger.info(f"💾 SL/TP Settings gespeichert für Trade #{platform_ticket}: SL={stop_loss:.2f}, TP={take_profit:.2f}")
+            except Exception as e:
+                logger.error(f"⚠️ Fehler beim Speichern der Trade Settings: {e}")
+                # Continue anyway - trade was successful
+            
+            return {
+                "success": True, 
+                "ticket": platform_ticket, 
+                "platform": default_platform,
+                "message": f"Trade erfolgreich an {default_platform} gesendet. Ticket: #{platform_ticket}"
+            }
+        else:
+            logger.error(f"❌ platform_ticket ist None - Trade fehlgeschlagen")
+            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden - Broker hat Order abgelehnt")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error executing manual trade: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/trades/auto-set-targets")
 async def auto_set_sl_tp_for_open_trades():
