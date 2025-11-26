@@ -1039,7 +1039,15 @@ const Dashboard = () => {
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs text-slate-500">{commodity.category}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-500">{commodity.category}</span>
+                    {commodity.market_hours && (
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span className="text-slate-400" title="Handelszeiten">{commodity.market_hours}</span>
+                      </div>
+                    )}
+                  </div>
                   {settings?.mode === 'MT5' && !['GOLD', 'SILVER', 'PLATINUM', 'PALLADIUM'].includes(commodityId) && (
                     <div className="mt-2 flex items-center gap-1 text-xs text-green-400 bg-green-500/10 border border-green-500/30 rounded px-2 py-1">
                       <AlertCircle className="w-3 h-3" />
