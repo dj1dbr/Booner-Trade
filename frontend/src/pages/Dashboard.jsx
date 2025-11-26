@@ -1743,7 +1743,7 @@ const Dashboard = () => {
                             <Button
                               onClick={async () => {
                                 try {
-                                  await axios.post(`${backendUrl}/api/trades/close`, {
+                                  await axios.post(`${API}/trades/close`, {
                                     trade_id: trade.id,
                                     ticket: trade.ticket,
                                     platform: trade.platform
@@ -2190,7 +2190,7 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
     }
 
     try {
-      const response = await axios.post(`${backendUrl}/api/settings/reset`);
+      const response = await axios.post(`${API}/settings/reset`);
       if (response.data.success) {
         // Update form with reset values
         setFormData(response.data.settings);
