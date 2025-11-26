@@ -52,13 +52,13 @@ sudo supervisorctl restart backend
 
 ```bash
 # Test: Symbolzuordnung prüfen
-curl https://smarttrade-hub-33.preview.emergentagent.com/api/mt5/symbols
+curl https://fxmarket-connect.preview.emergentagent.com/api/mt5/symbols
 
 # Test: Account-Verbindung
-curl https://smarttrade-hub-33.preview.emergentagent.com/api/mt5/account
+curl https://fxmarket-connect.preview.emergentagent.com/api/mt5/account
 
 # Test: Manuelle Order (z.B. Gold)
-curl -X POST "https://smarttrade-hub-33.preview.emergentagent.com/api/trades/execute?trade_type=BUY&price=3978&commodity=GOLD"
+curl -X POST "https://fxmarket-connect.preview.emergentagent.com/api/trades/execute?trade_type=BUY&price=3978&commodity=GOLD"
 ```
 
 ## Beispiel: Broker-spezifische Symbole

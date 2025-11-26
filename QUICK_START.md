@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://smarttrade-hub-33.preview.emergentagent.com
+https://fxmarket-connect.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.
