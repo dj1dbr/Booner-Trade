@@ -1185,6 +1185,7 @@ const Dashboard = () => {
                           <tr>
                             <th className="px-4 py-3 text-left text-slate-300">Rohstoff</th>
                             <th className="px-4 py-3 text-left text-slate-300">Typ</th>
+                            <th className="px-4 py-3 text-center text-slate-300">Strategie</th>
                             <th className="px-4 py-3 text-right text-slate-300">Einstieg</th>
                             <th className="px-4 py-3 text-right text-slate-300">Aktuell</th>
                             <th className="px-4 py-3 text-right text-slate-300">Menge</th>
