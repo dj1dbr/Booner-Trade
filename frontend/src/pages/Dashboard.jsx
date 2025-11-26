@@ -2507,32 +2507,95 @@ const SettingsForm = ({ settings, onSave, commodities, balance }) => {
                   />
                   <p className="text-xs text-slate-500 mt-1">Default: 5</p>
                 </div>
-                <div>
-                  <Label className="text-xs text-slate-400">Stop Loss %</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    max="10"
-                    value={formData.swing_stop_loss_percent || 2.0}
-                    onChange={(e) => setFormData({ ...formData, swing_stop_loss_percent: parseFloat(e.target.value) })}
-                    className="bg-slate-800 border-slate-700 text-sm"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Default: 2.0%</p>
+                {/* TP/SL Modus Toggle */}
+                <div className="col-span-2 p-3 bg-slate-800/30 rounded border border-slate-700">
+                  <Label className="text-xs text-slate-300 font-semibold mb-2 block">TP/SL Eingabe-Modus:</Label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, swing_tp_sl_mode: 'percent' })}
+                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        (formData.swing_tp_sl_mode || 'percent') === 'percent'
+                          ? 'bg-purple-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      📊 Prozent (%)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, swing_tp_sl_mode: 'euro' })}
+                      className={`flex-1 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                        formData.swing_tp_sl_mode === 'euro'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      💶 Euro (€)
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-xs text-slate-400">Take Profit %</Label>
-                  <Input
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    max="20"
-                    value={formData.swing_take_profit_percent || 4.0}
-                    onChange={(e) => setFormData({ ...formData, swing_take_profit_percent: parseFloat(e.target.value) })}
-                    className="bg-slate-800 border-slate-700 text-sm"
-                  />
-                  <p className="text-xs text-slate-500 mt-1">Default: 4.0%</p>
-                </div>
+
+                {/* Bedingte Felder basierend auf Modus */}
+                {(formData.swing_tp_sl_mode || 'percent') === 'percent' ? (
+                  <>
+                    <div>
+                      <Label className="text-xs text-slate-400">Stop Loss %</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        max="10"
+                        value={formData.swing_stop_loss_percent || 2.0}
+                        onChange={(e) => setFormData({ ...formData, swing_stop_loss_percent: parseFloat(e.target.value) })}
+                        className="bg-slate-800 border-slate-700 text-sm"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Default: 2.0%</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Take Profit %</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0.1"
+                        max="20"
+                        value={formData.swing_take_profit_percent || 4.0}
+                        onChange={(e) => setFormData({ ...formData, swing_take_profit_percent: parseFloat(e.target.value) })}
+                        className="bg-slate-800 border-slate-700 text-sm"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Default: 4.0%</p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <Label className="text-xs text-slate-400">Stop Loss €</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="1"
+                        max="500"
+                        value={formData.swing_stop_loss_euro || 20.0}
+                        onChange={(e) => setFormData({ ...formData, swing_stop_loss_euro: parseFloat(e.target.value) })}
+                        className="bg-slate-800 border-slate-700 text-sm"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Schließe bei €20 Verlust</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Take Profit €</Label>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="1"
+                        max="1000"
+                        value={formData.swing_take_profit_euro || 50.0}
+                        onChange={(e) => setFormData({ ...formData, swing_take_profit_euro: parseFloat(e.target.value) })}
+                        className="bg-slate-800 border-slate-700 text-sm"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Schließe bei €50 Gewinn</p>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
