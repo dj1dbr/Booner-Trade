@@ -331,6 +331,7 @@ const Dashboard = () => {
       const allTrades = response.data.trades || [];
       
       console.log(`✅ Fetched ${allTrades.length} trades from unified endpoint`);
+      console.log('🔍 DEBUG - First trade data:', JSON.stringify(allTrades[0], null, 2));
       
       // ALTE LOGIK ENTFERNT - würde Duplikate erzeugen!
       // Die separaten MT5 Position Calls sind nicht mehr nötig,
