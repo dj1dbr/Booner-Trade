@@ -3089,6 +3089,7 @@ async def connection_health_check():
 @app.on_event("startup")
 async def startup_event():
     """Initialize background tasks on startup"""
+    import asyncio as _asyncio  # Local import to avoid conflicts
     logger.info("Starting WTI Smart Trader API...")
     
     # Load settings and initialize AI
