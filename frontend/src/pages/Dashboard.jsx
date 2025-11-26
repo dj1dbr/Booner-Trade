@@ -1280,14 +1280,20 @@ const Dashboard = () => {
                             </td>
                             <td className="px-4 py-3 text-center space-x-2">
                               <button
-                                onClick={() => handleCloseTrade(trade)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Verhindert Trade-Detail Modal
+                                  handleCloseTrade(trade);
+                                }}
                                 className="text-orange-400 hover:text-orange-300 text-xs font-semibold px-2 py-1 bg-orange-900/20 rounded"
                                 title="Position schließen"
                               >
                                 🔒 Schließen
                               </button>
                               <button
-                                onClick={() => handleDeleteTrade(trade.id, `${commodity?.name || trade.commodity} ${trade.type}`)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Verhindert Trade-Detail Modal
+                                  handleDeleteTrade(trade.id, `${commodity?.name || trade.commodity} ${trade.type}`);
+                                }}
                                 className="text-red-400 hover:text-red-300 text-xs"
                                 title="Trade löschen"
                               >
