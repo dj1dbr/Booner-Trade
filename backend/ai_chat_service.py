@@ -506,6 +506,59 @@ async def handle_trading_actions(user_message: str, ai_response: str, db, settin
                 logger.info(f"⚠️ Confirmation detected but no specific command: '{user_message}'")
                 # Don't return here - let the command detection below handle any embedded commands
         
+        # Close all PROFITABLE positions (positive trades)
+        if any(keyword in user_lower for keyword in ['schließe alle positiven', 'close all profitable', 'alle gewinne', 'close profitable']):
+            logger.info(f"🎯 Detected close all PROFITABLE trades command")
+            # Get open trades with profit
+            from multi_platform_connector import multi_platform
+            all_positions = []
+            for platform_name in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+                try:
+                    positions = await multi_platform.get_open_positions(platform_name)
+                    all_positions.extend([(pos, platform_name) for pos in positions])
+                except Exception as e:
+                    logger.error(f"Error fetching positions from {platform_name}: {e}")
+            
+            closed_count = 0
+            for pos, platform in all_positions:
+                profit = pos.get('profit', 0)
+                if profit > 0:  # Only close profitable trades
+                    ticket = pos.get('ticket') or pos.get('id')
+                    try:
+                        await multi_platform.close_position(platform, ticket)
+                        closed_count += 1
+                        logger.info(f"✅ Closed profitable trade #{ticket} (Profit: ${profit:.2f})")
+                    except Exception as e:
+                        logger.error(f"Error closing trade #{ticket}: {e}")
+            
+            return f"✅ {closed_count} profitable Trades geschlossen"
+        
+        # Close all LOSING positions (negative trades)
+        if any(keyword in user_lower for keyword in ['schließe alle negativen', 'close all losing', 'alle verluste', 'close losing']):
+            logger.info(f"🎯 Detected close all LOSING trades command")
+            from multi_platform_connector import multi_platform
+            all_positions = []
+            for platform_name in ['MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO']:
+                try:
+                    positions = await multi_platform.get_open_positions(platform_name)
+                    all_positions.extend([(pos, platform_name) for pos in positions])
+                except Exception as e:
+                    logger.error(f"Error fetching positions from {platform_name}: {e}")
+            
+            closed_count = 0
+            for pos, platform in all_positions:
+                profit = pos.get('profit', 0)
+                if profit < 0:  # Only close losing trades
+                    ticket = pos.get('ticket') or pos.get('id')
+                    try:
+                        await multi_platform.close_position(platform, ticket)
+                        closed_count += 1
+                        logger.info(f"✅ Closed losing trade #{ticket} (Loss: ${profit:.2f})")
+                    except Exception as e:
+                        logger.error(f"Error closing trade #{ticket}: {e}")
+            
+            return f"✅ {closed_count} losing Trades geschlossen"
+        
         # Close all positions
         if any(keyword in user_lower for keyword in ['schließe alle', 'close all', 'alle positionen schließen']):
             logger.info(f"🎯 Detected close all command")
