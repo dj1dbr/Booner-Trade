@@ -3258,3 +3258,35 @@ agent_communication:
       
       RECOMMENDATION: Only 1 out of 3 problems appears fully resolved. The manual trade execution issue requires immediate attention as it contradicts the review request claims.
 
+
+  - agent: "testing"
+    message: |
+      🔍 FRONTEND SAFARI BUG FIXES TESTING COMPLETED (Nov 26, 2025):
+      
+      ❌ CRITICAL LIMITATION: Cannot test the 3 Safari bug fixes due to NO EXISTING TRADES
+      
+      CURRENT SYSTEM STATE:
+      - Trades count: 0 (confirmed via UI)
+      - Manual trade creation fails: "Broker hat Order abgelehnt"
+      - AI Chat trade creation blocked: Budget exceeded
+      - Cannot create required test trade (GOLD/WTI_CRUDE BUY 0.01)
+      
+      WHAT WAS VERIFIED:
+      ✅ UI structure for TP/SL columns present
+      ✅ Modal dialog implementation exists in code
+      ✅ Live-Ticker functionality active
+      ❌ App name still shows "Rohstoff Trader" instead of "Booner-Trade"
+      ❌ Platform balances showing €0.00 (connection issues)
+      
+      WHAT CANNOT BE TESTED:
+      ❌ TP/SL numerical display (no trades to verify)
+      ❌ Modal opening on row/button click (no trade rows)
+      ❌ Live price updates in trades table (no trades)
+      
+      IMMEDIATE ACTIONS NEEDED:
+      1. Fix broker connection issues to enable trade creation
+      2. Create at least one test trade with TP/SL values
+      3. Update UI app name to "Booner-Trade"
+      4. Re-run frontend testing once trades are available
+      
+      The Safari bug fixes appear to be implemented in code but cannot be validated without test data.
