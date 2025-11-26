@@ -789,8 +789,9 @@ Antworte NUR mit: JA oder NEIN
             )
             
             if result and result.get('success'):
+                ticket = result.get('ticket')
                 logger.info(f"✅ AI-Trade erfolgreich ausgeführt: {commodity_id} {direction}")
-                logger.info(f"   Ticket: {result.get('ticket')}")
+                logger.info(f"   Ticket: {ticket}")
                 
                 # Speichere in DB mit Strategy-Tag
                 await self.db.trades.insert_one({
@@ -802,7 +803,7 @@ Antworte NUR mit: JA oder NEIN
                     "entry_price": current_price,
                     "stop_loss": stop_loss,
                     "take_profit": take_profit,
-                    "mt5_ticket": result.get('ticket'),
+                    "mt5_ticket": ticket,
                     "status": "OPEN",
                     "opened_at": datetime.now(),
                     "opened_by": "AI_BOT",
@@ -810,6 +811,27 @@ Antworte NUR mit: JA oder NEIN
                     "analysis": analysis,  # Speichere komplette Analyse
                     "confidence": analysis.get('confidence', 0)
                 })
+                
+                # WICHTIG: Speichere SL/TP auch in trade_settings für Monitor
+                try:
+                    await self.db.trade_settings.update_one(
+                        {'trade_id': str(ticket)},
+                        {'$set': {
+                            'trade_id': str(ticket),
+                            'stop_loss': stop_loss,
+                            'take_profit': take_profit,
+                            'created_at': datetime.now(timezone.utc).isoformat(),
+                            'commodity': commodity_id,
+                            'entry_price': current_price,
+                            'platform': platform,
+                            'strategy': strategy,
+                            'created_by': 'AI_BOT'
+                        }},
+                        upsert=True
+                    )
+                    logger.info(f"💾 SL/TP Settings gespeichert für AI-Trade #{ticket}")
+                except Exception as e:
+                    logger.error(f"⚠️ Fehler beim Speichern der Trade Settings: {e}")
                 
                 # Für Lernzwecke
                 self.trade_history.append({
