@@ -734,24 +734,48 @@ Antworte NUR mit: JA oder NEIN
                 logger.error("Keine aktiven Plattformen")
                 return
             
-            # Wähle Platform mit verfügbarem Symbol - BEVORZUGE LIBERTEX (mehr Symbole!)
+            # Wähle Platform mit verfügbarem Symbol - GLEICHMÄSSIGE VERTEILUNG
             platform = None
             symbol = None
             
-            # Sortiere: Libertex zuerst
-            sorted_platforms = sorted(active_platforms, key=lambda x: 0 if 'LIBERTEX' in x else 1)
+            # Prüfe, auf welchen Plattformen das Symbol verfügbar ist
+            available_platforms = []
             
-            for p in sorted_platforms:
+            for p in active_platforms:
                 if 'MT5_LIBERTEX' in p and commodity.get('mt5_libertex_symbol'):
-                    platform = p
-                    symbol = commodity.get('mt5_libertex_symbol')
-                    logger.debug(f"✅ {commodity_id} → Libertex (Symbol: {symbol})")
-                    break
+                    available_platforms.append({
+                        'platform': p,
+                        'symbol': commodity.get('mt5_libertex_symbol'),
+                        'name': 'Libertex'
+                    })
                 elif 'MT5_ICMARKETS' in p and commodity.get('mt5_icmarkets_symbol'):
-                    platform = p
-                    symbol = commodity.get('mt5_icmarkets_symbol')
-                    logger.debug(f"✅ {commodity_id} → ICMarkets (Symbol: {symbol})")
-                    break
+                    available_platforms.append({
+                        'platform': p,
+                        'symbol': commodity.get('mt5_icmarkets_symbol'),
+                        'name': 'ICMarkets'
+                    })
+            
+            if not available_platforms:
+                logger.warning(f"⚠️  {commodity_id}: Kein verfügbares Symbol auf aktiven Plattformen")
+                return
+            
+            # ROUND ROBIN: Wähle Plattform mit wenigsten offenen Positionen für Lastverteilung
+            from multi_platform_connector import multi_platform
+            
+            platform_positions = {}
+            for plat_info in available_platforms:
+                try:
+                    positions = await multi_platform.get_open_positions(plat_info['platform'])
+                    platform_positions[plat_info['platform']] = len(positions)
+                except:
+                    platform_positions[plat_info['platform']] = 0
+            
+            # Wähle Plattform mit wenigsten Positionen
+            selected = min(available_platforms, key=lambda x: platform_positions.get(x['platform'], 0))
+            platform = selected['platform']
+            symbol = selected['symbol']
+            
+            logger.info(f"✅ {commodity_id} → {selected['name']} (Symbol: {symbol}, Open Positions: {platform_positions.get(platform, 0)})")
             
             if not platform or not symbol:
                 logger.warning(f"⚠️  {commodity_id}: Kein verfügbares Symbol auf aktiven Plattformen")
