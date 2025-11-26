@@ -2142,7 +2142,8 @@ const Dashboard = () => {
           )}
         </DialogContent>
       </Dialog>
-
+    </div>
+  );
 };
 
 const SettingsForm = ({ settings, onSave, commodities, balance }) => {
