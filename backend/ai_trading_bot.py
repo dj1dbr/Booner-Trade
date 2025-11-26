@@ -289,18 +289,28 @@ class AITradingBot:
                                 logger.info(f"✅ Position {ticket} automatisch geschlossen!")
                                 closed_positions += 1
                                 
-                                # Speichere in DB für History
-                                await self.db.trades.update_one(
-                                    {"mt5_ticket": str(ticket)},
-                                    {"$set": {
-                                        "status": "CLOSED",
-                                        "closed_at": datetime.now(),
+                                # WICHTIG: Speichere geschlossenen Trade in DB für Historie & Statistiken
+                                try:
+                                    closed_trade = {
+                                        "id": f"mt5_{ticket}",
+                                        "mt5_ticket": str(ticket),
+                                        "commodity": symbol,
+                                        "type": "BUY" if 'BUY' in pos_type else "SELL",
+                                        "entry_price": entry_price,
+                                        "exit_price": current_price,
+                                        "quantity": quantity,
                                         "profit_loss": profit,
+                                        "status": "CLOSED",
+                                        "platform": platform,
+                                        "opened_at": opened_at if opened_at else datetime.now(timezone.utc).isoformat(),
+                                        "closed_at": datetime.now(timezone.utc).isoformat(),
                                         "close_reason": close_reason,
                                         "closed_by": "AI_BOT"
-                                    }},
-                                    upsert=False
-                                )
+                                    }
+                                    await self.db.trades.insert_one(closed_trade)
+                                    logger.info(f"💾 Saved closed trade #{ticket} to DB (P/L: €{profit:.2f})")
+                                except Exception as e:
+                                    logger.error(f"⚠️ Failed to save closed trade to DB: {e}")
                             else:
                                 logger.error(f"❌ Fehler beim Schließen von Position {ticket}")
                         
