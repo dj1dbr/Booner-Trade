@@ -1205,6 +1205,12 @@ const Dashboard = () => {
                             <td className="px-4 py-3 text-right text-slate-200">${trade.entry_price?.toFixed(2)}</td>
                             <td className="px-4 py-3 text-right text-slate-200">${currentPrice?.toFixed(2)}</td>
                             <td className="px-4 py-3 text-right text-slate-200">{trade.quantity}</td>
+                            <td className="px-4 py-3 text-right text-amber-400">
+                              {trade.stop_loss ? `$${trade.stop_loss.toFixed(2)}` : '-'}
+                            </td>
+                            <td className="px-4 py-3 text-right text-emerald-400">
+                              {trade.take_profit ? `$${trade.take_profit.toFixed(2)}` : '-'}
+                            </td>
                             <td className={`px-4 py-3 text-right font-semibold ${pl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                               {pl >= 0 ? '+' : ''}{pl.toFixed(2)} €
                             </td>
