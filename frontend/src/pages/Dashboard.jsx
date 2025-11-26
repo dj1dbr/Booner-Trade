@@ -630,12 +630,21 @@ const Dashboard = () => {
 
   const handleUpdateSettings = async (newSettings) => {
     try {
-      console.log('Saving settings:', newSettings);
-      const response = await axios.post(`${API}/settings`, newSettings);
-      console.log('Settings saved:', response.data);
+      console.log('💾 Speichere Einstellungen...');
+      console.log('  API URL:', `${API}/settings`);
+      console.log('  Settings:', newSettings);
+      
+      const response = await axios.post(`${API}/settings`, newSettings, {
+        timeout: 15000, // 15 Sekunden Timeout für Settings
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ Einstellungen gespeichert:', response.data);
       setSettings(response.data); // Use server response
       setGpt5Active(response.data.use_ai_analysis && response.data.auto_trading);
-      toast.success('Einstellungen gespeichert');
+      toast.success('✅ Einstellungen gespeichert');
       setSettingsOpen(false);
       
       // Reload balance based on active platforms
@@ -649,8 +658,24 @@ const Dashboard = () => {
         await fetchBitpandaAccount();
       }
     } catch (error) {
-      console.error('Settings save error:', error);
-      toast.error(`Fehler beim Speichern: ${error.response?.data?.detail || error.message}`);
+      console.error('❌ Settings save error:', error);
+      console.error('   Error type:', error.code);
+      console.error('   Error message:', error.message);
+      console.error('   Response:', error.response?.data);
+      
+      let errorMsg = 'Fehler beim Speichern';
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        errorMsg = '⏱️ Timeout: Backend antwortet nicht. Bitte prüfen Sie die Verbindung.';
+      } else if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        errorMsg = '🌐 Netzwerkfehler: Keine Verbindung zum Backend möglich.';
+      } else if (error.response) {
+        errorMsg = `❌ Server Fehler: ${error.response.data?.detail || error.response.statusText}`;
+      } else {
+        errorMsg = `❌ ${error.message}`;
+      }
+      
+      toast.error(errorMsg);
     }
   };
   
