@@ -1881,27 +1881,6 @@ async def auto_set_sl_tp_for_open_trades():
         logger.error(f"Error in auto-set SL/TP: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
-            except Exception as e:
-                logger.error(f"⚠️ Fehler beim Speichern der Trade Settings: {e}")
-                # Continue anyway - trade was successful
-            
-            return {
-                "success": True, 
-                "ticket": platform_ticket, 
-                "platform": default_platform,
-                "message": f"Trade erfolgreich an {default_platform} gesendet. Ticket: #{platform_ticket}"
-            }
-        else:
-            logger.error(f"❌ platform_ticket ist None - Trade fehlgeschlagen")
-            raise HTTPException(status_code=500, detail="Trade konnte nicht ausgeführt werden - Broker hat Order abgelehnt")
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error executing manual trade: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @api_router.post("/trades/close")
 async def close_trade_v2(request: CloseTradeRequest):
     """Close an open trade - supports both DB trades and MT5 positions"""
