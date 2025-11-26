@@ -1898,67 +1898,6 @@ async def close_trade_v2(request: CloseTradeRequest):
             
             await connector.connect_platform(platform)
             platform_info = connector.platforms.get(platform)
-
-@api_router.get("/health")
-async def health_check():
-    """Health check endpoint - Frontend kann regelmäßig abfragen"""
-    try:
-        from multi_platform_connector import multi_platform
-        
-        # Get active platforms
-        settings = await db.trading_settings.find_one({"id": "trading_settings"})
-        if not settings:
-            return {"status": "error", "message": "No settings found"}
-        
-        active_platforms = settings.get('active_platforms', [])
-        platform_status = {}
-        
-        for platform_name in active_platforms:
-            if platform_name not in multi_platform.platforms:
-                platform_status[platform_name] = {"connected": False, "error": "Unknown platform"}
-                continue
-            
-            platform = multi_platform.platforms[platform_name]
-            connector = platform.get('connector')
-            
-            if not connector:
-                platform_status[platform_name] = {"connected": False, "error": "No connector"}
-                continue
-            
-            try:
-                is_connected = await connector.is_connected()
-                balance = platform.get('balance', 0)
-                
-                platform_status[platform_name] = {
-                    "connected": is_connected,
-                    "balance": balance,
-                    "name": platform.get('name', platform_name)
-                }
-            except Exception as e:
-                platform_status[platform_name] = {
-                    "connected": False,
-                    "error": str(e)
-                }
-        
-        # Check if any platform is connected
-        any_connected = any(p.get('connected', False) for p in platform_status.values())
-        
-        return {
-            "status": "ok" if any_connected else "degraded",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "platforms": platform_status,
-            "database": "connected"  # MongoDB connection is always available
-        }
-        
-    except Exception as e:
-        logger.error(f"Health check error: {e}")
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat()
-        }
-
-
             
             if platform_info and platform_info.get('connector'):
                 mt5_connector = platform_info['connector']
