@@ -3018,6 +3018,11 @@ async def startup_event():
         
         logger.info(f"MT5 credentials loaded: Server={mt5_server}, Login={mt5_login}")
     
+
+    # Start connection health check background task
+    asyncio.create_task(connection_health_check())
+    logger.info("✅ Connection health check started")
+
     # Initialize platform connector for commodity_processor
     from multi_platform_connector import multi_platform
     import commodity_processor
