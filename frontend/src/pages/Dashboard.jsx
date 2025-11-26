@@ -479,32 +479,42 @@ const Dashboard = () => {
   // Trade Detail Modal Handlers
   const handleTradeClick = async (trade) => {
     console.log('🔍 Trade clicked:', trade);
+    console.log('🔍 Trade TP/SL values:', { 
+      take_profit: trade.take_profit, 
+      stop_loss: trade.stop_loss,
+      tp_type: typeof trade.take_profit,
+      sl_type: typeof trade.stop_loss
+    });
+    
     try {
+      // CRITICAL FIX for Safari: Set state synchronously FIRST
       setSelectedTrade(trade);
-      console.log('✅ Selected trade set');
+      setTradeDetailModalOpen(true); // Open modal immediately
+      console.log('✅ Modal opened');
       
-      // Lade individuelle Settings für diesen Trade
+      // THEN load additional settings asynchronously
       const ticket = trade.mt5_ticket || trade.id;
       console.log('📋 Loading settings for ticket:', ticket);
       
       try {
         const response = await axios.get(`${API}/trades/${ticket}/settings`);
         console.log('✅ Settings loaded:', response.data);
-        setTradeSettings(response.data || {});
-      } catch (error) {
-        console.log('⚠️ No settings found, using defaults');
-        // Wenn keine Settings vorhanden, leeres Object
         setTradeSettings({
-          stop_loss: null,
-          take_profit: null,
+          stop_loss: trade.stop_loss || response.data?.stop_loss || null,
+          take_profit: trade.take_profit || response.data?.take_profit || null,
+          trailing_stop: response.data?.trailing_stop || false,
+          strategy_type: response.data?.strategy_type || 'swing'
+        });
+      } catch (error) {
+        console.log('⚠️ No settings found, using trade defaults');
+        // Use values from trade object directly
+        setTradeSettings({
+          stop_loss: trade.stop_loss || null,
+          take_profit: trade.take_profit || null,
           trailing_stop: false,
           strategy_type: 'swing'
         });
       }
-      
-      console.log('🚀 Opening modal...');
-      setTradeDetailModalOpen(true);
-      console.log('✅ Modal state set to true');
     } catch (error) {
       console.error('❌ Error loading trade details:', error);
       toast.error('Fehler beim Laden der Trade-Details');
