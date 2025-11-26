@@ -21,6 +21,8 @@ const TradesTable = ({ trades, onCloseTrade }) => {
             <TableHead className="text-slate-400">Typ</TableHead>
             <TableHead className="text-slate-400">Einstiegspreis</TableHead>
             <TableHead className="text-slate-400">Menge</TableHead>
+            <TableHead className="text-slate-400">SL</TableHead>
+            <TableHead className="text-slate-400">TP</TableHead>
             <TableHead className="text-slate-400">Status</TableHead>
             <TableHead className="text-slate-400">Ausstiegspreis</TableHead>
             <TableHead className="text-slate-400">P/L</TableHead>
