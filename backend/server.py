@@ -2963,6 +2963,68 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+async def connection_health_check():
+    """Background task: Check and restore platform connections every 5 minutes"""
+    while True:
+        try:
+            await asyncio.sleep(300)  # 5 minutes
+            
+            logger.info("🔍 Connection health check...")
+            
+            # Get active platforms from settings
+            settings = await db.trading_settings.find_one({"id": "trading_settings"})
+            if not settings:
+                continue
+            
+            active_platforms = settings.get('active_platforms', [])
+            
+            from multi_platform_connector import multi_platform
+            
+            for platform_name in active_platforms:
+                try:
+                    # Check connection status
+                    if platform_name not in multi_platform.platforms:
+                        continue
+                    
+                    platform = multi_platform.platforms[platform_name]
+                    connector = platform.get('connector')
+                    
+                    if not connector:
+                        # No connector - try to connect
+                        logger.warning(f"⚠️ {platform_name} has no connector, reconnecting...")
+                        await multi_platform.connect_platform(platform_name)
+                        continue
+                    
+                    # Check if connected
+                    is_connected = await connector.is_connected()
+                    
+                    if not is_connected:
+                        # Connection lost - reconnect
+                        logger.warning(f"⚠️ {platform_name} connection lost, reconnecting...")
+                        platform['active'] = False
+                        platform['connector'] = None
+                        await multi_platform.connect_platform(platform_name)
+                    else:
+                        # Connection OK - update balance
+                        try:
+                            account_info = await multi_platform.get_account_info(platform_name)
+                            if account_info:
+                                balance = account_info.get('balance', 0)
+                                logger.info(f"✅ {platform_name} healthy: Balance = €{balance:,.2f}")
+                        except Exception as e:
+                            logger.error(f"Error updating balance for {platform_name}: {e}")
+                
+                except Exception as e:
+                    logger.error(f"Error checking {platform_name}: {e}")
+            
+            logger.info("✅ Health check complete")
+            
+        except Exception as e:
+            logger.error(f"Error in health check: {e}")
+            await asyncio.sleep(60)  # Wait 1 minute on error
+
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize background tasks on startup"""
