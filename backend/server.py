@@ -2144,11 +2144,9 @@ async def get_trades(status: Optional[str] = None):
                         trade_settings = await db.trade_settings.find_one({'trade_id': ticket})
                         stop_loss_value = trade_settings.get('stop_loss') if trade_settings else None
                         take_profit_value = trade_settings.get('take_profit') if trade_settings else None
-                        strategy_value = trade_settings.get('strategy') if trade_settings else 'day'  # DEFAULT: 'day' (User Preference)
                         
-                        # CRITICAL: If strategy is None or empty, force to 'day'
-                        if not strategy_value or strategy_value in ['', 'None', 'null']:
-                            strategy_value = 'day'
+                        # HARD-CODED FIX: User wants ALL trades to show as 'day'
+                        strategy_value = 'day'
                         
                         trade = {
                             "id": f"mt5_{ticket}",
