@@ -64,12 +64,23 @@ MARKTDATEN (Live):
         if commodity_count == 0:
             context += "\n(Keine Marktdaten verfügbar)"
     
-    context += f"\n\nOFFENE TRADES: {len(open_trades)}"
+    # Get Day Trading Settings (User's current settings)
+    day_mode = settings.get('day_tp_sl_mode', 'percent') if settings else 'percent'
+    if day_mode == 'euro':
+        sl_euro = settings.get('day_stop_loss_euro', 7.0) if settings else 7.0
+        tp_euro = settings.get('day_take_profit_euro', 7.0) if settings else 7.0
+        context += f"\n\n📊 IHRE DAY TRADING EINSTELLUNGEN (EURO-Modus):\n"
+        context += f"   Stop Loss: €{sl_euro}\n"
+        context += f"   Take Profit: €{tp_euro}\n"
+    else:
+        sl_percent = settings.get('day_stop_loss_percent', 1.5) if settings else 1.5
+        tp_percent = settings.get('day_take_profit_percent', 2.5) if settings else 2.5
+        context += f"\n\n📊 IHRE DAY TRADING EINSTELLUNGEN (PROZENT-Modus):\n"
+        context += f"   Stop Loss: {sl_percent}%\n"
+        context += f"   Take Profit: {tp_percent}%\n"
+    
+    context += f"\nOFFENE TRADES: {len(open_trades)}"
     if open_trades:
-        # Get SL/TP percentages from settings
-        sl_percent = settings.get('stop_loss_percent', 0.5)
-        tp_percent = settings.get('take_profit_percent', 0.2)
-        
         context += "\n"
         for i, trade in enumerate(open_trades[:10], 1):  # Show up to 10 trades with numbers
             commodity = trade.get('commodity', trade.get('symbol', 'UNKNOWN'))
@@ -81,24 +92,40 @@ MARKTDATEN (Live):
             stop_loss = trade.get('stop_loss', trade.get('sl'))
             take_profit = trade.get('take_profit', trade.get('tp'))
             
-            # Calculate recommended SL/TP based on settings
-            if trade_type == 'SELL':
-                recommended_sl = entry * (1 + sl_percent / 100)
-                recommended_tp = entry * (1 - tp_percent / 100)
-            else:  # BUY
-                recommended_sl = entry * (1 - sl_percent / 100)
-                recommended_tp = entry * (1 + tp_percent / 100)
+            # Calculate recommended SL/TP based on Day Trading Settings
+            if day_mode == 'euro':
+                # EURO-Modus
+                if trade_type == 'SELL':
+                    recommended_sl = entry + (sl_euro / quantity)
+                    recommended_tp = entry - (tp_euro / quantity)
+                else:  # BUY
+                    recommended_sl = entry - (sl_euro / quantity)
+                    recommended_tp = entry + (tp_euro / quantity)
+            else:
+                # PROZENT-Modus
+                if trade_type == 'SELL':
+                    recommended_sl = entry * (1 + sl_percent / 100)
+                    recommended_tp = entry * (1 - tp_percent / 100)
+                else:  # BUY
+                    recommended_sl = entry * (1 - sl_percent / 100)
+                    recommended_tp = entry * (1 + tp_percent / 100)
             
             # Format SL/TP info with recommendations
             if stop_loss:
                 sl_text = f"${stop_loss:.2f}"
             else:
-                sl_text = f"NICHT GESETZT (Empfohlen: ${recommended_sl:.2f} bei {sl_percent}%)"
+                if day_mode == 'euro':
+                    sl_text = f"NICHT GESETZT (Empfohlen: ${recommended_sl:.2f} bei €{sl_euro})"
+                else:
+                    sl_text = f"NICHT GESETZT (Empfohlen: ${recommended_sl:.2f} bei {sl_percent}%)"
             
             if take_profit:
                 tp_text = f"${take_profit:.2f}"
             else:
-                tp_text = f"NICHT GESETZT (Empfohlen: ${recommended_tp:.2f} bei {tp_percent}%)"
+                if day_mode == 'euro':
+                    tp_text = f"NICHT GESETZT (Empfohlen: ${recommended_tp:.2f} bei €{tp_euro})"
+                else:
+                    tp_text = f"NICHT GESETZT (Empfohlen: ${recommended_tp:.2f} bei {tp_percent}%)"
             
             context += f"{i}. {commodity} {trade_type}\n"
             context += f"   Menge: {quantity}, Entry: ${entry:.2f}, Aktuell: ${current:.2f}\n"
