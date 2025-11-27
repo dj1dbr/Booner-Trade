@@ -484,6 +484,11 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
                 metaapi_data = await fetch_metaapi_candles(commodity_id, metaapi_tf, limit)
                 if metaapi_data is not None and not metaapi_data.empty:
                     # Cache for 1 hour (MetaAPI data is fresh)
+                    # MEMORY FIX: Evict oldest if cache is full
+                    if len(_ohlcv_cache) >= MAX_CACHE_SIZE:
+                        _ohlcv_cache.popitem(last=False)  # Remove oldest (FIFO)
+                        _cache_expiry.popitem(last=False)
+                    
                     _ohlcv_cache[cache_key] = metaapi_data
                     _cache_expiry[cache_key] = now + timedelta(hours=1)
                     return metaapi_data
