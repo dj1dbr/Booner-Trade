@@ -544,18 +544,17 @@ class AITradingBot:
                 if platform_balance <= 0:
                     continue
                 
-                # Hole ALLE offenen Positionen (Swing + Day) auf dieser Plattform
-                all_positions = await self.db.trades.find({
-                    "status": "OPEN",
-                    "platform": platform
-                }).to_list(length=100)
+                # Hole ALLE offenen Positionen (Swing + Day) vom Broker
+                all_positions = await multi_platform.get_positions(platform)
+                if not all_positions:
+                    all_positions = []
                 
                 # Berechne genutztes Kapital
                 used_capital = 0.0
                 for pos in all_positions:
-                    entry_price = pos.get('entry_price', 0)
-                    quantity = pos.get('quantity', 0)
-                    used_capital += (entry_price * quantity)
+                    entry_price = pos.get('openPrice', 0)
+                    volume = pos.get('volume', 0)
+                    used_capital += (entry_price * volume)
                 
                 # Prozent dieser Plattform-Balance
                 usage_percent = (used_capital / platform_balance) * 100
