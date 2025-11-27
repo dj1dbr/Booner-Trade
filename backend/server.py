@@ -2134,10 +2134,11 @@ async def get_trades(status: Optional[str] = None):
                         commodity_id = symbol_to_commodity.get(mt5_symbol, mt5_symbol)  # Fallback to MT5 symbol
                         ticket = str(pos.get('ticket', pos.get('id')))
                         
-                        # Hole SL/TP aus trade_settings (AI Bot Monitoring)
+                        # Hole SL/TP UND STRATEGY aus trade_settings (AI Bot Monitoring)
                         trade_settings = await db.trade_settings.find_one({'trade_id': ticket})
                         stop_loss_value = trade_settings.get('stop_loss') if trade_settings else None
                         take_profit_value = trade_settings.get('take_profit') if trade_settings else None
+                        strategy_value = trade_settings.get('strategy') if trade_settings else None
                         
                         trade = {
                             "id": f"mt5_{ticket}",
@@ -2153,6 +2154,7 @@ async def get_trades(status: Optional[str] = None):
                             "mode": platform_name,
                             "stop_loss": stop_loss_value,  # Aus DB (AI Bot Settings)
                             "take_profit": take_profit_value,  # Aus DB (AI Bot Settings)
+                            "strategy": strategy_value,  # Aus DB (AI Bot Settings) - WICHTIG FÜR FRONTEND!
                             "timestamp": pos.get('time', datetime.now(timezone.utc).isoformat())
                         }
                         live_mt5_positions.append(trade)
