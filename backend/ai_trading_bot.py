@@ -238,19 +238,23 @@ class AITradingBot:
                                     stop_loss_price = entry_price * (1 + sl_percent / 100)
                                     take_profit_price = entry_price * (1 - tp_percent / 100)
                             
+                            # Bestimme Strategie basierend auf Settings
+                            # Wenn Day Trading aktiviert ist, verwende 'day', sonst 'swing'
+                            default_strategy = 'day' if self.settings.get('day_trading_enabled', False) else 'swing'
+                            
                             # Speichere in DB
                             try:
                                 await self.db.trade_settings.insert_one({
                                     'trade_id': str(ticket),
                                     'stop_loss': stop_loss_price,
                                     'take_profit': take_profit_price,
-                                    'strategy': 'swing',  # Default: Swing Trading für Monitor
+                                    'strategy': default_strategy,  # Basierend auf aktiver Strategie
                                     'created_at': datetime.now(timezone.utc).isoformat(),
                                     'entry_price': entry_price,
                                     'platform': platform,
                                     'created_by': 'AI_MONITOR_AUTO'
                                 })
-                                logger.info(f"✅ Auto-created SL/TP für #{ticket} (SWING): SL={stop_loss_price:.2f}, TP={take_profit_price:.2f}")
+                                logger.info(f"✅ Auto-created SL/TP für #{ticket} ({default_strategy.upper()}): SL={stop_loss_price:.2f}, TP={take_profit_price:.2f}")
                             except Exception as e:
                                 logger.error(f"❌ Fehler beim Auto-Create SL/TP: {e}")
                                 # Verwende berechnete Werte trotzdem
