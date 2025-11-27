@@ -242,9 +242,9 @@ class AITradingBot:
                             # User möchte dass ALLE Trades als Day Trading markiert sind
                             default_strategy = 'day'
                             
-                            # Speichere in DB
+                            # Speichere in DB - NUR wenn noch nicht vorhanden (insert_one wirft Exception wenn existiert)
                             try:
-                                await self.db.trade_settings.insert_one({
+                                result = await self.db.trade_settings.insert_one({
                                     'trade_id': str(ticket),
                                     'stop_loss': stop_loss_price,
                                     'take_profit': take_profit_price,
