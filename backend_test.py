@@ -4146,7 +4146,7 @@ class Booner_TradeTester:
 async def main():
     """🔧 UMFASSENDER FIX - 3 PROBLEME BEHOBEN - TESTING"""
     # Get backend URL from environment
-    backend_url = "https://fxmarket-connect.preview.emergentagent.com"
+    backend_url = "https://tradebot-60.preview.emergentagent.com"
     
     logger.info(f"🔧 Starting UMFASSENDER FIX TESTING - 3 PROBLEME BEHOBEN")
     logger.info(f"Backend URL: {backend_url}")

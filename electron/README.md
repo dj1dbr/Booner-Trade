@@ -53,7 +53,7 @@ http://localhost:3000
 
 ODER für Production:
 ```
-https://fxmarket-connect.preview.emergentagent.com
+https://tradebot-60.preview.emergentagent.com
 ```
 
 ---

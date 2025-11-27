@@ -10,7 +10,7 @@ import json
 
 load_dotenv()
 
-BACKEND_URL = "https://fxmarket-connect.preview.emergentagent.com"
+BACKEND_URL = "https://tradebot-60.preview.emergentagent.com"
 
 # Rohstoffe und ihre möglichen Symbol-Varianten bei verschiedenen Brokern
 COMMODITY_PATTERNS = {

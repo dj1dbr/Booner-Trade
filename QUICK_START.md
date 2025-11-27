@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://fxmarket-connect.preview.emergentagent.com
+https://tradebot-60.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.
