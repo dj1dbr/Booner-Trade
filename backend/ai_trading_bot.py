@@ -831,14 +831,18 @@ Antworte NUR mit: JA oder NEIN
                     
                     # Berechne Nutzungs-Prozentsatz
                     usage_percent = (used_margin / balance) * 100
+                    # Hole Positions-Count für Logging
+                    positions = await multi_platform.get_open_positions(plat_info['platform'])
+                    positions_count = len(positions) if positions else 0
+                    
                     platform_usage[plat_info['platform']] = {
                         'usage_percent': usage_percent,
                         'balance': balance,
-                        'used_capital': used_capital,
-                        'positions_count': len(positions)
+                        'used_capital': used_margin,
+                        'positions_count': positions_count
                     }
                     
-                    logger.debug(f"📊 {plat_info['name']}: {usage_percent:.1f}% genutzt (€{used_capital:.2f} / €{balance:.2f}, {len(positions)} Positionen)")
+                    logger.debug(f"📊 {plat_info['name']}: {usage_percent:.1f}% genutzt (Margin: €{used_margin:.2f} / Balance: €{balance:.2f}, {positions_count} Positionen)")
                     
                 except Exception as e:
                     logger.error(f"Fehler beim Abrufen von {plat_info['platform']}: {e}")
