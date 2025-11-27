@@ -2140,6 +2140,10 @@ async def get_trades(status: Optional[str] = None):
                         take_profit_value = trade_settings.get('take_profit') if trade_settings else None
                         strategy_value = trade_settings.get('strategy') if trade_settings else None
                         
+                        # DEBUG LOG
+                        if ticket == '1340809976':
+                            logger.info(f"🔍 DEBUG Ticket {ticket}: trade_settings={trade_settings is not None}, strategy={strategy_value}")
+                        
                         trade = {
                             "id": f"mt5_{ticket}",
                             "mt5_ticket": ticket,
