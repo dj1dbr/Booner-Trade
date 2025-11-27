@@ -563,6 +563,11 @@ async def fetch_historical_ohlcv_async(commodity_id: str, timeframe: str = "1d",
         hist = calculate_indicators(hist)
         
         # Cache successful result (24 hours for yfinance to avoid rate limiting)
+        # MEMORY FIX: Evict oldest if cache is full
+        if len(_ohlcv_cache) >= MAX_CACHE_SIZE:
+            _ohlcv_cache.popitem(last=False)  # Remove oldest (FIFO)
+            _cache_expiry.popitem(last=False)
+        
         _ohlcv_cache[cache_key] = hist
         _cache_expiry[cache_key] = now + timedelta(hours=24)
         
