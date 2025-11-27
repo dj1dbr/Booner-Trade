@@ -39,7 +39,9 @@ class AITradingBot:
         self.market_data = {}
         self.market_analyzer = None
         self.llm_chat = None
-        self.trade_history = []  # Für Lernzwecke
+        # MEMORY FIX: Begrenzte History mit deque (max 1000 Trades)
+        from collections import deque
+        self.trade_history = deque(maxlen=1000)  # Auto-evicts oldest
         self.last_analysis_time_swing = {}  # Pro Commodity für Swing Trading
         self.last_analysis_time_day = {}  # Pro Commodity für Day Trading
         
