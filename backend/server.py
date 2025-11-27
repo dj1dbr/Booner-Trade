@@ -3381,3 +3381,30 @@ if frontend_build_path.exists():
 else:
     logger.warning(f"⚠️  Frontend build not found at: {frontend_build_path}")
     logger.warning("   Run 'cd /app/frontend && yarn build' to create production build")
+@api_router.get("/debug/memory")
+async def memory_status():
+    """Memory Diagnostics Endpoint"""
+    profiler = get_profiler()
+    
+    # Current memory
+    process = psutil.Process(os.getpid())
+    mem_info = process.memory_info()
+    
+    # GC stats
+    import gc
+    gc.collect()
+    
+    # Take snapshot
+    profiler.take_snapshot("api_call")
+    profiler.get_top_allocations(top=20)
+    
+    return {
+        "rss_mb": round(mem_info.rss / 1024 / 1024, 2),
+        "vms_mb": round(mem_info.vms / 1024 / 1024, 2),
+        "percent": process.memory_percent(),
+        "gc_objects": len(gc.get_objects()),
+        "gc_garbage": len(gc.garbage),
+        "gc_counts": gc.get_count(),
+        "snapshots_taken": len(profiler.snapshots),
+        "message": "Check backend logs for detailed memory allocation"
+    }
