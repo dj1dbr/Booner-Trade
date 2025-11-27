@@ -825,19 +825,12 @@ Antworte NUR mit: JA oder NEIN
                         platform_usage[plat_info['platform']] = 100.0  # Vermeide Plattform ohne Balance
                         continue
                     
-                    # Berechne genutzte Balance (alle offenen Positionen)
-                    positions = await multi_platform.get_open_positions(plat_info['platform'])
-                    used_capital = 0
-                    
-                    for pos in positions:
-                        # Geschätztes genutztes Kapital: Volume * Entry Price * Contract Size (100 für Forex, 1000 für Commodities)
-                        volume = pos.get('volume', 0)
-                        price = pos.get('price_open', 0)
-                        # Vereinfacht: Nutze Margin oder schätze basierend auf Position
-                        used_capital += volume * price * 100  # Konservativer Schätzwert
+                    # KORRIGIERT: Verwende MARGIN vom Account Info (echtes genutztes Kapital)
+                    # Bei CFD/Forex mit Hebel ist Margin das tatsächliche Risiko, nicht der Nominalwert
+                    used_margin = account_info.get('margin', 0)
                     
                     # Berechne Nutzungs-Prozentsatz
-                    usage_percent = (used_capital / balance) * 100
+                    usage_percent = (used_margin / balance) * 100
                     platform_usage[plat_info['platform']] = {
                         'usage_percent': usage_percent,
                         'balance': balance,
