@@ -554,7 +554,7 @@ class AITradingBot:
                 # Prozent dieser Plattform-Balance
                 usage_percent = (used_margin / platform_balance) * 100
                 
-                logger.debug(f"{platform}: {usage_percent:.1f}% genutzt (€{used_capital:.2f} von €{platform_balance:.2f})")
+                logger.debug(f"{platform}: {usage_percent:.1f}% genutzt (Margin: €{used_margin:.2f} von Balance: €{platform_balance:.2f})")
                 
                 # Höchste Auslastung merken
                 if usage_percent > max_usage_percent:
