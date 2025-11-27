@@ -2144,10 +2144,11 @@ async def get_trades(status: Optional[str] = None):
                         trade_settings = await db.trade_settings.find_one({'trade_id': ticket})
                         stop_loss_value = trade_settings.get('stop_loss') if trade_settings else None
                         take_profit_value = trade_settings.get('take_profit') if trade_settings else None
-                        strategy_value = trade_settings.get('strategy') if trade_settings else None
+                        strategy_value = trade_settings.get('strategy') if trade_settings else 'day'  # DEFAULT: 'day' (User Preference)
                         
-                        # DEBUG: Log für ALLE Trades
-                        logger.info(f"🔍 Ticket {ticket}: found_in_db={trade_settings is not None}, strategy_in_db={trade_settings.get('strategy') if trade_settings else 'NOT_FOUND'}, strategy_value={strategy_value}")
+                        # CRITICAL: If strategy is None or empty, force to 'day'
+                        if not strategy_value or strategy_value in ['', 'None', 'null']:
+                            strategy_value = 'day'
                         
                         trade = {
                             "id": f"mt5_{ticket}",
