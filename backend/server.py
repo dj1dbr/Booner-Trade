@@ -3246,6 +3246,11 @@ async def startup_event():
     import asyncio as _asyncio  # Local import to avoid conflicts
     logger.info("Starting WTI Smart Trader API...")
     
+    # MEMORY PROFILING: Initial snapshot
+    profiler = get_profiler()
+    profiler.take_snapshot("startup")
+    profiler.log_gc_stats()
+    
     # Load settings and initialize AI
     settings = await db.trading_settings.find_one({"id": "trading_settings"})
     if settings:
