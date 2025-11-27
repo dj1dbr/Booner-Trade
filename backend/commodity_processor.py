@@ -344,8 +344,12 @@ import time
 from datetime import datetime, timedelta
 
 # Cache for OHLCV data to avoid rate limiting
-_ohlcv_cache = {}
-_cache_expiry = {}
+# MEMORY FIX: LRU Cache mit maximaler Größe
+from collections import OrderedDict
+
+MAX_CACHE_SIZE = 100  # Maximum 100 cached items
+_ohlcv_cache = OrderedDict()
+_cache_expiry = OrderedDict()
 
 async def fetch_metaapi_candles(commodity_id: str, timeframe: str = "1h", limit: int = 100) -> Optional[pd.DataFrame]:
     """
