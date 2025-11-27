@@ -504,9 +504,12 @@ class AITradingBot:
             strategy_positions = []
             for pos in all_open_positions:
                 trade_id = pos.get('id', '')
+                # Entferne "mt5_" Präfix für DB-Lookup
+                clean_trade_id = trade_id.replace('mt5_', '')
+                
                 # Hole strategy aus trade_settings
                 trade_setting = await self.db.trade_settings.find_one(
-                    {"trade_id": trade_id}, 
+                    {"trade_id": clean_trade_id}, 
                     {"_id": 0, "strategy": 1}
                 )
                 
