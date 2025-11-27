@@ -4,6 +4,12 @@ from fastapi.responses import FileResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+
+# Memory Profiling
+from memory_profiler import get_profiler
+import psutil
+import os
+
 import os
 import logging
 from pathlib import Path
