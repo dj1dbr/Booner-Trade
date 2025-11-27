@@ -95,3 +95,4 @@ frontend/node_modules/.cache/default-development/15.pack
 frontend/node_modules/.cache/default-development/9.pack
 frontend/node_modules/.cache/default-development/11.pack
 electron/node_modules/electron/dist/electron
+electron-app/node_modules/electron/dist/electron
