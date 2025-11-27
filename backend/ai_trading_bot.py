@@ -547,20 +547,12 @@ class AITradingBot:
                 if platform_balance <= 0:
                     continue
                 
-                # Hole ALLE offenen Positionen (Swing + Day) vom Broker
-                all_positions = await multi_platform.get_positions(platform)
-                if not all_positions:
-                    all_positions = []
-                
-                # Berechne genutztes Kapital
-                used_capital = 0.0
-                for pos in all_positions:
-                    entry_price = pos.get('openPrice', 0)
-                    volume = pos.get('volume', 0)
-                    used_capital += (entry_price * volume)
+                # KORRIGIERT: Verwende MARGIN vom Account Info statt Nominalwert
+                # Bei CFD/Forex mit Hebel ist Margin das tatsächlich genutzte Kapital
+                used_margin = account_info.get('margin', 0)
                 
                 # Prozent dieser Plattform-Balance
-                usage_percent = (used_capital / platform_balance) * 100
+                usage_percent = (used_margin / platform_balance) * 100
                 
                 logger.debug(f"{platform}: {usage_percent:.1f}% genutzt (€{used_capital:.2f} von €{platform_balance:.2f})")
                 
