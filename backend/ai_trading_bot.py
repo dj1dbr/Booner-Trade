@@ -482,15 +482,39 @@ class AITradingBot:
     
     
     async def get_strategy_positions(self, strategy: str) -> List[Dict]:
-        """Hole alle offenen Positionen für eine bestimmte Strategie"""
+        """Hole alle offenen Positionen für eine bestimmte Strategie
+        
+        WICHTIG: Wir nutzen "live-from-broker" Architektur:
+        - Offene Trades kommen vom Broker (multi_platform), nicht aus der DB
+        - Strategy-Info steht in trade_settings Collection
+        """
         try:
-            # Suche in DB nach Trades mit strategy-Tag
-            trades = await self.db.trades.find({
-                "status": "OPEN",
-                "strategy": strategy
-            }).to_list(length=100)
+            from multi_platform_connector import multi_platform
             
-            return trades
+            # Hole ALLE offenen Positionen vom Broker
+            all_open_positions = []
+            for platform in self.settings.get('active_platforms', []):
+                positions = await multi_platform.get_positions(platform)
+                if positions:
+                    for pos in positions:
+                        pos['platform'] = platform
+                        all_open_positions.append(pos)
+            
+            # Filtere nach Strategie aus trade_settings
+            strategy_positions = []
+            for pos in all_open_positions:
+                trade_id = pos.get('id', '')
+                # Hole strategy aus trade_settings
+                trade_setting = await self.db.trade_settings.find_one(
+                    {"trade_id": trade_id}, 
+                    {"_id": 0, "strategy": 1}
+                )
+                
+                if trade_setting and trade_setting.get('strategy') == strategy:
+                    strategy_positions.append(pos)
+            
+            return strategy_positions
+            
         except Exception as e:
             logger.error(f"Fehler beim Laden der {strategy} Positionen: {e}")
             return []
