@@ -191,7 +191,7 @@ REACT_APP_BACKEND_URL=http://localhost:8001
 **NICHT**:
 ```bash
 # ❌ FALSCH (Cloud-Server):
-# REACT_APP_BACKEND_URL=https://tradebot-60.preview.emergentagent.com
+# REACT_APP_BACKEND_URL=https://trading-ai-desktop.preview.emergentagent.com
 ```
 
 ### 5. Frontend starten

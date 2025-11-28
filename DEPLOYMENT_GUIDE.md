@@ -5,7 +5,7 @@
 Die App ist jetzt in **zwei Versionen** verfügbar:
 
 ### 1. 🌐 Web-Version (Browser)
-- **URL**: https://tradebot-60.preview.emergentagent.com
+- **URL**: https://trading-ai-desktop.preview.emergentagent.com
 - **Zugriff**: Über jeden modernen Browser (Chrome, Safari, Firefox)
 - **Vorteil**: Keine Installation nötig, immer aktuell
 - **Nutzung**: Überall verfügbar mit Internetverbindung
@@ -92,7 +92,7 @@ Ausgabe: `/app/electron/dist/`
 ## 🌐 Web-Version nutzen (Browser)
 
 Die Web-Version läuft bereits auf:
-**https://tradebot-60.preview.emergentagent.com**
+**https://trading-ai-desktop.preview.emergentagent.com**
 
 ### Lokale Entwicklung
 

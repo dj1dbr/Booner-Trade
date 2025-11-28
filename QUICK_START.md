@@ -7,7 +7,7 @@ Keine Installation nötig!
 
 **URL öffnen:**
 ```
-https://tradebot-60.preview.emergentagent.com
+https://trading-ai-desktop.preview.emergentagent.com
 ```
 
 ✅ Fertig! Läuft im Browser.

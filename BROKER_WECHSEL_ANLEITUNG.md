@@ -52,13 +52,13 @@ sudo supervisorctl restart backend
 
 ```bash
 # Test: Symbolzuordnung prüfen
-curl https://tradebot-60.preview.emergentagent.com/api/mt5/symbols
+curl https://trading-ai-desktop.preview.emergentagent.com/api/mt5/symbols
 
 # Test: Account-Verbindung
-curl https://tradebot-60.preview.emergentagent.com/api/mt5/account
+curl https://trading-ai-desktop.preview.emergentagent.com/api/mt5/account
 
 # Test: Manuelle Order (z.B. Gold)
-curl -X POST "https://tradebot-60.preview.emergentagent.com/api/trades/execute?trade_type=BUY&price=3978&commodity=GOLD"
+curl -X POST "https://trading-ai-desktop.preview.emergentagent.com/api/trades/execute?trade_type=BUY&price=3978&commodity=GOLD"
 ```
 
 ## Beispiel: Broker-spezifische Symbole

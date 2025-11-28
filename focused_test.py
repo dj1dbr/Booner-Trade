@@ -335,7 +335,7 @@ class FocusedTester:
 
 async def main():
     """Main test execution"""
-    backend_url = "https://tradebot-60.preview.emergentagent.com"
+    backend_url = "https://trading-ai-desktop.preview.emergentagent.com"
     
     async with FocusedTester(backend_url) as tester:
         await tester.run_focused_tests()
