@@ -2483,7 +2483,7 @@ async def update_settings(settings: TradingSettings):
                 logger.info(f"📊 Gefunden: {len(all_open_positions)} offene Positionen")
                 
                 updated_count = 0
-            for position in all_open_positions:
+                for position in all_open_positions:
                 ticket = position.get('id') or position.get('ticket')
                 entry_price = position.get('price_open') or position.get('entry_price')
                 trade_type = position.get('type', 'BUY')  # 'BUY' oder 'SELL'
