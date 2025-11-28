@@ -2106,7 +2106,8 @@ async def get_trades(status: Optional[str] = None):
         live_mt5_positions = []
         
         for platform_name in active_platforms:
-            if platform_name in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            # Support both DEMO and REAL accounts
+            if 'MT5_LIBERTEX' in platform_name or 'MT5_ICMARKETS' in platform_name:
                 try:
                     from multi_platform_connector import multi_platform
                     positions = await multi_platform.get_open_positions(platform_name)
