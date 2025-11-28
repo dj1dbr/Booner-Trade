@@ -4430,33 +4430,52 @@ class Booner_TradeTester:
         self.print_test_summary()
 
     async def run_review_request_tests(self):
-        """🔥 REVIEW REQUEST SPECIFIC TESTS - 3 PROBLEME BEHOBEN"""
-        logger.info("🔥 STARTING REVIEW REQUEST TESTS - 3 PROBLEME BEHOBEN")
+        """🔥 REVIEW REQUEST SPECIFIC TESTS - BOONER TRADE APP COMPREHENSIVE TESTING"""
+        logger.info("🔥 STARTING REVIEW REQUEST TESTS - BOONER TRADE APP")
         logger.info("="*80)
         
-        # Test 1: Manual Trade Execution - GOLD
-        logger.info("🔥 TEST 1: Manual Trade Execution - GOLD")
-        await self.test_review_1_manual_trade_execution_gold()
+        # REVIEW REQUEST TESTS - As specified in the German review request
+        logger.info("🔥 REVIEW REQUEST TESTS - BACKEND COMPREHENSIVE TESTING")
         
-        # Test 2: Platform Connections Verification
-        logger.info("🔥 TEST 2: Platform Connections Verification")
-        await self.test_review_2_platform_connections_verification()
+        # Test 1: Backend-Erreichbarkeit auf Port 8001
+        logger.info("🔥 TEST 1: Backend-Erreichbarkeit auf Port 8001")
+        await self.test_backend_reachability_port_8001()
         
-        # Test 3: AI Chat Trade Execution - GOLD KAUFEN
-        logger.info("🔥 TEST 3: AI Chat Trade Execution - GOLD KAUFEN")
-        await self.test_review_3_ai_chat_trade_gold_kaufen()
+        # Test 2: GET /api/ping
+        logger.info("🔥 TEST 2: GET /api/ping")
+        await self.test_api_ping_endpoint()
         
-        # Test 4: AI Chat Trade Execution - EUR KAUFEN
-        logger.info("🔥 TEST 4: AI Chat Trade Execution - EUR KAUFEN")
-        await self.test_review_4_ai_chat_trade_eur_kaufen()
+        # Test 3: GET /api/settings
+        logger.info("🔥 TEST 3: GET /api/settings")
+        await self.test_api_settings_get()
         
-        # Test 5: AI Chat mit INAKTIVEM Auto-Trading
-        logger.info("🔥 TEST 5: AI Chat mit INAKTIVEM Auto-Trading")
-        await self.test_review_5_ai_chat_with_inactive_auto_trading()
+        # Test 4: POST /api/settings (mit Test-Daten)
+        logger.info("🔥 TEST 4: POST /api/settings (mit Test-Daten)")
+        await self.test_api_settings_post_with_test_data()
         
-        # Test 6: Backend Logs Analysis
-        logger.info("🔥 TEST 6: Backend Logs Analysis")
-        await self.test_review_6_backend_logs_analysis()
+        # Test 5: GET /api/trades/list
+        logger.info("🔥 TEST 5: GET /api/trades/list")
+        await self.test_api_trades_list()
+        
+        # Test 6: GET /api/accounts
+        logger.info("🔥 TEST 6: GET /api/accounts")
+        await self.test_api_accounts()
+        
+        # Test 7: GET /api/market/data
+        logger.info("🔥 TEST 7: GET /api/market/data")
+        await self.test_api_market_data()
+        
+        # Test 8: Prüfe MongoDB-Verbindung
+        logger.info("🔥 TEST 8: Prüfe MongoDB-Verbindung")
+        await self.test_mongodb_connection()
+        
+        # Test 9: Prüfe MetaAPI-Verbindung
+        logger.info("🔥 TEST 9: Prüfe MetaAPI-Verbindung")
+        await self.test_metaapi_connection()
+        
+        # Test 10: Frontend Backend Timeout Issue
+        logger.info("🔥 TEST 10: Frontend Backend Timeout Issue")
+        await self.test_frontend_backend_timeout_issue()
         
         logger.info("🔥 REVIEW REQUEST TESTS COMPLETED")
         logger.info("="*80)
