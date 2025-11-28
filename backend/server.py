@@ -2105,6 +2105,11 @@ async def get_trades(status: Optional[str] = None):
         # Hole echte MT5-Positionen (LIVE)
         live_mt5_positions = []
         
+        # PERFORMANCE OPTIMIZATION: Hole ALLE trade_settings auf einmal statt für jeden Trade einzeln
+        all_trade_settings = await db.trade_settings.find({}, {"_id": 0}).to_list(10000)
+        trade_settings_map = {ts['trade_id']: ts for ts in all_trade_settings if 'trade_id' in ts}
+        logger.info(f"📊 Loaded {len(trade_settings_map)} trade settings for fast lookup")
+        
         for platform_name in active_platforms:
             # Support both DEMO and REAL accounts
             if 'MT5_LIBERTEX' in platform_name or 'MT5_ICMARKETS' in platform_name:
@@ -2141,8 +2146,8 @@ async def get_trades(status: Optional[str] = None):
                         commodity_id = symbol_to_commodity.get(mt5_symbol, mt5_symbol)  # Fallback to MT5 symbol
                         ticket = str(pos.get('ticket', pos.get('id')))
                         
-                        # Hole SL/TP UND STRATEGY aus trade_settings (AI Bot Monitoring)
-                        trade_settings = await db.trade_settings.find_one({'trade_id': ticket})
+                        # Hole SL/TP UND STRATEGY aus trade_settings (AI Bot Monitoring) - OPTIMIZED: Use pre-loaded map
+                        trade_settings = trade_settings_map.get(ticket)
                         stop_loss_value = trade_settings.get('stop_loss') if trade_settings else None
                         take_profit_value = trade_settings.get('take_profit') if trade_settings else None
                         
