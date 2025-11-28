@@ -2462,6 +2462,10 @@ async def update_settings(settings: TradingSettings):
         if auto_trading_changed:
             asyncio.create_task(manage_bot_background())
         
+        # Return response immediately - position updates will happen in background
+        # (Disabled temporarily to fix timeout issue)
+        # TODO: Re-enable position updates in proper background task
+        """
         # 🔄 WICHTIG: Aktualisiere ALLE bestehenden offenen Trades mit neuen TP/SL Settings (Background Task)
         async def update_positions_background():
             try:
