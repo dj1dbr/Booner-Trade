@@ -95,14 +95,15 @@ python3 -m venv python-env
 source python-env/bin/activate
 pip install --upgrade pip
 
-echo "📦 Installing emergentintegrations from custom index..."
-pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
-
-echo "📦 Installing other requirements..."
-pip install -r ../backend/requirements.txt
+echo "📦 Installing requirements (without emergentintegrations - using fallback)..."
+# NOTE: emergentintegrations funktioniert nur in Emergent Plattform, nicht in Desktop-App
+# Desktop-App verwendet llm_fallback.py mit direkten API-Keys
+grep -v "^emergentintegrations" ../backend/requirements.txt > requirements-desktop.txt
+pip install -r requirements-desktop.txt
+rm requirements-desktop.txt
 
 deactivate
-echo "✅ Python environment ready"
+echo "✅ Python environment ready (Fallback-Mode für Desktop-App)"
 echo ""
 
 # 6. Icon & DMG Background konvertieren
