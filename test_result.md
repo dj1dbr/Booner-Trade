@@ -1998,6 +1998,32 @@ agent_communication:
       USER COMPLAINT: "Ich kann immer noch keine Möglichkeit sehen, wo ich draufklicken kann"
       
       🔍 COMPREHENSIVE TESTING RESULTS:
+  
+  - agent: "testing"
+    message: |
+      🚨 CRITICAL FRONTEND CONFIGURATION ISSUE IDENTIFIED (Nov 28, 2025):
+      
+      PROBLEM: User reports "Netzwerkfehler: Keine Verbindung zum Backend möglich" when saving settings.
+      
+      ROOT CAUSE: Frontend configuration mismatch
+      - Frontend .env: REACT_APP_BACKEND_URL=http://localhost:8001
+      - External URL: https://tradebot-60.preview.emergentagent.com
+      - Frontend tries to connect to localhost instead of external backend
+      
+      TESTING RESULTS:
+      ✅ Backend working perfectly (API accessible, settings save successfully)
+      ✅ Frontend UI functional (settings modal, auto trading toggle works)
+      ❌ Frontend-backend connectivity blocked by wrong URL configuration
+      ❌ Settings don't persist after reload due to save failure
+      
+      IMMEDIATE FIX REQUIRED:
+      Update /app/frontend/.env:
+      FROM: REACT_APP_BACKEND_URL=http://localhost:8001
+      TO: REACT_APP_BACKEND_URL=https://tradebot-60.preview.emergentagent.com
+      
+      This will resolve the "Netzwerkfehler" and enable settings persistence.
+      
+      PRIORITY: CRITICAL - This is blocking the main user scenario from review request.
       
       ✅ WHAT'S WORKING (UI Elements):
       1. Navigation: Successfully navigated to Trades tab → "📊 Offene Trades" sub-tab
