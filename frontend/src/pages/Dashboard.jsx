@@ -937,7 +937,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-xs text-slate-400">
-                    Offene Positionen: €{libertexExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && (t.platform === 'MT5_LIBERTEX' || t.mode === 'MT5_LIBERTEX')).length})
+                    Offene Positionen: €{libertexExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && ((t.platform && t.platform.includes('LIBERTEX')) || (t.mode && t.mode.includes('LIBERTEX')))).length})
                   </div>
                 </>
               )}
