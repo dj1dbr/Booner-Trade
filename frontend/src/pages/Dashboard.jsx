@@ -15,7 +15,7 @@ import TradesTable from '../components/TradesTable';
 import IndicatorsPanel from '../components/IndicatorsPanel';
 import AIChat from '../components/AIChat';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || '';
 const API = `${BACKEND_URL}/api`;
 
 // Debug: Log the backend URL being used
