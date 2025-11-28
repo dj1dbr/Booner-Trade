@@ -2478,9 +2478,7 @@ async def update_settings(settings: TradingSettings):
         
         # 🔄 TODO: Position updates temporarily disabled due to complexity
         # Update existing open positions with new TP/SL settings (background task)
-        # This is now properly implemented as a non-blocking background task
-        async def update_positions_background():
-            """Background task to update all open positions with new TP/SL settings"""
+        # Properly implemented as non-blocking using FastAPI BackgroundTasks
         async def update_positions_background():
             try:
                 logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
