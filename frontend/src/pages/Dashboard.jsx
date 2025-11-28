@@ -161,11 +161,11 @@ const Dashboard = () => {
   const fetchAllData = async () => {
     setLoading(true);
     
-    // Set a maximum timeout for loading - force stop after 5 seconds
+    // Set a maximum timeout for loading - force stop after 20 seconds (increased for slow connections)
     const maxLoadingTimeout = setTimeout(() => {
       console.warn('Loading timeout reached, forcing UI to display');
       setLoading(false);
-    }, 5000);
+    }, 20000);
     
     try {
       // First fetch settings and wait for it
