@@ -94,7 +94,13 @@ echo "📦 Creating Python Environment..."
 python3 -m venv python-env
 source python-env/bin/activate
 pip install --upgrade pip
+
+echo "📦 Installing emergentintegrations from custom index..."
+pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+
+echo "📦 Installing other requirements..."
 pip install -r ../backend/requirements.txt
+
 deactivate
 echo "✅ Python environment ready"
 echo ""
