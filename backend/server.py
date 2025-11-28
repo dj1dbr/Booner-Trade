@@ -2499,8 +2499,8 @@ async def update_settings(settings: TradingSettings):
                     volume = position.get('volume', 0.01)
                 
                     if strategy == 'swing':
-                    mode = settings.swing_tp_sl_mode
-                    if mode == 'euro':
+                        mode = settings.swing_tp_sl_mode
+                        if mode == 'euro':
                         tp_euro = settings.swing_take_profit_euro
                         sl_euro = settings.swing_stop_loss_euro
                         # Euro-Modus Berechnung
