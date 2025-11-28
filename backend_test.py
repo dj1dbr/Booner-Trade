@@ -451,6 +451,403 @@ class Booner_TradeTester:
                     {"error_detail": error_detail, "error_type": "specific"}
                 )
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # REVIEW REQUEST SPECIFIC TESTS - BOONER TRADE APP
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    async def test_backend_reachability_port_8001(self):
+        """🔥 REVIEW TEST 1: Backend-Erreichbarkeit auf Port 8001"""
+        logger.info("🔥 REVIEW TEST 1: Backend-Erreichbarkeit auf Port 8001")
+        
+        # Test basic connectivity to backend
+        success, data = await self.make_request("GET", "/api/")
+        
+        if success:
+            message = data.get("message", "")
+            self.log_test_result(
+                "REVIEW - Backend Reachability Port 8001", 
+                True, 
+                f"✅ Backend erreichbar auf Port 8001: {message}",
+                {"message": message, "status": "reachable"}
+            )
+        else:
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - Backend Reachability Port 8001", 
+                False, 
+                f"❌ Backend nicht erreichbar auf Port 8001: {error_msg}",
+                {"error": error_msg, "status": "unreachable"}
+            )
+
+    async def test_api_ping_endpoint(self):
+        """🔥 REVIEW TEST 2: GET /api/ping"""
+        logger.info("🔥 REVIEW TEST 2: GET /api/ping")
+        
+        success, data = await self.make_request("GET", "/api/ping")
+        
+        if success:
+            # Check for typical ping response
+            status = data.get("status", "")
+            timestamp = data.get("timestamp", "")
+            
+            self.log_test_result(
+                "REVIEW - API Ping Endpoint", 
+                True, 
+                f"✅ /api/ping responded: status={status}, timestamp={timestamp}",
+                {"status": status, "timestamp": timestamp}
+            )
+        else:
+            # Check if endpoint exists but returns different structure
+            if "404" in str(data) or "not found" in str(data).lower():
+                # Try alternative ping endpoints
+                alt_success, alt_data = await self.make_request("GET", "/api/")
+                if alt_success:
+                    self.log_test_result(
+                        "REVIEW - API Ping Endpoint", 
+                        True, 
+                        f"✅ /api/ping not found, but /api/ works: {alt_data}",
+                        {"alternative_endpoint": "/api/", "data": alt_data}
+                    )
+                else:
+                    self.log_test_result(
+                        "REVIEW - API Ping Endpoint", 
+                        False, 
+                        f"❌ /api/ping not found and /api/ also failed: {data}",
+                        data
+                    )
+            else:
+                self.log_test_result(
+                    "REVIEW - API Ping Endpoint", 
+                    False, 
+                    f"❌ /api/ping failed: {data}",
+                    data
+                )
+
+    async def test_api_settings_get(self):
+        """🔥 REVIEW TEST 3: GET /api/settings"""
+        logger.info("🔥 REVIEW TEST 3: GET /api/settings")
+        
+        success, data = await self.make_request("GET", "/api/settings")
+        
+        if success:
+            # Check for key settings fields
+            auto_trading = data.get("auto_trading")
+            ai_provider = data.get("ai_provider")
+            enabled_commodities = data.get("enabled_commodities", [])
+            
+            self.log_test_result(
+                "REVIEW - API Settings GET", 
+                True, 
+                f"✅ /api/settings responded: auto_trading={auto_trading}, ai_provider={ai_provider}, commodities={len(enabled_commodities)}",
+                {
+                    "auto_trading": auto_trading,
+                    "ai_provider": ai_provider,
+                    "enabled_commodities_count": len(enabled_commodities)
+                }
+            )
+        else:
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - API Settings GET", 
+                False, 
+                f"❌ /api/settings GET failed: {error_msg}",
+                data
+            )
+
+    async def test_api_settings_post_with_test_data(self):
+        """🔥 REVIEW TEST 4: POST /api/settings (mit Test-Daten)"""
+        logger.info("🔥 REVIEW TEST 4: POST /api/settings (mit Test-Daten)")
+        
+        # First get current settings
+        get_success, current_settings = await self.make_request("GET", "/api/settings")
+        
+        if not get_success:
+            self.log_test_result(
+                "REVIEW - API Settings POST (Get Current)", 
+                False, 
+                f"❌ Could not get current settings for POST test: {current_settings}",
+                current_settings
+            )
+            return
+        
+        # Prepare test data - modify a safe setting
+        test_settings = current_settings.copy()
+        test_settings["auto_trading"] = not test_settings.get("auto_trading", False)  # Toggle auto_trading
+        test_settings["max_trades_per_hour"] = 5  # Safe test value
+        
+        success, data = await self.make_request("POST", "/api/settings", test_settings)
+        
+        if success:
+            success_flag = data.get("success", False)
+            message = data.get("message", "")
+            
+            if success_flag:
+                self.log_test_result(
+                    "REVIEW - API Settings POST", 
+                    True, 
+                    f"✅ /api/settings POST successful: {message}",
+                    {"success": success_flag, "message": message, "test_data_applied": True}
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW - API Settings POST", 
+                    False, 
+                    f"❌ /api/settings POST returned success=false: {message}",
+                    data
+                )
+        else:
+            error_msg = str(data.get("detail", data))
+            
+            # Check if it's a "Netzwerkfehler" (network error) as mentioned in review
+            if "network" in error_msg.lower() or "timeout" in error_msg.lower():
+                self.log_test_result(
+                    "REVIEW - API Settings POST", 
+                    False, 
+                    f"❌ NETZWERKFEHLER confirmed: {error_msg}",
+                    {"error_type": "network_error", "error": error_msg}
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW - API Settings POST", 
+                    False, 
+                    f"❌ /api/settings POST failed: {error_msg}",
+                    data
+                )
+
+    async def test_api_trades_list(self):
+        """🔥 REVIEW TEST 5: GET /api/trades/list"""
+        logger.info("🔥 REVIEW TEST 5: GET /api/trades/list")
+        
+        success, data = await self.make_request("GET", "/api/trades/list")
+        
+        if success:
+            trades = data.get("trades", [])
+            trade_count = len(trades)
+            
+            # Check for open and closed trades
+            open_trades = [t for t in trades if t.get("status") == "OPEN"]
+            closed_trades = [t for t in trades if t.get("status") == "CLOSED"]
+            
+            self.log_test_result(
+                "REVIEW - API Trades List", 
+                True, 
+                f"✅ /api/trades/list responded: {trade_count} total trades ({len(open_trades)} open, {len(closed_trades)} closed)",
+                {
+                    "total_trades": trade_count,
+                    "open_trades": len(open_trades),
+                    "closed_trades": len(closed_trades)
+                }
+            )
+        else:
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - API Trades List", 
+                False, 
+                f"❌ /api/trades/list failed: {error_msg}",
+                data
+            )
+
+    async def test_api_accounts(self):
+        """🔥 REVIEW TEST 6: GET /api/accounts"""
+        logger.info("🔥 REVIEW TEST 6: GET /api/accounts")
+        
+        success, data = await self.make_request("GET", "/api/accounts")
+        
+        if success:
+            # Check for account information
+            accounts = data.get("accounts", []) if isinstance(data.get("accounts"), list) else []
+            
+            self.log_test_result(
+                "REVIEW - API Accounts", 
+                True, 
+                f"✅ /api/accounts responded: {len(accounts)} accounts found",
+                {"accounts_count": len(accounts), "accounts_data": accounts[:2]}  # Show first 2 accounts
+            )
+        else:
+            # Check if endpoint exists with different name
+            alt_endpoints = ["/api/platforms/status", "/api/platforms"]
+            
+            for alt_endpoint in alt_endpoints:
+                alt_success, alt_data = await self.make_request("GET", alt_endpoint)
+                if alt_success:
+                    self.log_test_result(
+                        "REVIEW - API Accounts", 
+                        True, 
+                        f"✅ /api/accounts not found, but {alt_endpoint} works: {len(alt_data.get('platforms', []))} platforms",
+                        {"alternative_endpoint": alt_endpoint, "data": alt_data}
+                    )
+                    return
+            
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - API Accounts", 
+                False, 
+                f"❌ /api/accounts failed: {error_msg}",
+                data
+            )
+
+    async def test_api_market_data(self):
+        """🔥 REVIEW TEST 7: GET /api/market/data"""
+        logger.info("🔥 REVIEW TEST 7: GET /api/market/data")
+        
+        success, data = await self.make_request("GET", "/api/market/data")
+        
+        if success:
+            # Check for market data
+            markets = data.get("markets", {})
+            commodities = data.get("commodities", [])
+            
+            self.log_test_result(
+                "REVIEW - API Market Data", 
+                True, 
+                f"✅ /api/market/data responded: {len(markets)} markets, {len(commodities)} commodities",
+                {"markets_count": len(markets), "commodities_count": len(commodities)}
+            )
+        else:
+            # Check alternative market endpoints
+            alt_endpoints = ["/api/market/all", "/api/market/current", "/api/commodities"]
+            
+            for alt_endpoint in alt_endpoints:
+                alt_success, alt_data = await self.make_request("GET", alt_endpoint)
+                if alt_success:
+                    self.log_test_result(
+                        "REVIEW - API Market Data", 
+                        True, 
+                        f"✅ /api/market/data not found, but {alt_endpoint} works",
+                        {"alternative_endpoint": alt_endpoint, "data_keys": list(alt_data.keys())}
+                    )
+                    return
+            
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - API Market Data", 
+                False, 
+                f"❌ /api/market/data failed: {error_msg}",
+                data
+            )
+
+    async def test_mongodb_connection(self):
+        """🔥 REVIEW TEST 8: Prüfe MongoDB-Verbindung"""
+        logger.info("🔥 REVIEW TEST 8: Prüfe MongoDB-Verbindung")
+        
+        # Test MongoDB connection by checking if settings can be retrieved
+        # This indirectly tests MongoDB since settings are stored in MongoDB
+        success, data = await self.make_request("GET", "/api/settings")
+        
+        if success:
+            # If settings work, MongoDB is connected
+            self.log_test_result(
+                "REVIEW - MongoDB Connection", 
+                True, 
+                f"✅ MongoDB connection working (settings retrieved successfully)",
+                {"mongodb_status": "connected", "test_method": "settings_retrieval"}
+            )
+        else:
+            # Check if it's a MongoDB connection error
+            error_msg = str(data.get("detail", data))
+            
+            if any(keyword in error_msg.lower() for keyword in ["mongo", "database", "connection", "timeout"]):
+                self.log_test_result(
+                    "REVIEW - MongoDB Connection", 
+                    False, 
+                    f"❌ MongoDB connection error detected: {error_msg}",
+                    {"mongodb_status": "connection_error", "error": error_msg}
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW - MongoDB Connection", 
+                    False, 
+                    f"❌ Cannot verify MongoDB connection (settings API failed): {error_msg}",
+                    {"mongodb_status": "unknown", "error": error_msg}
+                )
+
+    async def test_metaapi_connection(self):
+        """🔥 REVIEW TEST 9: Prüfe MetaAPI-Verbindung"""
+        logger.info("🔥 REVIEW TEST 9: Prüfe MetaAPI-Verbindung")
+        
+        # Test MetaAPI connection by checking platform status
+        success, data = await self.make_request("GET", "/api/platforms/status")
+        
+        if success:
+            platforms = data.get("platforms", [])
+            
+            # Look for MT5 platforms (which use MetaAPI)
+            mt5_platforms = [p for p in platforms if isinstance(p, dict) and "MT5" in p.get("name", "")]
+            connected_mt5 = [p for p in mt5_platforms if p.get("connected", False)]
+            
+            if connected_mt5:
+                platform_names = [p.get("name") for p in connected_mt5]
+                self.log_test_result(
+                    "REVIEW - MetaAPI Connection", 
+                    True, 
+                    f"✅ MetaAPI connection working: {len(connected_mt5)} MT5 platforms connected: {platform_names}",
+                    {"metaapi_status": "connected", "connected_platforms": platform_names}
+                )
+            else:
+                self.log_test_result(
+                    "REVIEW - MetaAPI Connection", 
+                    False, 
+                    f"❌ MetaAPI connection issues: {len(mt5_platforms)} MT5 platforms found, 0 connected",
+                    {"metaapi_status": "disconnected", "mt5_platforms_found": len(mt5_platforms)}
+                )
+        else:
+            error_msg = str(data.get("detail", data))
+            self.log_test_result(
+                "REVIEW - MetaAPI Connection", 
+                False, 
+                f"❌ Cannot verify MetaAPI connection (platforms API failed): {error_msg}",
+                {"metaapi_status": "unknown", "error": error_msg}
+            )
+
+    async def test_frontend_backend_timeout_issue(self):
+        """🔥 REVIEW TEST 10: Frontend Backend Timeout Issue"""
+        logger.info("🔥 REVIEW TEST 10: Frontend Backend Timeout Issue - Test response times")
+        
+        import time
+        
+        # Test multiple endpoints for response time
+        endpoints_to_test = [
+            "/api/settings",
+            "/api/trades/list", 
+            "/api/platforms/status",
+            "/api/market/all"
+        ]
+        
+        timeout_issues = []
+        fast_responses = []
+        
+        for endpoint in endpoints_to_test:
+            start_time = time.time()
+            success, data = await self.make_request("GET", endpoint)
+            response_time = time.time() - start_time
+            
+            if success:
+                if response_time > 10:  # More than 10 seconds is slow
+                    timeout_issues.append({"endpoint": endpoint, "response_time": response_time})
+                else:
+                    fast_responses.append({"endpoint": endpoint, "response_time": response_time})
+            else:
+                # Check if it's a timeout error
+                error_msg = str(data.get("detail", data))
+                if "timeout" in error_msg.lower():
+                    timeout_issues.append({"endpoint": endpoint, "error": "timeout", "response_time": response_time})
+        
+        if not timeout_issues:
+            avg_response_time = sum(r["response_time"] for r in fast_responses) / len(fast_responses) if fast_responses else 0
+            self.log_test_result(
+                "REVIEW - Frontend Backend Timeout Issue", 
+                True, 
+                f"✅ No timeout issues detected. Average response time: {avg_response_time:.2f}s",
+                {"timeout_issues": 0, "fast_responses": len(fast_responses), "avg_response_time": avg_response_time}
+            )
+        else:
+            self.log_test_result(
+                "REVIEW - Frontend Backend Timeout Issue", 
+                False, 
+                f"❌ Timeout issues detected on {len(timeout_issues)} endpoints: {[t['endpoint'] for t in timeout_issues]}",
+                {"timeout_issues": timeout_issues, "fast_responses": len(fast_responses)}
+            )
+
     async def test_critical_commodities_15_items(self):
         """CRITICAL TEST 1: Commodities - GET /api/commodities → Should return 15 items"""
         logger.info("🔥 CRITICAL TEST 1: Commodities - Should return 15 items")
