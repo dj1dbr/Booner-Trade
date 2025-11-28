@@ -708,7 +708,14 @@ const Dashboard = () => {
   // Fetch MT5 ICMarkets Account  
   const fetchMT5ICMarketsAccount = async () => {
     try {
-      const response = await axios.get(`${API}/platforms/MT5_ICMARKETS/account`);
+      // Find the first active ICMarkets platform (could be MT5_ICMARKETS or MT5_ICMARKETS_DEMO)
+      const icmarketsPlatform = settings?.active_platforms?.find(p => p.includes('ICMARKETS'));
+      if (!icmarketsPlatform) {
+        console.warn('No ICMarkets platform found in active platforms');
+        return;
+      }
+      
+      const response = await axios.get(`${API}/platforms/${icmarketsPlatform}/account`);
       if (response.data.success) {
         setMt5Account(response.data.account);
         setMt5Connected(true);
