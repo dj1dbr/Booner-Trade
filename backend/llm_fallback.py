@@ -12,10 +12,11 @@ logger = logging.getLogger(__name__)
 try:
     from emergentintegrations.llm.chat import LlmChat, UserMessage as EmergentUserMessage
     EMERGENT_AVAILABLE = True
-    logger.info("✅ emergentintegrations verfügbar")
+    logger.info("✅ emergentintegrations verfügbar (Emergent Platform)")
 except ImportError:
     EMERGENT_AVAILABLE = False
-    logger.warning("⚠️ emergentintegrations nicht verfügbar - verwende Fallback")
+    # This is EXPECTED in Desktop-Apps - emergentintegrations only works on Emergent Platform
+    logger.info("ℹ️  Desktop-App Mode: Using Fallback (direct API keys) - emergentintegrations not available")
 
 
 class UserMessage:
