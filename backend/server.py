@@ -2484,12 +2484,12 @@ async def update_settings(settings: TradingSettings):
                 
                 updated_count = 0
                 for position in all_open_positions:
-                ticket = position.get('id') or position.get('ticket')
-                entry_price = position.get('price_open') or position.get('entry_price')
-                trade_type = position.get('type', 'BUY')  # 'BUY' oder 'SELL'
-                
-                if not ticket or not entry_price:
-                    continue
+                    ticket = position.get('id') or position.get('ticket')
+                    entry_price = position.get('price_open') or position.get('entry_price')
+                    trade_type = position.get('type', 'BUY')  # 'BUY' oder 'SELL'
+                    
+                    if not ticket or not entry_price:
+                        continue
                 
                 # Hole trade_settings um Strategie zu bestimmen
                 trade_setting = await db.trade_settings.find_one({'trade_id': str(ticket)})
