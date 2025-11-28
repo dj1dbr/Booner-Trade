@@ -687,7 +687,14 @@ const Dashboard = () => {
   // Fetch MT5 Libertex Account
   const fetchMT5LibertexAccount = async () => {
     try {
-      const response = await axios.get(`${API}/platforms/MT5_LIBERTEX/account`);
+      // Find the first active Libertex platform (could be MT5_LIBERTEX, MT5_LIBERTEX_DEMO, or MT5_LIBERTEX_REAL)
+      const libertexPlatform = settings?.active_platforms?.find(p => p.includes('LIBERTEX'));
+      if (!libertexPlatform) {
+        console.warn('No Libertex platform found in active platforms');
+        return;
+      }
+      
+      const response = await axios.get(`${API}/platforms/${libertexPlatform}/account`);
       if (response.data.success) {
         setMt5LibertexAccount(response.data.account);
         setMt5LibertexConnected(true);
