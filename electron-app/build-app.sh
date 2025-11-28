@@ -98,14 +98,14 @@ if [ ! -d "python-env" ]; then
     source python-env/bin/activate
     pip install --upgrade pip
     
-    echo "📦 Installing emergentintegrations from custom index..."
-    pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
-    
-    echo "📦 Installing other requirements..."
-    pip install -r ../backend/requirements.txt
+    echo "📦 Installing requirements (Desktop-App uses Fallback, not emergentintegrations)..."
+    # emergentintegrations works ONLY on Emergent Platform, not in standalone apps
+    grep -v "^emergentintegrations" ../backend/requirements.txt > requirements-desktop.txt
+    pip install -r requirements-desktop.txt
+    rm requirements-desktop.txt
     
     deactivate
-    echo "✅ Python environment created"
+    echo "✅ Python environment created (Fallback-Mode)"
 else
     echo "✅ Python environment already exists"
 fi
