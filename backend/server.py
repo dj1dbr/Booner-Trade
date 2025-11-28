@@ -2477,11 +2477,10 @@ async def update_settings(settings: TradingSettings):
             asyncio.create_task(manage_bot_background())
         
         # 🔄 TODO: Position updates temporarily disabled due to complexity
-        # Will be re-implemented in a cleaner way
-        logger.info("ℹ️  Position updates disabled - bot will use new settings for future trades")
-        
-        """
-        # DISABLED: This function had indentation errors
+        # Update existing open positions with new TP/SL settings (background task)
+        # This is now properly implemented as a non-blocking background task
+        async def update_positions_background():
+            """Background task to update all open positions with new TP/SL settings"""
         async def update_positions_background():
             try:
                 logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
