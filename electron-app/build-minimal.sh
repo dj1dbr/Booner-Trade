@@ -26,9 +26,11 @@ echo "📦 Creating Python Environment..."
 python3 -m venv python-env
 source python-env/bin/activate
 pip install --upgrade pip --quiet
-echo "📦 Installing emergentintegrations..."
-pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ --quiet
-pip install -r ../backend/requirements.txt --quiet
+echo "📦 Installing requirements (Fallback-Mode)..."
+# emergentintegrations only works in Emergent Platform
+grep -v "^emergentintegrations" ../backend/requirements.txt > requirements-desktop.txt
+pip install -r requirements-desktop.txt --quiet
+rm requirements-desktop.txt
 deactivate
 echo ""
 
