@@ -372,15 +372,15 @@ const Dashboard = () => {
       }, 0);
       setTotalExposure(totalExp);
       
-      // Libertex exposure
+      // Libertex exposure (includes all Libertex accounts: MT5_LIBERTEX, MT5_LIBERTEX_DEMO, MT5_LIBERTEX_REAL)
       const libertexExp = openTrades
-        .filter(t => t.platform === 'MT5_LIBERTEX' || t.mode === 'MT5_LIBERTEX')
+        .filter(t => (t.platform && t.platform.includes('LIBERTEX')) || (t.mode && t.mode.includes('LIBERTEX')))
         .reduce((sum, trade) => sum + (trade.entry_price * trade.quantity), 0);
       setLibertexExposure(libertexExp);
       
-      // ICMarkets exposure
+      // ICMarkets exposure (includes all ICMarkets accounts: MT5_ICMARKETS, MT5_ICMARKETS_DEMO)
       const icExp = openTrades
-        .filter(t => t.platform === 'MT5_ICMARKETS' || (t.mode === 'MT5' && !t.platform))
+        .filter(t => (t.platform && t.platform.includes('ICMARKETS')) || (t.mode && t.mode.includes('ICMARKETS')))
         .reduce((sum, trade) => sum + (trade.entry_price * trade.quantity), 0);
       setIcmarketsExposure(icExp);
       
