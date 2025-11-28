@@ -2572,12 +2572,15 @@ async def update_settings(settings: TradingSettings):
                 updated_count += 1
                 logger.info(f"   ✅ Trade #{ticket}: Neue SL=${new_stop_loss:.2f}, TP=${new_take_profit:.2f} ({strategy.upper()}: SL={sl_percent}%, TP={tp_percent}%)")
             
-            logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
-        except Exception as e:
-            logger.error(f"⚠️ Fehler beim Aktualisieren bestehender Trades: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            # Nicht kritisch - Settings wurden gespeichert, nur Update fehlgeschlagen
+                logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
+            except Exception as e:
+                logger.error(f"⚠️ Fehler beim Aktualisieren bestehender Trades: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+                # Nicht kritisch - Settings wurden gespeichert, nur Update fehlgeschlagen
+        
+        # Start position updates in background
+        asyncio.create_task(update_positions_background())
         
         return settings
     except Exception as e:
