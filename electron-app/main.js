@@ -76,7 +76,7 @@ async function startBackend() {
       ...process.env,
       MONGO_URL: 'mongodb://localhost:27017',
       DB_NAME: 'booner_trade_db',
-      PORT: '8001'
+      PORT: '8000'
     };
 
     backendProcess = spawn(pythonPath, [serverPath], {
