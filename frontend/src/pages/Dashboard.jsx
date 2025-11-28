@@ -1011,7 +1011,7 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="text-xs text-slate-400">
-                    Offene Positionen: €{icmarketsExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && (t.platform === 'MT5_ICMARKETS' || (t.mode === 'MT5' && !t.platform))).length})
+                    Offene Positionen: €{icmarketsExposure.toFixed(2)} ({trades.filter(t => t.status === 'OPEN' && ((t.platform && t.platform.includes('ICMARKETS')) || (t.mode && t.mode.includes('ICMARKETS')))).length})
                   </div>
                 </>
               )}
