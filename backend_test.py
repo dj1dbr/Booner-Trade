@@ -4512,14 +4512,23 @@ class Booner_TradeTester:
         logger.info("="*80)
 
 async def main():
-    """🔧 UMFASSENDER FIX - 3 PROBLEME BEHOBEN - TESTING"""
-    # Get backend URL from environment
-    backend_url = "https://tradebot-60.preview.emergentagent.com"
+    """🔧 BOONER TRADE APP - COMPREHENSIVE BACKEND TESTING"""
+    # Get backend URL from frontend .env file
+    try:
+        with open('/app/frontend/.env', 'r') as f:
+            for line in f:
+                if line.startswith('REACT_APP_BACKEND_URL='):
+                    backend_url = line.split('=', 1)[1].strip()
+                    break
+        else:
+            backend_url = "http://localhost:8001"  # fallback
+    except:
+        backend_url = "http://localhost:8001"  # fallback
     
-    logger.info(f"🔧 Starting UMFASSENDER FIX TESTING - 3 PROBLEME BEHOBEN")
+    logger.info(f"🔧 Starting BOONER TRADE APP COMPREHENSIVE TESTING")
     logger.info(f"Backend URL: {backend_url}")
     logger.info("="*80)
-    logger.info("🔥 REVIEW REQUEST TESTS - CRITICAL PRIORITY")
+    logger.info("🔥 REVIEW REQUEST TESTS - COMPREHENSIVE BACKEND TESTING")
     logger.info("="*80)
     
     async with Booner_TradeTester(backend_url) as tester:
