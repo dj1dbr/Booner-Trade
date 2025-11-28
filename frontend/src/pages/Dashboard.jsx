@@ -178,7 +178,8 @@ const Dashboard = () => {
         refreshMarketData().catch(err => console.error('Market refresh error:', err)),
         fetchHistoricalData().catch(err => console.error('Historical data fetch error:', err)),
         fetchTrades().catch(err => console.error('Trades fetch error:', err)),
-        fetchStats().catch(err => console.error('Stats fetch error:', err))
+        fetchStats().catch(err => console.error('Stats fetch error:', err)),
+        fetchAccountData().catch(err => console.error('Account data fetch error:', err))
       ]);
     } catch (error) {
       console.error('Error in fetchAllData:', error);
