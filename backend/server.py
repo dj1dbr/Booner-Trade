@@ -2491,14 +2491,14 @@ async def update_settings(settings: TradingSettings):
                     if not ticket or not entry_price:
                         continue
                 
-                # Hole trade_settings um Strategie zu bestimmen
-                trade_setting = await db.trade_settings.find_one({'trade_id': str(ticket)})
-                strategy = trade_setting.get('strategy', 'swing') if trade_setting else 'swing'
+                    # Hole trade_settings um Strategie zu bestimmen
+                    trade_setting = await db.trade_settings.find_one({'trade_id': str(ticket)})
+                    strategy = trade_setting.get('strategy', 'swing') if trade_setting else 'swing'
                 
-                # Hole neue TP/SL Settings basierend auf Strategie UND Modus
-                volume = position.get('volume', 0.01)
+                    # Hole neue TP/SL Settings basierend auf Strategie UND Modus
+                    volume = position.get('volume', 0.01)
                 
-                if strategy == 'swing':
+                    if strategy == 'swing':
                     mode = settings.swing_tp_sl_mode
                     if mode == 'euro':
                         tp_euro = settings.swing_take_profit_euro
@@ -2520,7 +2520,7 @@ async def update_settings(settings: TradingSettings):
                         else:
                             new_stop_loss = entry_price * (1 + sl_percent / 100)
                             new_take_profit = entry_price * (1 - tp_percent / 100)
-                elif strategy == 'day':
+                    elif strategy == 'day':
                     mode = settings.day_tp_sl_mode
                     if mode == 'euro':
                         tp_euro = settings.day_take_profit_euro
@@ -2542,7 +2542,7 @@ async def update_settings(settings: TradingSettings):
                         else:
                             new_stop_loss = entry_price * (1 + sl_percent / 100)
                             new_take_profit = entry_price * (1 - tp_percent / 100)
-                else:
+                    else:
                     # Manual/Unknown - verwende Swing Settings als Default (Prozent-Modus)
                     tp_percent = settings.swing_take_profit_percent
                     sl_percent = settings.swing_stop_loss_percent
@@ -2553,8 +2553,8 @@ async def update_settings(settings: TradingSettings):
                         new_stop_loss = entry_price * (1 + sl_percent / 100)
                         new_take_profit = entry_price * (1 - tp_percent / 100)
                 
-                # Update in DB (upsert falls nicht existiert)
-                await db.trade_settings.update_one(
+                    # Update in DB (upsert falls nicht existiert)
+                    await db.trade_settings.update_one(
                     {'trade_id': str(ticket)},
                     {'$set': {
                         'stop_loss': new_stop_loss,
@@ -2567,12 +2567,12 @@ async def update_settings(settings: TradingSettings):
                         'updated_by': 'SETTINGS_CHANGE'
                     }},
                     upsert=True
-                )
+                    )
                 
-                updated_count += 1
-                logger.info(f"   ✅ Trade #{ticket}: Neue SL=${new_stop_loss:.2f}, TP=${new_take_profit:.2f} ({strategy.upper()}: SL={sl_percent}%, TP={tp_percent}%)")
+                    updated_count += 1
+                    logger.info(f"   ✅ Trade #{ticket}: Neue SL=${new_stop_loss:.2f}, TP=${new_take_profit:.2f} ({strategy.upper()}: SL={sl_percent}%, TP={tp_percent}%)")
             
-                logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
+                    logger.info(f"✅ {updated_count} offene Trades mit neuen Einstellungen aktualisiert")
             except Exception as e:
                 logger.error(f"⚠️ Fehler beim Aktualisieren bestehender Trades: {e}")
                 import traceback
