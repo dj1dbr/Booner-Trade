@@ -2220,15 +2220,17 @@ async def get_trades(status: Optional[str] = None):
             if trade.get('closed_at') and isinstance(trade['closed_at'], str):
                 trade['closed_at'] = datetime.fromisoformat(trade['closed_at']).isoformat()
         
-        # Filter nur offensichtliche Fehler (TRADE_RETCODE)
-        # KEINE aggressive Deduplizierung mehr!
+        # Filter errors AND deduplicate by ticket ID
+        # Reason: MT5_LIBERTEX and MT5_LIBERTEX_DEMO point to same account, causing duplicates
         unique_trades = []
+        seen_tickets = set()
         
         for trade in trades:
             ticket = trade.get('mt5_ticket') or trade.get('ticket')
             commodity = trade.get('commodity', '')
+            status = trade.get('status', '')
             
-            # Skip NUR trades mit MetaAPI error codes
+            # Skip trades with MetaAPI error codes
             if ticket and isinstance(ticket, str) and 'TRADE_RETCODE' in str(ticket):
                 logger.debug(f"Filtered error trade: {ticket}")
                 continue
@@ -2237,7 +2239,13 @@ async def get_trades(status: Optional[str] = None):
                 logger.debug(f"Filtered error trade: commodity={commodity}")
                 continue
             
-            # ALLE anderen Trades durchlassen!
+            # Deduplicate by ticket ID (OPEN trades only - closed trades may have same ticket)
+            if status == 'OPEN' and ticket:
+                if ticket in seen_tickets:
+                    logger.debug(f"Filtered duplicate open trade: ticket={ticket}")
+                    continue
+                seen_tickets.add(ticket)
+            
             unique_trades.append(trade)
         
         logger.info(f"Trades fetched: {len(trades)} total, {len(unique_trades)} after deduplication")
