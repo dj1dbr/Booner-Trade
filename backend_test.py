@@ -4514,16 +4514,15 @@ class Booner_TradeTester:
 async def main():
     """🔧 BOONER TRADE APP - COMPREHENSIVE BACKEND TESTING"""
     # Get backend URL from frontend .env file
+    backend_url = "http://localhost:8001"  # default fallback
     try:
         with open('/app/frontend/.env', 'r') as f:
             for line in f:
                 if line.startswith('REACT_APP_BACKEND_URL='):
                     backend_url = line.split('=', 1)[1].strip()
                     break
-        else:
-            backend_url = "http://localhost:8001"  # fallback
-    except:
-        backend_url = "http://localhost:8001"  # fallback
+    except Exception as e:
+        logger.warning(f"Could not read frontend .env file: {e}, using fallback URL")
     
     logger.info(f"🔧 Starting BOONER TRADE APP COMPREHENSIVE TESTING")
     logger.info(f"Backend URL: {backend_url}")
