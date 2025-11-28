@@ -1275,6 +1275,14 @@ frontend:
     stuck_count: 1
     priority: "critical"
     needs_retesting: false
+  
+  - task: "Frontend Backend URL Configuration Fix"
+    implemented: false
+    working: false
+    file: "frontend/.env"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
     status_history:
       - working: "NA"
         agent: "main"
