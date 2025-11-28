@@ -2584,11 +2584,10 @@ async def update_settings(settings: TradingSettings):
                 logger.error(traceback.format_exc())
                 # Nicht kritisch - Settings wurden gespeichert, nur Update fehlgeschlagen
         
-        # Start position updates in background (WICHTIG: NACH return, läuft asynchron!)
-        asyncio.create_task(update_positions_background())
+        """
         
-        # Return immediately - background tasks will continue
-        logger.info("✅ Settings gespeichert - Position-Updates laufen im Hintergrund")
+        # Return immediately - settings saved successfully
+        logger.info("✅ Settings gespeichert")
         return settings
     except Exception as e:
         logger.error(f"Error updating settings: {e}")
