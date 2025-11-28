@@ -2462,13 +2462,14 @@ async def update_settings(settings: TradingSettings):
         if auto_trading_changed:
             asyncio.create_task(manage_bot_background())
         
-        # 🔄 WICHTIG: Aktualisiere ALLE bestehenden offenen Trades mit neuen TP/SL Settings
-        try:
-            logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
-            
-            # Hole ALLE offenen Positionen von allen Plattformen
-            from multi_platform_connector import multi_platform
-            all_open_positions = []
+        # 🔄 WICHTIG: Aktualisiere ALLE bestehenden offenen Trades mit neuen TP/SL Settings (Background Task)
+        async def update_positions_background():
+            try:
+                logger.info("🔄 Aktualisiere bestehende offene Trades mit neuen TP/SL Einstellungen...")
+                
+                # Hole ALLE offenen Positionen von allen Plattformen
+                from multi_platform_connector import multi_platform
+                all_open_positions = []
             
             for platform in settings.active_platforms:
                 try:
