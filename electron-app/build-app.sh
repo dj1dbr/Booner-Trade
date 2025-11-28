@@ -58,15 +58,35 @@ if [ ! -d "mongodb-mac" ]; then
     
     if [ "$ARCH" = "arm64" ]; then
         MONGO_URL="https://fastdl.mongodb.org/osx/mongodb-macos-arm64-${MONGO_VERSION}.tgz"
+        MONGO_FILE="mongodb-macos-arm64-${MONGO_VERSION}.tgz"
     else
         MONGO_URL="https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-${MONGO_VERSION}.tgz"
+        MONGO_FILE="mongodb-macos-x86_64-${MONGO_VERSION}.tgz"
     fi
     
-    curl -O "$MONGO_URL"
-    tar -zxvf mongodb-macos-*.tgz
-    mv mongodb-macos-* mongodb-mac
-    rm mongodb-macos-*.tgz
-    echo "✅ MongoDB downloaded"
+    echo "Downloading from: $MONGO_URL"
+    curl -L -o "$MONGO_FILE" "$MONGO_URL"
+    
+    if [ ! -f "$MONGO_FILE" ]; then
+        echo "❌ MongoDB download failed!"
+        exit 1
+    fi
+    
+    echo "Extracting MongoDB..."
+    tar -zxf "$MONGO_FILE"
+    
+    # Finde das extrahierte Verzeichnis
+    MONGO_DIR=$(find . -maxdepth 1 -type d -name "mongodb-macos-*" | head -n 1)
+    
+    if [ -z "$MONGO_DIR" ]; then
+        echo "❌ MongoDB extraction failed!"
+        exit 1
+    fi
+    
+    echo "Moving $MONGO_DIR to mongodb-mac..."
+    mv "$MONGO_DIR" mongodb-mac
+    rm "$MONGO_FILE"
+    echo "✅ MongoDB downloaded and prepared"
 else
     echo "✅ MongoDB already prepared"
 fi
