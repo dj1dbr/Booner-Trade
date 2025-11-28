@@ -2423,38 +2423,44 @@ async def update_settings(settings: TradingSettings):
             init_ai_chat(provider=provider, api_key=api_key, model=model)
             logger.info(f"Settings updated and AI reinitialized: Provider={provider}, Model={model}")
         
-        # Auto-Trading Bot Management
+        # Auto-Trading Bot Management (Background Task to avoid blocking)
+        async def manage_bot_background():
+            if auto_trading_changed:
+                if settings.auto_trading:
+                    # Start Bot wenn aktiviert
+                    logger.info("🤖 Auto-Trading aktiviert - starte Bot...")
+                    from ai_trading_bot import AITradingBot
+                    
+                    global ai_trading_bot_instance, bot_task
+                    # Stoppe alten Bot falls vorhanden
+                    if ai_trading_bot_instance and ai_trading_bot_instance.running:
+                        ai_trading_bot_instance.stop()
+                        if bot_task:
+                            try:
+                                await asyncio.wait_for(bot_task, timeout=2.0)
+                            except:
+                                pass
+                    
+                    # Starte neuen Bot
+                    ai_trading_bot_instance = AITradingBot()
+                    if await ai_trading_bot_instance.initialize():
+                        bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
+                        logger.info("✅ AI Trading Bot gestartet (via Settings)")
+                else:
+                    # Stop Bot wenn deaktiviert
+                    logger.info("🛑 Auto-Trading deaktiviert - stoppe Bot...")
+                    if ai_trading_bot_instance and ai_trading_bot_instance.running:
+                        ai_trading_bot_instance.stop()
+                        if bot_task:
+                            try:
+                                await asyncio.wait_for(bot_task, timeout=2.0)
+                            except:
+                                pass
+                        logger.info("✅ AI Trading Bot gestoppt (via Settings)")
+        
+        # Start bot management in background
         if auto_trading_changed:
-            if settings.auto_trading:
-                # Start Bot wenn aktiviert
-                logger.info("🤖 Auto-Trading aktiviert - starte Bot...")
-                from ai_trading_bot import AITradingBot
-                
-                # Stoppe alten Bot falls vorhanden
-                if ai_trading_bot_instance and ai_trading_bot_instance.running:
-                    ai_trading_bot_instance.stop()
-                    if bot_task:
-                        try:
-                            await asyncio.wait_for(bot_task, timeout=2.0)
-                        except:
-                            pass
-                
-                # Starte neuen Bot
-                ai_trading_bot_instance = AITradingBot()
-                if await ai_trading_bot_instance.initialize():
-                    bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
-                    logger.info("✅ AI Trading Bot gestartet (via Settings)")
-            else:
-                # Stop Bot wenn deaktiviert
-                logger.info("🛑 Auto-Trading deaktiviert - stoppe Bot...")
-                if ai_trading_bot_instance and ai_trading_bot_instance.running:
-                    ai_trading_bot_instance.stop()
-                    if bot_task:
-                        try:
-                            await asyncio.wait_for(bot_task, timeout=2.0)
-                        except:
-                            pass
-                    logger.info("✅ AI Trading Bot gestoppt (via Settings)")
+            asyncio.create_task(manage_bot_background())
         
         # 🔄 WICHTIG: Aktualisiere ALLE bestehenden offenen Trades mit neuen TP/SL Settings
         try:
