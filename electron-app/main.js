@@ -128,11 +128,57 @@ function createWindow() {
 
   // Lade React App (läuft auf Port 3000 im Dev oder als statische Files)
   if (isDev) {
+    console.log('🔧 Development Mode - Loading from localhost:3000');
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(appPath, 'frontend', 'build', 'index.html'));
+    const indexPath = path.join(appPath, 'frontend', 'build', 'index.html');
+    console.log('📦 Production Mode - Loading from:', indexPath);
+    
+    // Prüfe ob index.html existiert
+    const fs = require('fs');
+    if (fs.existsSync(indexPath)) {
+      console.log('✅ index.html found');
+      mainWindow.loadFile(indexPath);
+    } else {
+      console.error('❌ index.html NOT FOUND at:', indexPath);
+      console.error('Available files:');
+      const buildPath = path.join(appPath, 'frontend', 'build');
+      if (fs.existsSync(buildPath)) {
+        console.log(fs.readdirSync(buildPath));
+      } else {
+        console.error('❌ Build folder does not exist:', buildPath);
+      }
+      
+      // Zeige Fehlermeldung im Fenster
+      mainWindow.loadURL(`data:text/html,
+        <html>
+          <body style="background:#0f172a;color:white;font-family:Arial;padding:40px;text-align:center;">
+            <h1>⚠️ Frontend Build Missing</h1>
+            <p>The React frontend was not found in the app package.</p>
+            <p style="color:#ef4444;">Expected: ${indexPath}</p>
+            <br>
+            <p>Please rebuild the app:</p>
+            <pre style="background:#1e293b;padding:20px;border-radius:8px;text-align:left;">
+cd frontend
+yarn build
+cd ../electron-app
+yarn build:dmg
+            </pre>
+          </body>
+        </html>
+      `);
+    }
   }
+
+  // Debug: Log WebContents events
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('❌ Failed to load:', errorCode, errorDescription);
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('✅ Page loaded successfully');
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
