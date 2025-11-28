@@ -2500,14 +2500,14 @@ async def update_settings(settings: TradingSettings):
                 
                     if strategy == 'swing':
                         mode = settings.swing_tp_sl_mode
-                        if mode == 'euro':
-                        tp_euro = settings.swing_take_profit_euro
-                        sl_euro = settings.swing_stop_loss_euro
+                            if mode == 'euro':
+                            tp_euro = settings.swing_take_profit_euro
+                            sl_euro = settings.swing_stop_loss_euro
                         # Euro-Modus Berechnung
-                        if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
+                            if 'BUY' in str(trade_type).upper() or 'POSITION_TYPE_BUY' in str(trade_type).upper():
                             new_stop_loss = entry_price - (sl_euro / volume)
                             new_take_profit = entry_price + (tp_euro / volume)
-                        else:
+                            else:
                             new_stop_loss = entry_price + (sl_euro / volume)
                             new_take_profit = entry_price - (tp_euro / volume)
                     else:
