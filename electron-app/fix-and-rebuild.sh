@@ -99,8 +99,31 @@ deactivate
 echo "✅ Python environment ready"
 echo ""
 
-# 6. Icon konvertieren (oder Fallback)
-echo "🎨 Preparing Icon..."
+# 6. Icon & DMG Background konvertieren
+echo "🎨 Preparing Icon & DMG Background..."
+
+# DMG Background (WICHTIG für DMG-Build!)
+if command -v rsvg-convert &> /dev/null; then
+    echo "Creating DMG background..."
+    rsvg-convert -w 540 -h 380 assets/dmg-background.svg -o assets/dmg-background.png
+    echo "✅ DMG background created"
+else
+    echo "⚠️  Creating simple gradient background..."
+    if command -v convert &> /dev/null; then
+        convert -size 540x380 gradient:"#1e293b-#0f172a" assets/dmg-background.png
+    else
+        # Erstelle minimales PNG falls nichts verfügbar
+        echo "Creating minimal background..."
+        python3 -c "
+from PIL import Image
+img = Image.new('RGB', (540, 380), color='#0f172a')
+img.save('assets/dmg-background.png')
+print('✅ Minimal background created')
+" 2>/dev/null || echo "⚠️  No background tools available"
+    fi
+fi
+
+# App Icon
 if command -v rsvg-convert &> /dev/null && command -v iconutil &> /dev/null; then
     echo "Converting SVG to ICNS..."
     mkdir -p assets/logo.iconset
