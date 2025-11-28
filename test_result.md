@@ -2188,6 +2188,51 @@ agent_communication:
       This will resolve the "Netzwerkfehler" and enable settings persistence.
       
       PRIORITY: CRITICAL - This is blocking the main user scenario from review request.
+  - agent: "testing"
+    message: |
+      ❌ CRITICAL ISSUE IDENTIFIED: Open Trades Display Problem (Nov 28, 2025)
+      
+      🔍 TESTING RESULTS FOR USER REQUEST:
+      User asked to check if open trades are displayed in frontend and whether Libertex trades are missing.
+      
+      📊 BACKEND DATA (CONFIRMED):
+      - Total trades: 202
+      - Open trades: 202 (all trades are open)
+      - Libertex open trades: 200
+      - ICMarkets open trades: 2
+      - Expected display: 202 trades total
+      
+      📱 FRONTEND DISPLAY (ACTUAL):
+      - Trades shown in "Offene Trades" tab: ONLY 2 trades
+      - Both displayed trades are from MT5_ICMARKETS platform
+      - Platform badges visible: MT5_ICMARKETS only
+      
+      ❌ CRITICAL FINDING:
+      **198 LIBERTEX TRADES ARE MISSING FROM FRONTEND DISPLAY**
+      
+      🔍 ROOT CAUSE ANALYSIS:
+      1. Backend API (/api/trades/list) returns all 202 trades correctly
+      2. Frontend can access the API (confirmed via browser console)
+      3. Frontend filtering logic appears to be excluding Libertex trades
+      4. Only ICMarkets trades (2 out of 202) are being displayed
+      
+      📸 EVIDENCE:
+      - Screenshot shows "Offene Trades (2)" in tab header
+      - Table shows only 2 Gold trades with MT5_ICMARKETS platform badges
+      - No Libertex platform badges visible in the trades table
+      
+      🚨 IMPACT:
+      - User cannot see 98.5% of their open positions (200 out of 202 trades)
+      - This is a critical trading application bug affecting position monitoring
+      - Libertex trades worth significant exposure are invisible to the user
+      
+      🔧 INVESTIGATION NEEDED:
+      1. Check frontend trade filtering logic in Dashboard.jsx
+      2. Verify platform name matching (MT5_LIBERTEX vs other variations)
+      3. Check if there are any error filters excluding Libertex trades
+      4. Investigate if MetaAPI connection issues affect trade display
+      
+      PRIORITY: CRITICAL - This affects core trading functionality and position visibility.
       
       ✅ WHAT'S WORKING (UI Elements):
       1. Navigation: Successfully navigated to Trades tab → "📊 Offene Trades" sub-tab
