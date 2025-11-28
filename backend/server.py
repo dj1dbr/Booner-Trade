@@ -2585,6 +2585,10 @@ async def update_settings(settings: TradingSettings):
         
         # Start position updates in background
         asyncio.create_task(update_positions_background())
+        """
+        
+        # TEMP FIX: Skip position updates to avoid timeout
+        logger.info("ℹ️ Position updates temporarily disabled for fast response")
         
         return settings
     except Exception as e:
