@@ -3020,34 +3020,37 @@ async def get_platform_account(platform_name: str):
         account_info = await multi_platform.get_account_info(platform_name)
         
         if account_info:
-            # Calculate portfolio risk
+            # Calculate portfolio risk from LIVE positions (not from DB!)
             balance = account_info.get('balance', 0)
             
-            # Get open trades for this platform
-            open_trades = await db.trades.find({
-                "mode": platform_name,
-                "status": "OPEN"
-            }).to_list(1000)
+            # Get LIVE open positions from broker
+            try:
+                open_positions = await multi_platform.get_open_positions(platform_name)
+            except Exception as e:
+                logger.warning(f"Could not get open positions for {platform_name}: {e}")
+                open_positions = []
             
-            # Calculate total risk exposure
-            total_risk = 0.0
-            for trade in open_trades:
-                entry_price = trade.get('entry_price', 0)
-                stop_loss = trade.get('stop_loss', 0)
-                quantity = trade.get('quantity', 0)
+            # Calculate total risk exposure using MARGIN (correct for CFD/Forex)
+            total_margin = 0.0
+            total_unrealized_pl = 0.0
+            for position in open_positions:
+                # Margin is the actual capital at risk
+                margin = position.get('margin', 0)
+                total_margin += margin
                 
-                if entry_price > 0 and stop_loss > 0:
-                    # Risk = (Entry - StopLoss) * Quantity
-                    risk_per_trade = abs(entry_price - stop_loss) * quantity
-                    total_risk += risk_per_trade
+                # Also track unrealized P&L
+                profit = position.get('profit', 0)
+                total_unrealized_pl += profit
             
-            # Portfolio risk as percentage of balance
-            portfolio_risk_percent = (total_risk / balance * 100) if balance > 0 else 0.0
+            # Portfolio risk as percentage of balance (margin-based)
+            portfolio_risk_percent = (total_margin / balance * 100) if balance > 0 else 0.0
             
             # Add risk info to account
-            account_info['portfolio_risk'] = round(total_risk, 2)
+            account_info['portfolio_risk'] = round(total_margin, 2)
             account_info['portfolio_risk_percent'] = round(portfolio_risk_percent, 2)
-            account_info['open_trades_count'] = len(open_trades)
+            account_info['open_trades_count'] = len(open_positions)
+            account_info['open_positions_total'] = round(total_margin, 2)
+            account_info['unrealized_pl'] = round(total_unrealized_pl, 2)
             
             return {
                 "success": True,
