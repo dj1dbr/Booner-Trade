@@ -195,10 +195,14 @@ const Dashboard = () => {
     try {
       if (settings?.active_platforms && settings.active_platforms.length > 0) {
         const promises = [];
-        if (settings.active_platforms.includes('MT5_LIBERTEX')) {
+        // Check for any Libertex account (MT5_LIBERTEX, MT5_LIBERTEX_DEMO, MT5_LIBERTEX_REAL)
+        const hasLibertex = settings.active_platforms.some(p => p.includes('LIBERTEX'));
+        if (hasLibertex) {
           promises.push(fetchMT5LibertexAccount().catch(err => console.error('MT5 Libertex error:', err)));
         }
-        if (settings.active_platforms.includes('MT5_ICMARKETS')) {
+        // Check for any ICMarkets account (MT5_ICMARKETS, MT5_ICMARKETS_DEMO)
+        const hasICMarkets = settings.active_platforms.some(p => p.includes('ICMARKETS'));
+        if (hasICMarkets) {
           promises.push(fetchMT5ICMarketsAccount().catch(err => console.error('MT5 ICMarkets error:', err)));
         }
         if (settings.active_platforms.includes('BITPANDA')) {
