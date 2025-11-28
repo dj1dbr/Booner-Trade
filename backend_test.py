@@ -1,88 +1,40 @@
 #!/usr/bin/env python3
 """
-🔧 UMFASSENDER FIX - 3 PROBLEME BEHOBEN - TESTING
+🔧 BOONER TRADE APP - COMPREHENSIVE BACKEND TESTING
 
-**PROBLEM 1: ✅ BEHOBEN - Broker Verbindungen**
-- Ursache: Falsche MetaAPI Account IDs in .env
-- Fix: Account IDs korrigiert auf:
-  * MT5_LIBERTEX: 5cc9abd1-671a-447e-ab93-5abbfe0ed941
-  * MT5_ICMARKETS: d2605e89-7bc2-4144-9f7c-951edd596c39
+**REVIEW REQUEST TESTING:**
+Führe einen umfassenden Test der Booner Trade App durch:
 
-**PROBLEM 2: ✅ BEHOBEN - AI Chat führt keine Trades aus**
-- Ursache 1: Auto-Trading Check blockierte Function Calling
-- Ursache 2: Falsche Parameter beim Aufruf von execute_trade_tool
-- Ursache 3: System-Prompt sagte "Du kannst nicht traden" wenn Auto-Trading inaktiv
-- Fixes:
-  * Function Calling jetzt IMMER aktiv (unabhängig von Auto-Trading)
-  * execute_trade_tool korrekt aufgerufen mit: symbol, direction, quantity, db
-  * System-Prompt geändert: AI Chat kann IMMER traden
-  * EUR/EURUSD Symbol-Mapping hinzugefügt
-  * Detailliertes Logging für alle Trading-Actions
+**Zu testen:**
+1. Backend-Erreichbarkeit auf Port 8001
+2. Alle API-Endpunkte:
+   - GET /api/ping
+   - GET /api/settings
+   - POST /api/settings (mit Test-Daten)
+   - GET /api/trades/list
+   - GET /api/accounts
+   - GET /api/market/data
 
-**PROBLEM 3: ✅ BEHOBEN - AI Chat soll bei aktivem Auto-Trading traden können**
-- Fix: Auto-Trading Status ist nun unabhängig vom AI Chat
-  * Auto-Trading = Autonomer Bot tradet automatisch
-  * AI Chat = Kann IMMER traden (egal ob Bot aktiv/inaktiv)
+3. Prüfe MongoDB-Verbindung
+4. Prüfe MetaAPI-Verbindung
 
-**GEÄNDERTE DATEIEN:**
-1. `/app/backend/.env` - Account IDs korrigiert
-2. `/app/backend/ai_chat_service.py`:
-   - System-Prompt komplett umgeschrieben
-   - Function Calling immer aktiv (Zeile ~603)
-   - handle_trading_actions korrigiert (Parameter-Fixes)
-   - EUR Symbol-Mapping hinzugefügt
-   - Detailliertes Logging
+**Probleme, die identifiziert wurden:**
+- Frontend konnte Backend nicht erreichen ("Timeout: Backend antwortet nicht")
+- Settings konnten nicht gespeichert werden ("Netzwerkfehler")
 
-**TEST-SZENARIEN (PRIORITÄT: KRITISCH):**
-
-1. **Manual Trade Execution - GOLD**
-   - POST /api/trades/execute
-   - Body: {"commodity": "GOLD", "trade_type": "BUY", "quantity": 0.01}
-   - Expected: ✅ Trade erfolgreich, Ticket # zurückgegeben
-   - Verify: Keine "Broker hat Order abgelehnt" Fehler
-
-2. **Platform Connections Verification**
-   - GET /api/platforms/status
-   - Expected: MT5_LIBERTEX_DEMO: connected=true, balance > 0
-   - Expected: MT5_ICMARKETS_DEMO: connected=true, balance > 0
-
-3. **AI Chat Trade Execution - GOLD KAUFEN**
-   - POST /api/ai-chat
-   - Body: {"message": "Kaufe Gold", "session_id": "test-123"}
-   - Expected: Chat erkennt "kaufe gold" → führt execute_trade aus
-   - Backend-Logs prüfen auf:
-     * "🎯 Detected trade command: BUY GOLD"
-     * "📊 Trade result: ..."
-     * "✅ Trade ausgeführt: BUY GOLD @ 0.01 Lots, Ticket #..."
-
-4. **AI Chat Trade Execution - EUR KAUFEN**
-   - POST /api/ai-chat
-   - Body: {"message": "Kaufe EUR", "session_id": "test-456"}
-   - Expected: Chat erkennt "kaufe eur" → führt execute_trade(EURUSD) aus
-
-5. **AI Chat mit INAKTIVEM Auto-Trading**
-   - Settings: auto_trading = false
-   - POST /api/ai-chat
-   - Body: {"message": "Kaufe WTI", "session_id": "test-789"}
-   - Expected: Trade wird TROTZDEM ausgeführt (AI Chat ist unabhängig!)
-
-6. **Backend Logs Analysis**
-   - Verify: "🔍 Checking for trading actions in user message"
-   - Verify: "🎯 Detected trade command" when trade keywords found
-   - Verify: "✅ Trading action executed" when action performed
+**Kontext:**
+- Backend läuft auf localhost:8001
+- MongoDB läuft auf localhost:27017
+- MetaAPI Credentials sind in .env hinterlegt
 
 **SUCCESS CRITERIA:**
-- ✅ Plattform-Verbindungen: connected=true, balance > 0
-- ✅ Manuelle Trades: Erfolgreich ausgeführt, Ticket # zurückgegeben
-- ✅ AI Chat Trades: Keyword-Detection funktioniert, Trades werden ausgeführt
-- ✅ AI Chat unabhängig von Auto-Trading Status
-- ✅ Backend-Logs zeigen detaillierte Trading-Action-Flows
-- ✅ EUR/EURUSD Symbol-Mapping funktioniert
-
-**WICHTIG:**
-- Teste AI Chat Trades mit verschiedenen Formulierungen: "Kaufe Gold", "kaufe gold", "GOLD kaufen"
-- Teste AI Chat sowohl mit auto_trading=true als auch auto_trading=false
-- Prüfe Backend-Logs für JEDE Test-Aktion
+- ✅ Backend erreichbar auf Port 8001
+- ✅ Alle API-Endpunkte antworten korrekt
+- ✅ MongoDB-Verbindung funktioniert
+- ✅ MetaAPI-Verbindung funktioniert
+- ✅ Settings können gespeichert werden
+- ✅ Trades können abgerufen werden
+- ✅ Keine Timeout-Fehler
 """
 
 import asyncio
