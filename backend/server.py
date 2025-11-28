@@ -2470,8 +2470,8 @@ async def update_settings(settings: TradingSettings):
                 # Hole ALLE offenen Positionen von allen Plattformen
                 from multi_platform_connector import multi_platform
                 all_open_positions = []
-            
-            for platform in settings.active_platforms:
+                
+                for platform in settings.active_platforms:
                 try:
                     positions = await multi_platform.get_open_positions(platform)
                     for pos in positions:
