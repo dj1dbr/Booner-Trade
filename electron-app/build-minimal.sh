@@ -30,13 +30,20 @@ pip install -r ../backend/requirements.txt --quiet
 deactivate
 echo ""
 
-# 4. Icon (Fallback zu PNG)
-echo "🎨 Creating Icon..."
+# 4. Icon & DMG Background
+echo "🎨 Creating Icon & DMG Background..."
 if command -v rsvg-convert &> /dev/null; then
     rsvg-convert -w 512 -h 512 assets/logo.svg -o assets/logo.png
-    echo "✅ Icon created"
+    rsvg-convert -w 540 -h 380 assets/dmg-background.svg -o assets/dmg-background.png
+    echo "✅ Icon & Background created"
 else
-    echo "⚠️  librsvg not found, skipping icon"
+    echo "⚠️  librsvg not found"
+    echo "Creating minimal background with Python..."
+    python3 -c "
+from PIL import Image
+img = Image.new('RGB', (540, 380), color='#0f172a')
+img.save('assets/dmg-background.png')
+" 2>/dev/null || echo "⚠️  Install Pillow: pip install Pillow"
 fi
 echo ""
 
