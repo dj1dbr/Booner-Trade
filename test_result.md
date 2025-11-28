@@ -1048,6 +1048,72 @@ backend:
           RECOMMENDATION: 
           Only 1 out of 3 problems appears to be fully resolved. Manual trade execution 
           and AI Chat trade execution require further investigation and fixes.
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ BOONER TRADE FRONTEND SETTINGS AUTO TRADING TESTING RESULTS (Nov 28, 2025):
+          
+          🔍 CRITICAL FRONTEND-BACKEND CONNECTIVITY ISSUE IDENTIFIED:
+          
+          ✅ SUCCESS CRITERIA MET (5/8 tests - 62.5% success rate):
+          
+          1. **App Loading & UI Functionality: ✅ WORKING**
+             ✅ App loads successfully on https://tradebot-60.preview.emergentagent.com
+             ✅ Settings modal opens correctly
+             ✅ Auto Trading toggle is functional (OFF → ON)
+             ✅ "Einstellungen speichern" button clickable
+             ✅ Page reload works correctly
+          
+          2. **Backend API Accessibility: ✅ WORKING**
+             ✅ Backend accessible via https://tradebot-60.preview.emergentagent.com/api/ping
+             ✅ Backend logs show successful POST /api/settings requests (200 OK)
+             ✅ Backend is running on port 8001 and responding correctly
+          
+          ❌ CRITICAL ISSUES IDENTIFIED (3/8 tests failed):
+          
+          1. **FRONTEND CONFIGURATION ERROR: ❌ CRITICAL BUG**
+             ❌ Frontend .env configured with REACT_APP_BACKEND_URL=http://localhost:8001
+             ❌ Frontend tries to connect to localhost instead of external URL
+             ❌ User sees "🌐 Netzwerkfehler: Keine Verbindung zum Backend möglich"
+             ❌ This is the EXACT "Netzwerkfehler" mentioned in review request
+          
+          2. **Settings Persistence: ❌ FAILED DUE TO CONNECTIVITY**
+             ❌ Auto Trading status reverts to OFF after page reload
+             ❌ Settings cannot be saved due to frontend-backend connectivity issue
+             ❌ Backend receives requests but frontend cannot process responses
+          
+          3. **Success Message Display: ❌ NETWORK ERROR SHOWN**
+             ❌ Network error message displayed instead of success message
+             ❌ Frontend shows connectivity error despite backend working correctly
+          
+          🎯 ROOT CAUSE ANALYSIS:
+          
+          **PROBLEM IDENTIFIED:** Frontend configuration mismatch
+          - Frontend configured for localhost development environment
+          - External deployment requires frontend to use external backend URL
+          - Backend is working correctly (confirmed via direct API testing)
+          - Issue is purely frontend configuration, not backend functionality
+          
+          **EXPECTED vs ACTUAL:**
+          - Expected: Frontend uses https://tradebot-60.preview.emergentagent.com/api
+          - Actual: Frontend tries to use http://localhost:8001/api
+          
+          🔧 SOLUTION REQUIRED:
+          Update frontend/.env to use correct backend URL:
+          - Change: REACT_APP_BACKEND_URL=http://localhost:8001
+          - To: REACT_APP_BACKEND_URL=https://tradebot-60.preview.emergentagent.com
+          
+          🎯 OVERALL ASSESSMENT:
+          The settings functionality is IMPLEMENTED CORRECTLY but has a CONFIGURATION ISSUE:
+          - ✅ Backend API working perfectly (settings save/load functional)
+          - ✅ Frontend UI components working correctly
+          - ✅ Auto Trading toggle functionality implemented
+          - ❌ Frontend-backend connectivity blocked by configuration mismatch
+          - ❌ This causes the "Netzwerkfehler" mentioned in review request
+          
+          RECOMMENDATION: 
+          Fix frontend configuration to use external backend URL. Once fixed, 
+          settings should save and persist correctly as backend is fully functional.
       - working: true
         agent: "testing"
         comment: |
