@@ -2472,17 +2472,17 @@ async def update_settings(settings: TradingSettings):
                 all_open_positions = []
                 
                 for platform in settings.active_platforms:
-                try:
-                    positions = await multi_platform.get_open_positions(platform)
-                    for pos in positions:
-                        pos['platform'] = platform  # Tag mit Platform
-                        all_open_positions.append(pos)
-                except Exception as e:
-                    logger.warning(f"Konnte Positionen von {platform} nicht laden: {e}")
-            
-            logger.info(f"📊 Gefunden: {len(all_open_positions)} offene Positionen")
-            
-            updated_count = 0
+                    try:
+                        positions = await multi_platform.get_open_positions(platform)
+                        for pos in positions:
+                            pos['platform'] = platform  # Tag mit Platform
+                            all_open_positions.append(pos)
+                    except Exception as e:
+                        logger.warning(f"Konnte Positionen von {platform} nicht laden: {e}")
+                
+                logger.info(f"📊 Gefunden: {len(all_open_positions)} offene Positionen")
+                
+                updated_count = 0
             for position in all_open_positions:
                 ticket = position.get('id') or position.get('ticket')
                 entry_price = position.get('price_open') or position.get('entry_price')
