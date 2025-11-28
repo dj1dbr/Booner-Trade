@@ -23,7 +23,7 @@ console.log('🔧 Backend URL:', BACKEND_URL);
 console.log('🔧 API URL:', API);
 
 // Configure axios defaults with timeout
-axios.defaults.timeout = 10000; // 10 second timeout for all requests
+axios.defaults.timeout = 30000; // 30 second timeout for all requests (increased for large trade lists)
 
 // Test backend connectivity on load
 axios.get(`${API}/ping`)
