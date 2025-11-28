@@ -110,6 +110,23 @@ tail -f ~/Library/Application\ Support/booner-trade/logs/app.log
 /Applications/Booner\ Trade.app/Contents/Resources/app/python/bin/python3 -m pip list
 ```
 
+## 🤖 AI/LLM Konfiguration
+
+**WICHTIG:** Diese Desktop-App verwendet **NICHT** `emergentintegrations`!
+
+Die Warnung beim Start ist **NORMAL**:
+```
+ℹ️  Desktop-App Mode: Using Fallback (direct API keys)
+```
+
+**Warum?** `emergentintegrations` funktioniert nur auf der Emergent Plattform.
+
+**Die Desktop-App nutzt stattdessen:**
+- ✅ Direkten API-Zugriff (OpenAI, Anthropic, Google)
+- ✅ Oder Ollama (komplett offline & kostenlos)
+
+**Detaillierte Anleitung:** Siehe `DESKTOP-APP-AI-KONFIGURATION.md`
+
 ## 🔄 Updates
 
 Um ein Update zu erstellen:
