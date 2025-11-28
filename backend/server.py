@@ -3022,6 +3022,8 @@ async def get_platform_account(platform_name: str):
         if account_info:
             # Calculate portfolio risk from LIVE positions (not from DB!)
             balance = account_info.get('balance', 0)
+            equity = account_info.get('equity', balance)
+            margin_used = account_info.get('margin', 0)
             
             # Get LIVE open positions from broker
             try:
@@ -3030,15 +3032,29 @@ async def get_platform_account(platform_name: str):
                 logger.warning(f"Could not get open positions for {platform_name}: {e}")
                 open_positions = []
             
-            # Calculate total risk exposure using MARGIN (correct for CFD/Forex)
-            total_margin = 0.0
+            # Calculate total exposure - use margin from account_info if available
+            # Otherwise calculate from positions
+            if margin_used > 0:
+                # Use account-level margin (most reliable)
+                total_margin = margin_used
+            else:
+                # Fallback: Calculate from positions
+                total_margin = 0.0
+                for position in open_positions:
+                    # Try different margin fields from MetaAPI
+                    pos_margin = position.get('margin', 0)
+                    if pos_margin == 0:
+                        # Estimate margin from volume and price for CFDs
+                        volume = position.get('volume', 0)
+                        price = position.get('price_current', position.get('price_open', 0))
+                        # For CFDs, margin is typically volume * price / leverage
+                        # We don't have leverage, so use volume * price as conservative estimate
+                        pos_margin = volume * price
+                    total_margin += pos_margin
+            
+            # Track unrealized P&L
             total_unrealized_pl = 0.0
             for position in open_positions:
-                # Margin is the actual capital at risk
-                margin = position.get('margin', 0)
-                total_margin += margin
-                
-                # Also track unrealized P&L
                 profit = position.get('profit', 0)
                 total_unrealized_pl += profit
             
