@@ -79,7 +79,14 @@ async function startBackend() {
       PORT: '8000'
     };
 
-    backendProcess = spawn(pythonPath, [serverPath], {
+    // Backend muss mit uvicorn gestartet werden, nicht direkt mit python
+    const uvicornPath = path.join(appPath, 'python', 'bin', 'uvicorn');
+    
+    backendProcess = spawn(uvicornPath, [
+      'server:app',
+      '--host', '0.0.0.0',
+      '--port', '8000'
+    ], {
       cwd: backendPath,
       env: env
     });
