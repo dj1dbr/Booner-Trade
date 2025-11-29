@@ -68,6 +68,25 @@
       "hardenedRuntime": false,
       "gatekeeperAssess": false
     },
+    "extraResources": [
+      {
+        "from": "../backend",
+        "to": "app/backend",
+        "filter": ["**/*", "!__pycache__", "!*.pyc"]
+      },
+      {
+        "from": "../frontend/build",
+        "to": "app/frontend/build"
+      },
+      {
+        "from": "./mongodb-mac",
+        "to": "app/mongodb"
+      },
+      {
+        "from": "./python-env",
+        "to": "app/python"
+      }
+    ],
     "dmg": {
       "contents": [
         {
