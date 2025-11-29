@@ -61,7 +61,7 @@
       "icon": "assets/logo.png",
       "target": [
         {
-          "target": "dmg",
+          "target": "dir",
           "arch": ["x64", "arm64"]
         }
       ],
