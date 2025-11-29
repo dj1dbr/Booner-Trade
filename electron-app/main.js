@@ -47,21 +47,32 @@ log(`App paths: ${JSON.stringify({ appPath, mongoPath, dbPath, backendPath }, nu
 // MongoDB starten
 async function startMongoDB() {
   return new Promise((resolve, reject) => {
-    // Erstelle DB-Verzeichnis wenn nicht vorhanden
-    if (!fs.existsSync(dbPath)) {
-      fs.mkdirSync(dbPath, { recursive: true });
-    }
+    try {
+      // Erstelle DB-Verzeichnis wenn nicht vorhanden
+      if (!fs.existsSync(dbPath)) {
+        log(`Creating DB directory: ${dbPath}`);
+        fs.mkdirSync(dbPath, { recursive: true });
+      }
 
-    const mongodPath = path.join(mongoPath, 'bin', 'mongod');
-    
-    console.log('Starting MongoDB from:', mongodPath);
-    
-    mongoProcess = spawn(mongodPath, [
-      '--dbpath', dbPath,
-      '--port', '27017',
-      '--bind_ip', '127.0.0.1',
-      '--noauth'
-    ]);
+      const mongodPath = path.join(mongoPath, 'bin', 'mongod');
+      
+      // Check if MongoDB binary exists
+      if (!fs.existsSync(mongodPath)) {
+        const error = `MongoDB binary not found at: ${mongodPath}`;
+        logError(error);
+        reject(new Error(error));
+        return;
+      }
+      
+      log(`Starting MongoDB from: ${mongodPath}`);
+      log(`DB Path: ${dbPath}`);
+      
+      mongoProcess = spawn(mongodPath, [
+        '--dbpath', dbPath,
+        '--port', '27017',
+        '--bind_ip', '127.0.0.1',
+        '--noauth'
+      ]);
 
     mongoProcess.stdout.on('data', (data) => {
       const message = data.toString();
