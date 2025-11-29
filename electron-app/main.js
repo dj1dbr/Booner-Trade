@@ -8,6 +8,32 @@ let mainWindow;
 let backendProcess;
 let mongoProcess;
 
+// Setup logging to file
+const logDir = path.join(app.getPath('logs'));
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
+const logFile = path.join(logDir, 'main.log');
+const errorLogFile = path.join(logDir, 'error.log');
+
+function log(message, isError = false) {
+  const timestamp = new Date().toISOString();
+  const logMessage = `[${timestamp}] ${message}\n`;
+  console.log(message);
+  
+  try {
+    fs.appendFileSync(isError ? errorLogFile : logFile, logMessage);
+  } catch (err) {
+    console.error('Failed to write to log:', err);
+  }
+}
+
+function logError(message, error) {
+  const errorMessage = error ? `${message}: ${error.stack || error}` : message;
+  log(errorMessage, true);
+  console.error(errorMessage);
+}
+
 // Pfade für portable Installation
 const isDev = process.env.NODE_ENV === 'development';
 const appPath = isDev ? __dirname : path.join(process.resourcesPath, 'app');
@@ -15,7 +41,8 @@ const mongoPath = path.join(appPath, 'mongodb');
 const dbPath = path.join(app.getPath('userData'), 'database');
 const backendPath = path.join(appPath, 'backend');
 
-console.log('App paths:', { appPath, mongoPath, dbPath, backendPath });
+log('=== Booner Trade Starting ===');
+log(`App paths: ${JSON.stringify({ appPath, mongoPath, dbPath, backendPath }, null, 2)}`);
 
 // MongoDB starten
 async function startMongoDB() {
