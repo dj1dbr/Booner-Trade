@@ -104,7 +104,7 @@ if [ $ERRORS -eq 0 ]; then
     echo -e "${GREEN}✅ All checks passed! Ready to build.${NC}"
     echo ""
     echo "Run the build:"
-    echo "  cd /app/electron-app"
+    echo "  cd \"$SCRIPT_DIR\""
     echo "  ./build.sh"
     echo ""
 else
