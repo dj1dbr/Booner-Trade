@@ -83,7 +83,7 @@ echo ""
 
 # Schritt 4: Electron App vorbereiten
 echo -e "${YELLOW}[4/7] Bereite Electron App vor...${NC}"
-cd /app/electron-app
+cd "$SCRIPT_DIR"
 
 # Install electron dependencies if needed
 if [ ! -d "node_modules" ]; then
