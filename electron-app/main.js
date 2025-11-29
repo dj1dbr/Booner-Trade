@@ -114,53 +114,83 @@ async function startMongoDB() {
 // Backend (FastAPI) starten
 async function startBackend() {
   return new Promise((resolve, reject) => {
-    const pythonPath = path.join(appPath, 'python', 'bin', 'python3');
-    const serverPath = path.join(backendPath, 'server.py');
-    
-    console.log('Starting Backend from:', serverPath);
-    
-    // Setze Environment Variables
-    const env = {
-      ...process.env,
-      MONGO_URL: 'mongodb://localhost:27017',
-      DB_NAME: 'booner_trade_db',
-      PORT: '8000'
-    };
-
-    // Backend muss mit uvicorn gestartet werden, nicht direkt mit python
-    const uvicornPath = path.join(appPath, 'python', 'bin', 'uvicorn');
-    
-    backendProcess = spawn(uvicornPath, [
-      'server:app',
-      '--host', '0.0.0.0',
-      '--port', '8000'
-    ], {
-      cwd: backendPath,
-      env: env
-    });
-
-    backendProcess.stdout.on('data', (data) => {
-      const message = data.toString();
-      console.log('[Backend]:', message);
-      if (message.includes('Uvicorn running')) {
-        console.log('✅ Backend ready');
-        resolve();
+    try {
+      const pythonPath = path.join(appPath, 'python', 'bin', 'python3');
+      const serverPath = path.join(backendPath, 'server.py');
+      
+      // Check if backend files exist
+      if (!fs.existsSync(serverPath)) {
+        const error = `Backend server.py not found at: ${serverPath}`;
+        logError(error);
+        reject(new Error(error));
+        return;
       }
-    });
+      
+      log(`Starting Backend from: ${serverPath}`);
+      
+      // Setze Environment Variables
+      const env = {
+        ...process.env,
+        MONGO_URL: 'mongodb://localhost:27017',
+        DB_NAME: 'booner_trade_db',
+        PORT: '8000'
+      };
 
-    backendProcess.stderr.on('data', (data) => {
-      console.error('[Backend Error]:', data.toString());
-    });
+      // Backend muss mit uvicorn gestartet werden, nicht direkt mit python
+      const uvicornPath = path.join(appPath, 'python', 'bin', 'uvicorn');
+      
+      // Check if uvicorn exists
+      if (!fs.existsSync(uvicornPath)) {
+        const error = `Uvicorn not found at: ${uvicornPath}`;
+        logError(error);
+        reject(new Error(error));
+        return;
+      }
+      
+      log(`Using Uvicorn at: ${uvicornPath}`);
+      log(`Backend directory: ${backendPath}`);
+      
+      backendProcess = spawn(uvicornPath, [
+        'server:app',
+        '--host', '0.0.0.0',
+        '--port', '8000'
+      ], {
+        cwd: backendPath,
+        env: env
+      });
 
-    backendProcess.on('error', (error) => {
-      console.error('Backend failed to start:', error);
+      backendProcess.stdout.on('data', (data) => {
+        const message = data.toString();
+        log(`Backend: ${message.trim()}`);
+        if (message.includes('Uvicorn running') || message.includes('Application startup complete')) {
+          log('✅ Backend ready');
+          resolve();
+        }
+      });
+
+      backendProcess.stderr.on('data', (data) => {
+        const message = data.toString();
+        logError(`Backend stderr: ${message.trim()}`);
+      });
+
+      backendProcess.on('error', (error) => {
+        logError('Backend failed to start', error);
+        reject(error);
+      });
+
+      backendProcess.on('exit', (code) => {
+        logError(`Backend process exited with code: ${code}`);
+      });
+
+      // Timeout für Backend Start
+      setTimeout(() => {
+        log('Backend timeout reached, assuming it started');
+        resolve();
+      }, 8000);
+    } catch (error) {
+      logError('Backend startup error', error);
       reject(error);
-    });
-
-    // Timeout für Backend Start
-    setTimeout(() => {
-      resolve(); // Gehe davon aus, dass es funktioniert hat
-    }, 8000);
+    }
   });
 }
 
