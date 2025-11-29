@@ -146,7 +146,7 @@ echo ""
 
 # Schritt 8: .env wiederherstellen
 echo "Stelle original Frontend .env wieder her..."
-cd /app/frontend
+cd "$PROJECT_ROOT/frontend"
 if [ -f .env.backup ]; then
     mv .env.backup .env
     echo -e "${GREEN}✅ Original .env wiederhergestellt${NC}"
