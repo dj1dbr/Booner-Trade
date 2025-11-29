@@ -277,27 +277,39 @@ yarn build:dmg
   });
 }
 
+// Global error handlers
+process.on('uncaughtException', (error) => {
+  logError('Uncaught Exception', error);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logError(`Unhandled Rejection at: ${promise}, reason: ${reason}`);
+});
+
 // App Lifecycle
 app.on('ready', async () => {
   try {
-    console.log('🚀 Starting Booner Trade...');
+    log('🚀 Starting Booner Trade...');
+    log(`Electron version: ${process.versions.electron}`);
+    log(`Node version: ${process.versions.node}`);
+    log(`Platform: ${process.platform} ${process.arch}`);
     
     // 1. Starte MongoDB
-    console.log('📦 Starting MongoDB...');
+    log('📦 Starting MongoDB...');
     await startMongoDB();
     
     // 2. Starte Backend
-    console.log('⚙️  Starting Backend...');
+    log('⚙️  Starting Backend...');
     await startBackend();
     
     // 3. Warte kurz, dann öffne Window
     setTimeout(() => {
-      console.log('🖥️  Opening Window...');
+      log('🖥️  Opening Window...');
       createWindow();
     }, 2000);
     
   } catch (error) {
-    console.error('❌ Failed to start app:', error);
+    logError('❌ Startup failed', error);
     app.quit();
   }
 });
