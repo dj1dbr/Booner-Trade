@@ -107,11 +107,20 @@ else
         source "$PYTHON_DIR/bin/activate"
         pip install --upgrade pip
         
-        if [ -f "$PROJECT_ROOT/backend/requirements.txt" ]; then
-            pip install -r "$PROJECT_ROOT/backend/requirements.txt"
+        # Verwende DESKTOP requirements (ohne emergentintegrations!)
+        if [ -f "$PROJECT_ROOT/backend/requirements-desktop.txt" ]; then
+            echo "Installing from requirements-desktop.txt (ohne Emergent Dependencies)..."
+            pip install -r "$PROJECT_ROOT/backend/requirements-desktop.txt"
+        elif [ -f "$PROJECT_ROOT/backend/requirements.txt" ]; then
+            echo "⚠️  WARNING: Using requirements.txt (may include Emergent dependencies)"
+            echo "Installing and filtering out emergentintegrations..."
+            grep -v "emergentintegrations" "$PROJECT_ROOT/backend/requirements.txt" > /tmp/requirements-filtered.txt
+            pip install -r /tmp/requirements-filtered.txt
+            rm /tmp/requirements-filtered.txt
         else
             # Minimale Installation
-            pip install fastapi uvicorn motor python-dotenv
+            echo "No requirements file found, installing minimal dependencies..."
+            pip install fastapi uvicorn motor python-dotenv metaapi-cloud-sdk
         fi
         
         deactivate
