@@ -44,9 +44,37 @@ const backendPath = path.join(appPath, 'backend');
 log('=== Booner Trade Starting ===');
 log(`App paths: ${JSON.stringify({ appPath, mongoPath, dbPath, backendPath }, null, 2)}`);
 
+// Find available port starting from 27017
+function findAvailablePort(startPort) {
+  return new Promise((resolve) => {
+    const net = require('net');
+    const server = net.createServer();
+    
+    server.once('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        // Port in use, try next one
+        log(`Port ${startPort} is in use, trying ${startPort + 1}...`);
+        server.close();
+        resolve(findAvailablePort(startPort + 1));
+      } else {
+        resolve(startPort);
+      }
+    });
+    
+    server.once('listening', () => {
+      const port = server.address().port;
+      server.close();
+      log(`Found available port: ${port}`);
+      resolve(port);
+    });
+    
+    server.listen(startPort, '127.0.0.1');
+  });
+}
+
 // MongoDB starten
 async function startMongoDB() {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
       // Erstelle DB-Verzeichnis wenn nicht vorhanden
       if (!fs.existsSync(dbPath)) {
@@ -64,12 +92,19 @@ async function startMongoDB() {
         return;
       }
       
+      // Find available port (default 27017, but use alternative if occupied)
+      const mongoPort = await findAvailablePort(27017);
+      
       log(`Starting MongoDB from: ${mongodPath}`);
       log(`DB Path: ${dbPath}`);
+      log(`MongoDB Port: ${mongoPort}`);
+      
+      // Store port globally for backend
+      global.mongoPort = mongoPort;
       
       mongoProcess = spawn(mongodPath, [
         '--dbpath', dbPath,
-        '--port', '27017',
+        '--port', mongoPort.toString(),
         '--bind_ip', '127.0.0.1',
         '--noauth'
       ]);
