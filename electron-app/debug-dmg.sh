@@ -36,14 +36,24 @@ fi
 echo "Mounted at: $MOUNT_POINT"
 echo ""
 
-APP_PATH="$MOUNT_POINT/Booner Trade.app"
-RESOURCES="$APP_PATH/Contents/Resources"
+echo "Inhalt des Mount Points:"
+ls -la "$MOUNT_POINT"
+echo ""
 
-if [ ! -d "$APP_PATH" ]; then
-    echo -e "${RED}❌ App nicht in DMG gefunden${NC}"
+# Suche nach App
+APP_PATH=$(find "$MOUNT_POINT" -name "*.app" -maxdepth 2 -type d | head -1)
+
+if [ -z "$APP_PATH" ]; then
+    echo -e "${RED}❌ Keine .app gefunden in DMG!${NC}"
+    echo ""
+    echo "Voller Inhalt:"
+    find "$MOUNT_POINT" -maxdepth 3
     hdiutil detach "$MOUNT_POINT" -quiet
     exit 1
 fi
+
+echo "App gefunden: $APP_PATH"
+RESOURCES="$APP_PATH/Contents/Resources"
 
 echo "======================================"
 echo "Struktur:"
