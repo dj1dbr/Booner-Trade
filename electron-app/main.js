@@ -256,14 +256,23 @@ yarn build:dmg
 
   // Debug: Log WebContents events
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
-    console.error('❌ Failed to load:', errorCode, errorDescription);
+    logError(`Failed to load page: ${errorCode} - ${errorDescription}`);
   });
 
   mainWindow.webContents.on('did-finish-load', () => {
-    console.log('✅ Page loaded successfully');
+    log('✅ Page loaded successfully');
+  });
+
+  mainWindow.webContents.on('crashed', () => {
+    logError('Renderer process crashed!');
+  });
+
+  mainWindow.on('unresponsive', () => {
+    logError('Window became unresponsive');
   });
 
   mainWindow.on('closed', () => {
+    log('Window closed');
     mainWindow = null;
   });
 }
