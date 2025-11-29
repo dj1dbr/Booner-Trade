@@ -163,13 +163,16 @@ async function startBackend() {
       
       log(`Starting Backend from: ${serverPath}`);
       
-      // Setze Environment Variables
+      // Setze Environment Variables (use dynamic MongoDB port)
+      const mongoPort = global.mongoPort || 27017;
       const env = {
         ...process.env,
-        MONGO_URL: 'mongodb://localhost:27017',
+        MONGO_URL: `mongodb://localhost:${mongoPort}`,
         DB_NAME: 'booner_trade_db',
         PORT: '8000'
       };
+      
+      log(`Backend will connect to MongoDB at: mongodb://localhost:${mongoPort}`);
 
       // Backend muss mit uvicorn gestartet werden, nicht direkt mit python
       const uvicornPath = path.join(appPath, 'python', 'bin', 'uvicorn');
