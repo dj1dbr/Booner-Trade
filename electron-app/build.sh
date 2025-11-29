@@ -138,8 +138,27 @@ echo ""
 echo -e "${YELLOW}[6/7] Baue macOS App (DMG wird erstellt)...${NC}"
 echo "Dies kann 5-10 Minuten dauern..."
 
-# Run electron-builder
-yarn build:dmg
+# Check if electron-builder is available
+if ! command -v electron-builder &> /dev/null; then
+    echo "electron-builder not in PATH, using local version..."
+    if [ -f "node_modules/.bin/electron-builder" ]; then
+        echo "Using: node_modules/.bin/electron-builder"
+        node_modules/.bin/electron-builder --mac
+    else
+        echo -e "${RED}❌ electron-builder not found! Installing...${NC}"
+        yarn add --dev electron-builder
+        yarn build:dmg
+    fi
+else
+    # Run electron-builder
+    yarn build:dmg
+fi
+
+if [ $? -ne 0 ]; then
+    echo -e "${RED}❌ electron-builder failed!${NC}"
+    echo "Check the error messages above."
+    exit 1
+fi
 
 echo -e "${GREEN}✅ DMG-Datei erfolgreich erstellt${NC}"
 echo ""
