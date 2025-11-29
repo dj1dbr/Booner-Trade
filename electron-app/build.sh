@@ -67,18 +67,33 @@ echo "Dies kann einige Minuten dauern..."
 # Install dependencies if needed
 if [ ! -d "node_modules" ]; then
     echo "Installing frontend dependencies..."
-    yarn install
+    yarn install --non-interactive
 fi
 
 # Build frontend
-yarn build
+echo "Running: yarn build"
+if ! yarn build; then
+    echo -e "${RED}❌ Frontend build failed!${NC}"
+    echo "Trying alternative build command..."
+    
+    # Fallback: Direct react-scripts build
+    if [ -f "node_modules/.bin/react-scripts" ]; then
+        node_modules/.bin/react-scripts build
+    elif [ -f "node_modules/.bin/craco" ]; then
+        node_modules/.bin/craco build
+    else
+        echo -e "${RED}❌ No build tool found (react-scripts or craco)${NC}"
+        exit 1
+    fi
+fi
 
 if [ ! -d "build" ]; then
     echo -e "${RED}❌ Frontend build failed - build directory not found${NC}"
+    ls -la
     exit 1
 fi
 
-echo -e "${GREEN}✅ Frontend erfolgreich gebaut${NC}"
+echo -e "${GREEN}✅ Frontend erfolgreich gebaut ($(du -sh build | cut -f1))${NC}"
 echo ""
 
 # Schritt 4: Electron App vorbereiten
