@@ -105,7 +105,8 @@
       "window": {
         "width": 540,
         "height": 380
-      }
+      },
+      "sign": false
     }
   }
 }
