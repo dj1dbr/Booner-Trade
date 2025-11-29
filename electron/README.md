@@ -53,7 +53,7 @@ http://localhost:3000
 
 ODER für Production:
 ```
-https://trading-ai-desktop.preview.emergentagent.com
+https://tradeomatic-app.preview.emergentagent.com
 ```
 
 ---
