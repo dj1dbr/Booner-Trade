@@ -213,26 +213,24 @@ function createWindow() {
 
   // Lade React App (läuft auf Port 3000 im Dev oder als statische Files)
   if (isDev) {
-    console.log('🔧 Development Mode - Loading from localhost:3000');
+    log('🔧 Development Mode - Loading from localhost:3000');
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
     const indexPath = path.join(appPath, 'frontend', 'build', 'index.html');
-    console.log('📦 Production Mode - Loading from:', indexPath);
+    log(`📦 Production Mode - Loading from: ${indexPath}`);
     
     // Prüfe ob index.html existiert
-    const fs = require('fs');
     if (fs.existsSync(indexPath)) {
-      console.log('✅ index.html found');
+      log('✅ index.html found');
       mainWindow.loadFile(indexPath);
     } else {
-      console.error('❌ index.html NOT FOUND at:', indexPath);
-      console.error('Available files:');
+      logError(`❌ index.html NOT FOUND at: ${indexPath}`);
       const buildPath = path.join(appPath, 'frontend', 'build');
       if (fs.existsSync(buildPath)) {
-        console.log(fs.readdirSync(buildPath));
+        log(`Available files: ${fs.readdirSync(buildPath).join(', ')}`);
       } else {
-        console.error('❌ Build folder does not exist:', buildPath);
+        logError(`❌ Build folder does not exist: ${buildPath}`);
       }
       
       // Zeige Fehlermeldung im Fenster
