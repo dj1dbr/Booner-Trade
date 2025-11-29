@@ -41,25 +41,25 @@ fi
 
 # Check 3: Frontend build directory
 echo -n "Checking Frontend... "
-if [ -d "/app/frontend" ]; then
+if [ -d "$PROJECT_ROOT/frontend" ]; then
     echo -e "${GREEN}✅ Found${NC}"
 else
-    echo -e "${RED}❌ /app/frontend not found${NC}"
+    echo -e "${RED}❌ frontend directory not found${NC}"
     ERRORS=$((ERRORS + 1))
 fi
 
 # Check 4: Backend directory
 echo -n "Checking Backend... "
-if [ -d "/app/backend" ]; then
+if [ -d "$PROJECT_ROOT/backend" ]; then
     echo -e "${GREEN}✅ Found${NC}"
 else
-    echo -e "${RED}❌ /app/backend not found${NC}"
+    echo -e "${RED}❌ backend directory not found${NC}"
     ERRORS=$((ERRORS + 1))
 fi
 
 # Check 5: Electron app structure
 echo -n "Checking Electron App... "
-if [ -f "/app/electron-app/main.js" ] && [ -f "/app/electron-app/package.json" ]; then
+if [ -f "$SCRIPT_DIR/main.js" ] && [ -f "$SCRIPT_DIR/package.json" ]; then
     echo -e "${GREEN}✅ Found${NC}"
 else
     echo -e "${RED}❌ main.js or package.json missing${NC}"
@@ -68,7 +68,7 @@ fi
 
 # Check 6: Assets
 echo -n "Checking Assets... "
-if [ -f "/app/electron-app/assets/dmg-background.png" ] && [ -f "/app/electron-app/assets/logo.png" ]; then
+if [ -f "$SCRIPT_DIR/assets/dmg-background.png" ] && [ -f "$SCRIPT_DIR/assets/logo.png" ]; then
     echo -e "${GREEN}✅ Found (PNG)${NC}"
 else
     echo -e "${YELLOW}⚠️  PNG assets missing (will be created)${NC}"
@@ -76,7 +76,7 @@ fi
 
 # Check 7: build.sh
 echo -n "Checking build.sh... "
-if [ -x "/app/electron-app/build.sh" ]; then
+if [ -x "$SCRIPT_DIR/build.sh" ]; then
     echo -e "${GREEN}✅ Executable${NC}"
 else
     echo -e "${RED}❌ Not executable or missing${NC}"
@@ -85,12 +85,12 @@ fi
 
 # Check 8: Disk space
 echo -n "Checking Disk Space... "
-AVAILABLE=$(df -h /app | awk 'NR==2 {print $4}')
+AVAILABLE=$(df -h "$PROJECT_ROOT" | awk 'NR==2 {print $4}')
 echo -e "${GREEN}✅ ${AVAILABLE} available${NC}"
 
 # Check 9: Port 8000 configuration
 echo -n "Checking main.js Port... "
-if grep -q "8000" /app/electron-app/main.js; then
+if grep -q "8000" "$SCRIPT_DIR/main.js"; then
     echo -e "${GREEN}✅ Port 8000 configured${NC}"
 else
     echo -e "${RED}❌ Port 8000 not found in main.js${NC}"
