@@ -74,30 +74,40 @@ async function startMongoDB() {
         '--noauth'
       ]);
 
-    mongoProcess.stdout.on('data', (data) => {
-      const message = data.toString();
-      console.log('[MongoDB]:', message);
-      if (message.includes('Waiting for connections')) {
-        console.log('✅ MongoDB ready');
-        resolve();
-      }
-    });
+      mongoProcess.stdout.on('data', (data) => {
+        const message = data.toString();
+        log(`MongoDB: ${message.trim()}`);
+        if (message.includes('Waiting for connections')) {
+          log('✅ MongoDB ready');
+          resolve();
+        }
+      });
 
-    mongoProcess.stderr.on('data', (data) => {
-      console.error('[MongoDB Error]:', data.toString());
-    });
+      mongoProcess.stderr.on('data', (data) => {
+        const message = data.toString();
+        logError(`MongoDB stderr: ${message.trim()}`);
+      });
 
-    mongoProcess.on('error', (error) => {
-      console.error('MongoDB failed to start:', error);
+      mongoProcess.on('error', (error) => {
+        logError('Failed to start MongoDB', error);
+        reject(error);
+      });
+
+      mongoProcess.on('exit', (code) => {
+        logError(`MongoDB process exited with code: ${code}`);
+      });
+
+      // Timeout nach 10 Sekunden
+      setTimeout(() => {
+        if (mongoProcess && !mongoProcess.killed) {
+          log('MongoDB timeout reached, assuming it started');
+          resolve();
+        }
+      }, 10000);
+    } catch (error) {
+      logError('MongoDB startup error', error);
       reject(error);
-    });
-
-    // Timeout für MongoDB Start
-    setTimeout(() => {
-      if (mongoProcess && !mongoProcess.killed) {
-        resolve(); // Gehe davon aus, dass es funktioniert hat
-      }
-    }, 5000);
+    }
   });
 }
 
