@@ -16,6 +16,13 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+echo "📁 Project Root: $PROJECT_ROOT"
+echo ""
+
 # Schritt 1: Dependencies überprüfen
 echo -e "${YELLOW}[1/7] Überprüfe Dependencies...${NC}"
 if ! command -v node &> /dev/null; then
@@ -34,7 +41,7 @@ echo ""
 
 # Schritt 2: Frontend .env konfigurieren (Port 8000!)
 echo -e "${YELLOW}[2/7] Konfiguriere Frontend für Desktop (Port 8000)...${NC}"
-cd /app/frontend
+cd "$PROJECT_ROOT/frontend"
 
 # Backup original .env
 if [ -f .env ]; then
