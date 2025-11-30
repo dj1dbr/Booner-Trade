@@ -2551,32 +2551,22 @@ async def get_bot_status():
 
 @api_router.post("/bot/start")
 async def start_bot():
-    """Starte AI Trading Bot manuell"""
-    global ai_trading_bot_instance, bot_task
-    
+    """Starte AI Trading Bot - Bot läuft im Worker-Prozess"""
     try:
-        # Prüfe ob auto_trading aktiviert ist
+        # Aktiviere auto_trading in Settings
+        # Der Worker-Prozess überwacht die Settings und startet den Bot automatisch
         settings = await db.trading_settings.find_one({"id": "trading_settings"})
-        if not settings or not settings.get('auto_trading', False):
-            raise HTTPException(
-                status_code=400, 
-                detail="Auto-Trading muss in den Einstellungen aktiviert sein"
-            )
+        if not settings:
+            raise HTTPException(status_code=404, detail="Settings nicht gefunden")
         
-        # Prüfe ob Bot bereits läuft
-        if ai_trading_bot_instance and ai_trading_bot_instance.running:
-            return {"success": False, "message": "Bot läuft bereits"}
+        # Update auto_trading zu true
+        await db.trading_settings.update_one(
+            {"id": "trading_settings"},
+            {"$set": {"auto_trading": True}}
+        )
         
-        # Importiere und starte Bot
-        from ai_trading_bot import AITradingBot
-        
-        ai_trading_bot_instance = AITradingBot()
-        if await ai_trading_bot_instance.initialize():
-            bot_task = asyncio.create_task(ai_trading_bot_instance.run_forever())
-            logger.info("✅ AI Trading Bot manuell gestartet")
-            return {"success": True, "message": "AI Trading Bot gestartet"}
-        else:
-            raise HTTPException(status_code=500, detail="Bot-Initialisierung fehlgeschlagen")
+        logger.info("✅ Auto-Trading aktiviert - Worker startet Bot")
+        return {"success": True, "message": "AI Trading Bot wird im Worker gestartet"}
             
     except HTTPException:
         raise
