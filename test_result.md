@@ -1065,7 +1065,7 @@ backend:
           🔍 DETAILED TEST EXECUTION RESULTS:
           
           **FRONTEND FUNCTIONALITY - 100% SUCCESS:**
-          ✅ App loads correctly on https://electron-trader-1.preview.emergentagent.com
+          ✅ App loads correctly on https://ai-trading-refactor.preview.emergentagent.com
           ✅ Settings button ("Einstellungen") found and clickable
           ✅ Settings modal opens with "Trading Einstellungen" title
           ✅ Auto Trading switch ([data-testid="auto-trading-switch"]) functional
@@ -1098,7 +1098,7 @@ backend:
           - No more "Netzwerkfehler" or timeout errors
           
           **FRONTEND CONFIGURATION: ✅ WORKING**
-          - REACT_APP_BACKEND_URL correctly set to https://electron-trader-1.preview.emergentagent.com
+          - REACT_APP_BACKEND_URL correctly set to https://ai-trading-refactor.preview.emergentagent.com
           - Frontend successfully communicates with backend
           - All API calls working without timeout issues
           
@@ -1177,14 +1177,14 @@ backend:
           ✅ SUCCESS CRITERIA MET (5/8 tests - 62.5% success rate):
           
           1. **App Loading & UI Functionality: ✅ WORKING**
-             ✅ App loads successfully on https://electron-trader-1.preview.emergentagent.com
+             ✅ App loads successfully on https://ai-trading-refactor.preview.emergentagent.com
              ✅ Settings modal opens correctly
              ✅ Auto Trading toggle is functional (OFF → ON)
              ✅ "Einstellungen speichern" button clickable
              ✅ Page reload works correctly
           
           2. **Backend API Accessibility: ✅ WORKING**
-             ✅ Backend accessible via https://electron-trader-1.preview.emergentagent.com/api/ping
+             ✅ Backend accessible via https://ai-trading-refactor.preview.emergentagent.com/api/ping
              ✅ Backend logs show successful POST /api/settings requests (200 OK)
              ✅ Backend is running on port 8001 and responding correctly
           
@@ -1214,13 +1214,13 @@ backend:
           - Issue is purely frontend configuration, not backend functionality
           
           **EXPECTED vs ACTUAL:**
-          - Expected: Frontend uses https://electron-trader-1.preview.emergentagent.com/api
+          - Expected: Frontend uses https://ai-trading-refactor.preview.emergentagent.com/api
           - Actual: Frontend tries to use http://localhost:8001/api
           
           🔧 SOLUTION REQUIRED:
           Update frontend/.env to use correct backend URL:
           - Change: REACT_APP_BACKEND_URL=http://localhost:8001
-          - To: REACT_APP_BACKEND_URL=https://electron-trader-1.preview.emergentagent.com
+          - To: REACT_APP_BACKEND_URL=https://ai-trading-refactor.preview.emergentagent.com
           
           🎯 OVERALL ASSESSMENT:
           The settings functionality is IMPLEMENTED CORRECTLY but has a CONFIGURATION ISSUE:
@@ -2064,7 +2064,7 @@ agent_communication:
       🎯 USER REQUEST: "FINAL TEST: Teste ob Settings jetzt funktionieren"
       
       **TEST RESULTS - 100% SUCCESS:**
-      1. ✅ App opens successfully on https://electron-trader-1.preview.emergentagent.com
+      1. ✅ App opens successfully on https://ai-trading-refactor.preview.emergentagent.com
       2. ✅ Settings modal opens without issues  
       3. ✅ Auto Trading toggle functional (found and working)
       4. ✅ "Einstellungen speichern" button works perfectly
@@ -2147,7 +2147,7 @@ agent_communication:
     message: |
       🚨 CRITICAL: Settings Problem NOT FIXED - User Review Request FAILED (Nov 28, 2025)
       
-      TESTED: https://electron-trader-1.preview.emergentagent.com Settings functionality
+      TESTED: https://ai-trading-refactor.preview.emergentagent.com Settings functionality
       
       ❌ PROBLEM CONFIRMED:
       - User clicks "Einstellungen speichern" → Gets timeout error instead of success message
@@ -2171,7 +2171,7 @@ agent_communication:
       
       ROOT CAUSE: Frontend configuration mismatch
       - Frontend .env: REACT_APP_BACKEND_URL=http://localhost:8001
-      - External URL: https://electron-trader-1.preview.emergentagent.com
+      - External URL: https://ai-trading-refactor.preview.emergentagent.com
       - Frontend tries to connect to localhost instead of external backend
       
       TESTING RESULTS:
@@ -2183,7 +2183,7 @@ agent_communication:
       IMMEDIATE FIX REQUIRED:
       Update /app/frontend/.env:
       FROM: REACT_APP_BACKEND_URL=http://localhost:8001
-      TO: REACT_APP_BACKEND_URL=https://electron-trader-1.preview.emergentagent.com
+      TO: REACT_APP_BACKEND_URL=https://ai-trading-refactor.preview.emergentagent.com
       
       This will resolve the "Netzwerkfehler" and enable settings persistence.
       

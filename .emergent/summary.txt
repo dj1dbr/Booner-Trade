@@ -1,158 +1,977 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was to get a fully functional AI trading bot and a distributable macOS desktop version of the application.
-
-The primary and currently unresolved goal is to create a standalone, distributable desktop version for macOS. This app must be self-contained, bundling its own backend (Python, FastAPI) and database (MongoDB), and must not rely on any Emergent-specific services. The web-based version of the application is stable and functional. The main challenge has been correctly packaging the Python environment and its dependencies for macOS within an Electron app.
+The user's initial goal was to get a fully functional AI trading bot and a distributable macOS desktop version of the application. The current primary goal is to refactor the application for stability and performance, clean up the codebase, and then produce a final, distributable macOS desktop app.
 
 PRODUCT REQUIREMENTS:
 - A standalone, distributable desktop version for macOS must be created. This app must be self-contained, bundling its own backend (Python, FastAPI) and database (MongoDB).
-- The risk-limiting logic (e.g., stop opening trades at 20% portfolio risk) must be functional. (This is a lower priority task pending the desktop app completion).
+- The application must be stable, without the connection timeouts and intermittent data loading issues the user has experienced.
+- The codebase must be cleaned of all unused files and code.
+- The functionality to manually close trades must work correctly.
 
 **User's preferred language**: German
 
 **what currently exists?**
-- A stable and fully functional web application in the Emergent environment.
-- The  directory contains a complete build system designed to be run **on the user's local Mac**, not in the Emergent Linux container.
-- The core of this system is the  script, which automates dependency installation and the Electron build process.
-- The previous local build attempt by the user produced a  file, but the application crashed on launch.
-- Analysis of user-provided logs revealed the root cause: The Python virtual environment packaged within the app had broken symbolic links, making the Python interpreter and  executable unreachable.
+- A web application that was successfully packaged into a macOS desktop app. However, the app proved to be unstable, suffering from slow startup times, connection timeouts, and intermittent failures.
+- To address the instability, the agent began a major refactoring to split the backend into two processes: a lightweight API server () and a heavy-duty background worker ().
+- A new  file has been created.
+- The Electron  has been modified to start and manage both the  and  processes.
+- Some cleanup has been performed on  (removing the scheduler and memory profiler) and unused backend files have been deleted.
+- The frontend was modified to call APIs sequentially instead of in parallel to reduce load.
+- Crucially, the backend in the development environment became unresponsive during this refactoring process.
 
 **Last working item**:
--   **Last item agent was working:** The agent was fixing the broken Python environment packaging for the local macOS build. After the user's logs showed that symlinks inside the  bundle were broken (), the agent deduced that packaging a virtual environment created with symlinks is unreliable. The fix involved changing the  configuration in  to directly copy the folder containing the installed Python packages () instead of the virtual environment directory (). This should result in a portable Python environment. The agent then created  with instructions for the user to try building again.
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** Manual testing by the user. The user must run the updated local build script on their macOS machine as instructed in , install the resulting , and attempt to launch the application.
--   **User Testing Done:** N (User has not yet attempted the build after the latest  fix).
+- **Last item agent was working:** The agent was trying to diagnose why the backend became completely unresponsive after starting a major refactoring. The user reported that saving settings resulted in a timeout and the balance was not loading, indicating a total loss of backend connectivity. The agent's last attempts to check the service status via  and backend                          RUNNING   pid 30, uptime 0:00:02
+code-server                      STOPPED   Not started
+frontend                         STOPPED   Nov 30 05:09 PM
+mongodb                          RUNNING   pid 32, uptime 0:00:02
+nginx-code-proxy                 RUNNING   pid 28, uptime 0:00:02
+supervisor>  timed out, confirming the backend process is hung or has crashed.
+- **Status:** BLOCKED
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** backend testing agent
+- **User Testing Done:** Y (User reported the failure in the dev environment)
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0):** Electron App Build is Broken on User's Mac.
+- **Issue 1 (P0):** Backend is unresponsive in the development environment.
+- **Issue 2 (P1):** Manually closing trades is not working.
 
 **Issues Detail:**
--   **Issue 1: Electron App Build is Broken on User's Mac**
-    -   **Attempted fixes:**
-        1.  Initial builds within the Linux container failed because the Python virtual environment was incompatible with macOS.
-        2.  A new local build system () was created for the user to run on their Mac.
-        3.  The user ran the script, which successfully built a , but the app crashed on launch.
-        4.  User logs confirmed the crash was due to a  error, which was traced back to broken Python symlinks inside the  bundle.
-        5.  The latest attempted fix was to modify 's  to copy the installed packages directly, avoiding the problematic symlinks.
-    -   **Next debug checklist:**
-        1.  Wait for the user to follow  and report the outcome of the new build.
-        2.  If it still fails, ask the user for the new logs from .
-        3.  If the error is still related to Python paths, the next step is to make the  script inside the app more robust, possibly by using  and setting the  environment variable to point to the  directory before launching .
-    -   **Why fix this issue and what will be achieved with the fix?** This is the final and most critical task. Fixing it will deliver the standalone, distributable macOS desktop application the user has been requesting for the entire project.
-    -   **Status:** USER VERIFICATION PENDING
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** N/A (User must test the final  artifact).
-    -   **Blocked on other issue:** None.
+- **Issue 1: Backend is unresponsive in the development environment.**
+    - **Attempted fixes:** The agent was in the middle of refactoring  (removing the scheduler and memory profiling) when the backend process hung. Attempts to probe its status with  failed due to timeouts.
+    - **Next debug checklist:**
+        1.  Check the backend logs for the fatal error that caused the crash: ==> /var/log/supervisor/backend.err.log <==
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:57,370 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,371 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,371 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,371 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,371 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,373 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,373 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,373 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,375 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+WARNING:  WatchFiles detected changes in 'server.py', 'list_all_metaapi_accounts.py', 'create_libertex_account.py', 'close_positions.py', 'list_metaapi_accounts.py', 'check_metaapi_accounts.py'. Reloading...
+2025-11-30 16:25:01,657 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:01,657 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [23941]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:01,658 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:01,658 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:01,661 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:01,663 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:01,669 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:01,669 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:01,669 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:01,669 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3179, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:01
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 167, in <module>
+    scheduler = BackgroundScheduler()
+                ^^^^^^^^^^^^^^^^^^^
+NameError: name 'BackgroundScheduler' is not defined
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+2025-11-30 16:25:24,302 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:24,302 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [24283]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:24,303 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:24,303 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:24,306 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:24,307 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:24,314 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:24,314 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:24,314 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:24,314 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3181, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:24
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+2025-11-30 16:25:37,285 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:37,285 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [24585]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:37,286 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:37,286 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:37,290 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:37,291 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:37,302 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:37,302 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:37,302 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:37,302 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3181, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:37
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [30] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.130.137:50484 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50138 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50154 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50504 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50172 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50162 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46126 - "GET /api/ping HTTP/1.1" 200 OK
+INFO:     10.64.131.163:43262 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.131.163:43250 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37072 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46128 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37104 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46126 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50518 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.131.142:51664 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37104 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46886 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41240 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41242 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46886 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47450 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46914 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51396 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39420 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39436 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47452 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51408 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39440 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39440 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51420 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57900 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47022 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47006 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48442 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47440 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57910 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55436 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47858 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47844 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:56808 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57364 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57370 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57362 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57384 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34126 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34128 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50708 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37812 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54092 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50706 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37828 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54080 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50708 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37812 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47820 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50706 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54080 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54092 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37828 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47820 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58788 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44284 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58806 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58794 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58772 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41662 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52448 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41676 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52446 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/all HTTP/1.1" 200 OK
+[2025-11-30T16:22:52.816335] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.816384] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.816425] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.818680] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 1 seconds  
+[2025-11-30T16:22:53.238300] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:54.357602] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+[2025-11-30T16:22:54.773185] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+[2025-11-30T16:22:55.356268] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37206 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34132 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34138 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37206 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34138 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:59628 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+[2025-11-30T16:23:24.140753] [WARN] 5cc9abd1-671a-447e-ab93-5abbfe0ed941:london:0:ps-mpa-a-3:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:23:24.261869] [WARN] 5cc9abd1-671a-447e-ab93-5abbfe0ed941:london:0:ps-mpa-a-3:on_synchronization_started: finished in 1 seconds  
+INFO:     10.64.130.220:37188 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37202 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:59628 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37172 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37710 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37710 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44104 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36950 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36962 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44122 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44522 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44504 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44536 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44510 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36950 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:43748 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:43748 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56964 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56974 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:58528 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41304 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:58518 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41304 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56980 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56994 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41312 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56994 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40152 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43746 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40124 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40136 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41312 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43742 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35682 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50626 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35680 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50610 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35676 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:38928 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:38928 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52392 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52404 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44676 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52408 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47198 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/live-ticks HTTP/1.1" 200 OK.
+        2.  Review the recent changes made to  during the refactoring. It's highly likely an error was introduced (e.g., a necessary import was removed, or code was left in an inconsistent state).
+        3.  Start the backend service manually to observe the startup error directly.
+        4.  Once the error is identified, fix the code in  or related files.
+    - **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. The entire development and testing process is halted until the backend in the development environment is running again.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** backend
+    - **Blocked on other issue:** None
+
+- **Issue 2: Manually closing trades is not working.**
+    - **Attempted fixes:** The agent confirmed the  function exists in the frontend. An API test showed a Platform not connected error, suggesting it was a symptom of general backend instability. This issue was deprioritized to focus on the major refactoring.
+    - **Next debug checklist:**
+        1.  Once the backend is stable (after Issue 1 is resolved and the refactoring is complete), re-test the close trade functionality.
+        2.  Check the browser console in the Electron app for errors when the button is clicked.
+        3.  Check the logs of both  and  for any related error messages.
+    - **Why fix this issue and what will be achieved with the fix?** This restores a core piece of user-interactivity to the application.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on other issue:** Issue 1: Backend is unresponsive.
 
 **In progress Task List**:
--   **Task 1: Finalize Mac Desktop App (P0)**
-    -   **Where to resume:** Awaiting user feedback after they run the newly configured local build process.
-    -   **What will be achieved with this?** A distributable  file that installs a fully standalone and functional application on macOS.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** N/A (User testing only).
-    -   **Blocked on something:** User action is required to perform the build on their local machine.
+- **Task 1: Complete Backend Refactoring and Codebase Cleanup (P0)**
+    - **Where to resume:** This task is currently blocked by the unresponsive backend. Once the backend is fixed, the refactoring must be completed.
+        1.  **Finish splitting :** Systematically move all heavy, long-running tasks (MetaApi connections, background scheduler, AI position management) from  into .  should only contain the lightweight FastAPI endpoints that serve data from the database.
+        2.  **Complete file cleanup:** The agent started deleting unused files but this needs to be finalized. A new minimal  was created, which should be renamed to .
+        3.  **Verify inter-process communication:** Ensure the  correctly writes data to MongoDB and the  correctly reads it.
+    - **What will be achieved with this?** A much more stable and performant application, as the UI will no longer be blocked by heavy background tasks. The codebase will be clean and maintainable.
+    - **Status:** BLOCKED
+    - **Should Test frontend/backend/both after fix?** both
+    - **Blocked on something:** Issue 1: Backend is unresponsive.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   (P1) Re-implement the disabled automatic position update feature in  as a non-blocking background task.
--   **Future Tasks:**
-    -   Creation of a distributable Electron desktop application for Windows.
+- **Upcoming Tasks:**
+    - (P0) Create a new, final build instruction markdown file for the user, explaining how to build the refactored desktop application on their Mac.
+- **Future Tasks:**
+    - Re-implement the disabled automatic position update feature in  as a non-blocking background task (This is now part of the refactoring into ).
+    - Creation of a distributable Electron desktop application for Windows.
 
 **Completed work in this session**
 - **Recently completed:**
-  - **Overhauled Build Strategy:** Shifted from a failing Linux-based build to a new, robust **local macOS build system** ().
-  - **Fixed MongoDB Port Conflict:** Modified  to find and use a free port for MongoDB dynamically, preventing Address already in use errors.
-  - **Created New Build Scripts:** Developed  to automate the entire local build process on the user's Mac, including system checks, dependency installation, and the final  command.
-  - **Diagnosed Runtime Crash:** Analyzed user-provided crash logs (, ) to pinpoint the application crash to a  error, caused by broken Python symlinks in the packaged app.
-  - **Refined Packaging Configuration:** Updated  to fix the symlink issue by directly packaging the installed Python libraries instead of a virtual environment.
-  - **Generated New User Instructions:** Created  and  to provide clear, step-by-step guidance for the user.
-  - **Guided User Through macOS Quirks:** Instructed the user on how to bypass macOS Gatekeeper's damaged app warning using .
+  - **Solved macOS Build Crash:** Successfully debugged and resolved the critical  by updating ═══════════════════════════════════════════════════════
+  Booner Trade - LOKALER MAC BUILD
+═══════════════════════════════════════════════════════
 
-**Earlier issues found/mentioned but not fixed**
-- The Disabled Automatic Position Updates feature (listed in Pending Issues) is the only known outstanding item apart from the main build task.
-
-**Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Electron App Build is Broken
--   **Recurrence count:** High. The issue has persisted through multiple sessions, although the root cause has evolved from incorrect resource packaging to Python environment incompatibility.
--   **Status:** IN PROGRESS
+[0;34m[1/8] Systemprüfung...[0m
+[0;31m❌ Dieses Script muss auf macOS laufen![0m to force re-compilation of native Python modules on the user's Mac.
+  - **Solved Installation Issue:** Diagnosed that the user was running the app from the mounted  instead of installing it to , and provided clear instructions to fix this.
+  - **Solved Frontend Display Issues:**
+    - Fixed the black screen by replacing  with  in  to make routing compatible with Electron's  protocol.
+    - Fixed  by ensuring the frontend production build points to .
+  - **Initiated Major Backend Refactoring:** Began splitting the monolithic backend into a  (API) and  (background tasks) to improve stability, as requested by the user.
+  - **Fixed MetaAPI Connection Issues:** Diagnosed and corrected incorrect fallback MetaAPI account IDs in the  file, successfully re-establishing data flow in the development environment before the refactoring broke it.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Desktop App:** Electron, .
--   **Local Build Strategy:** The entire build process is now designed to run on the user's macOS machine via a shell script to avoid cross-platform incompatibilities.
--   **Python Packaging:** The core challenge is creating a portable Python environment inside the Electron app. The current approach is to install packages to a target directory () and package that directory, avoiding virtual environment symlinks.
--   **macOS Gatekeeper:** Understanding that  is required to run unsigned applications downloaded from the internet.
+- **Backend Architecture:** Moving from a monolith to a microservices-like pattern (API server + background worker) to improve UI responsiveness and stability.
+- **Electron Process Management:** Using Node.js  within  to spawn and manage multiple backend Python processes.
+- **macOS App Building:** The entire workflow is now mature: using a local build script (), building the frontend (yarn run v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.), packaging with , and correctly installing the  into the  folder.
+- **Python Native Dependencies:** Understanding that packages with C extensions (like ) must be compiled for the target architecture (macOS ARM64) and cannot be simply copied from a Linux environment. Using  is the solution.
+- **React Routing for Electron:**  fails with  protocol;  is the correct choice.
 
 **key DB schema**
--   : Stores closed trade history.
--   : Stores AI-generated metadata (SL/TP, strategy) for open trades.
--   : Stores global user settings (e.g., max risk).
+- : Stores closed trade history.
+- : Stores AI-generated metadata (SL/TP, strategy) for open trades.
+- : Stores global user settings (e.g., max risk, platform credentials).
 
 **changes in tech stack**
--   No changes.
+- No changes in the core technologies, but a significant architectural change in the backend (monolith to server/worker split).
 
 **All files**
--   **═══════════════════════════════════════════════════════
+- ** (Created):** New file to house the heavy background processing logic (MetaAPI, scheduler). Currently contains a skeleton.
+- ** (Updated):** Refactoring started. Scheduler and memory profiling code removed. Still requires major cleanup to move MetaAPI logic to the worker.
+- ** (Updated):** Heavily modified to manage two child processes (, ) instead of one. Includes logic to start and kill both.
+- **═══════════════════════════════════════════════════════
   Booner Trade - LOKALER MAC BUILD
 ═══════════════════════════════════════════════════════
 
 [0;34m[1/8] Systemprüfung...[0m
-[0;31m❌ Dieses Script muss auf macOS laufen![0m (Created):** A comprehensive new script to run the entire build process natively on the user's Mac. It handles system checks, dependency installation, and invoking .
--   ** (Updated):** Critically modified the  section multiple times. The latest change points to the  directory to fix broken symlinks from the previous build attempt.
--   ** (Updated):** Added logic to find a free port for MongoDB before starting it, resolving Address already in use errors.
--   ** (Created):** Detailed instructions for the user on how to perform the local build.
--   ** (Created):** Simplified, updated instructions for the user to run the build after the latest  fix.
-
-**Areas that need refactoring**:
--   The  function in  needs to be cleanly re-implemented.
-
-**key api endpoints**
--   : Stable.
--   : Works, but background update task is disabled.
--   : Stable.
+[0;31m❌ Dieses Script muss auf macOS laufen![0m (Updated):** Added  flags to the  command to fix native module compilation issues on the user's Mac.
+- ** (Updated):** Switched from  to .
+- ** (Updated):** Replaced  with sequential  calls for fetching initial data to reduce load on the backend.
+- ** (Updated):** Corrected the fallback MetaAPI account IDs to fix connection issues in the dev environment.
+- **Multiple backend files (Deleted):** A number of unused setup scripts and old connector files were deleted as part of the cleanup.
 
 **Critical Info for New Agent**
--   **Your sole focus is to get the macOS desktop app working.** Do not work on any other feature.
--   The build process **must** be executed on the user's local Mac using the provided scripts. Do not attempt to build within the Emergent Linux environment.
--   The last build failed due to broken Python symlinks. The proposed fix is in  (packaging  instead of ).
--   You are waiting for the user to follow the instructions in  and report back.
--   If the build fails again, analyze the user's logs from . The problem is almost certainly related to how the Python environment is being packaged and executed.
--   **Communicate exclusively in German.** The user is frustrated with the time this is taking, so be clear, concise, and focused on the solution.
+- **Your immediate and only priority is to fix the unresponsive backend in the development environment.** The last agent broke it during a refactoring. Check the supervisor logs (==> /var/log/supervisor/backend.err.log <==
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,375 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,375 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - INFO - Sending packet PING data None
+2025-11-30 16:24:27,376 - engineio.client - ERROR - packet queue is empty, aborting
+2025-11-30 16:24:27,376 - engineio.client - INFO - Exiting write loop task
+2025-11-30 16:24:57,370 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,371 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,371 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,371 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,371 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,372 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,372 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,373 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,373 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,373 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,375 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,376 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,376 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,377 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,377 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+2025-11-30 16:24:57,378 - engineio.client - INFO - PONG response has not been received, aborting
+2025-11-30 16:24:57,378 - engineio.client - INFO - Exiting ping task
+WARNING:  WatchFiles detected changes in 'server.py', 'list_all_metaapi_accounts.py', 'create_libertex_account.py', 'close_positions.py', 'list_metaapi_accounts.py', 'check_metaapi_accounts.py'. Reloading...
+2025-11-30 16:25:01,657 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:01,657 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [23941]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:01,658 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:01,658 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:01,661 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:01,663 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:01,669 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:01,669 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:01,669 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:01,669 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3179, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:01
+2025-11-30 16:25:01,669 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+Process SpawnProcess-4:
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 314, in _bootstrap
+    self.run()
+  File "/usr/local/lib/python3.11/multiprocessing/process.py", line 108, in run
+    self._target(*self._args, **self._kwargs)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/_subprocess.py", line 76, in subprocess_started
+    target(sockets=sockets)
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 61, in run
+    return asyncio.run(self.serve(sockets=sockets))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 190, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/asyncio/base_events.py", line 654, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/server.py", line 68, in serve
+    config.load()
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/config.py", line 467, in load
+    self.loaded_app = import_from_string(self.app)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/.venv/lib/python3.11/site-packages/uvicorn/importer.py", line 21, in import_from_string
+    module = importlib.import_module(module_str)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/__init__.py", line 126, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1204, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1176, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1147, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 690, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/app/backend/server.py", line 167, in <module>
+    scheduler = BackgroundScheduler()
+                ^^^^^^^^^^^^^^^^^^^
+NameError: name 'BackgroundScheduler' is not defined
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+2025-11-30 16:25:24,302 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:24,302 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [24283]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:24,303 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:24,303 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:24,306 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:24,307 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:24,314 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:24,314 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:24,314 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:24,314 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3181, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:24
+2025-11-30 16:25:24,314 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
+2025-11-30 16:25:37,285 - server - WARNING - ⚠️  Frontend build not found at: /app/frontend/build
+2025-11-30 16:25:37,285 - server - WARNING -    Run 'cd /app/frontend && yarn build' to create production build
+INFO:     Started server process [24585]
+INFO:     Waiting for application startup.
+2025-11-30 16:25:37,286 - server - INFO - 🚀 Server startet - führe Trade-Cleanup durch...
+2025-11-30 16:25:37,286 - server - ERROR - ⚠️ Startup-Cleanup fehlgeschlagen: No module named 'trade_cleanup'
+2025-11-30 16:25:37,290 - server - INFO - 🤖 Auto-Trading ist aktiviert - starte AI Trading Bot...
+2025-11-30 16:25:37,291 - ai_trading_bot - INFO - 🤖 AI Trading Bot wird initialisiert...
+2025-11-30 16:25:37,302 - ai_chat_service - INFO - Using API key for provider: emergent (from environment)
+2025-11-30 16:25:37,302 - ai_chat_service - INFO - ✅ AI Chat initialized: openai/gpt-5
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ✅ LLM initialisiert: emergent/gpt-5
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ✅ Bot initialisiert | Auto-Trading: True
+2025-11-30 16:25:37,302 - server - INFO - ✅ AI Trading Bot gestartet als Background Task
+2025-11-30 16:25:37,302 - server - INFO - Starting WTI Smart Trader API...
+ERROR:    Traceback (most recent call last):
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 732, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 608, in __aenter__
+    await self._router.startup()
+  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 709, in startup
+    await handler()
+  File "/app/backend/server.py", line 3181, in startup_event
+    profiler = get_profiler()
+               ^^^^^^^^^^^^
+NameError: name 'get_profiler' is not defined
+
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 🚀 AI Trading Bot gestartet - läuft kontinuierlich!
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 
+============================================================
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - 🤖 Bot Iteration #1 - 16:25:37
+2025-11-30 16:25:37,302 - ai_trading_bot - INFO - ============================================================
+ERROR:    Application startup failed. Exiting.
+INFO:     Will watch for changes in these directories: ['/app/backend']
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     Started reloader process [30] using WatchFiles
+
+==> /var/log/supervisor/backend.out.log <==
+INFO:     10.64.130.137:50484 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50138 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50154 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50504 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50172 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.133.203:50162 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46126 - "GET /api/ping HTTP/1.1" 200 OK
+INFO:     10.64.131.163:43262 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.131.163:43250 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37072 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46128 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37104 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.131.136:46126 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.137:50518 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.136:40484 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.131.142:51664 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.171:37104 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46886 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41240 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41242 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46886 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47450 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46914 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39244 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51396 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39420 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39436 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47452 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46898 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39252 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51408 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39440 - "GET /api/settings HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39440 - "GET /api/commodities HTTP/1.1" 200 OK
+INFO:     10.64.130.204:46910 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:39410 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:51420 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57900 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47022 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47006 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48442 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47440 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57910 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:48458 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55436 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47858 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47844 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:39258 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:57916 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.200:55434 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:56808 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57364 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57370 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57362 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:57384 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34126 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34128 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50598 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50708 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37812 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54092 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50706 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37828 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54080 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50708 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37812 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47820 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50706 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54080 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:54092 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37828 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:47820 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58788 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44284 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58806 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58794 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:58772 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44298 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41662 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52448 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:41676 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52446 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37804 - "GET /api/market/all HTTP/1.1" 200 OK
+[2025-11-30T16:22:52.816335] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.816384] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.816425] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:52.818680] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 1 seconds  
+[2025-11-30T16:22:53.238300] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:22:54.357602] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+[2025-11-30T16:22:54.773185] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+[2025-11-30T16:22:55.356268] [WARN] d2605e89-7bc2-4144-9f7c-951edd596c39:london:0:ps-mpa-a-11:on_synchronization_started: finished in 3 seconds  
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37206 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34132 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34138 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37206 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:34138 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:59628 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+[2025-11-30T16:23:24.140753] [WARN] 5cc9abd1-671a-447e-ab93-5abbfe0ed941:london:0:ps-mpa-a-3:on_synchronization_started: event is taking more than 1 second to process  
+[2025-11-30T16:23:24.261869] [WARN] 5cc9abd1-671a-447e-ab93-5abbfe0ed941:london:0:ps-mpa-a-3:on_synchronization_started: finished in 1 seconds  
+INFO:     10.64.130.220:37188 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37202 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:59628 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37172 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37710 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.200:37710 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44104 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36950 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36962 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44122 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44114 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:47396 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44522 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44504 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44536 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:44510 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:36950 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:43748 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:43748 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56964 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56974 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:58528 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41304 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52430 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.200:58518 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41304 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56980 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56994 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41312 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.220:56994 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40152 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43746 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40124 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:40136 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.204:41312 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.204:43742 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35682 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50626 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35680 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.220:50610 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:37882 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35676 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.204:38928 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.204:38928 - "GET /api/market/history?limit=50 HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52392 - "GET /api/platforms/MT5_LIBERTEX_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52404 - "GET /api/platforms/MT5_ICMARKETS_DEMO/account HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44676 - "GET /api/market/live-ticks HTTP/1.1" 200 OK
+INFO:     10.64.130.204:52408 - "GET /api/trades/stats HTTP/1.1" 200 OK
+INFO:     10.64.130.200:47198 - "GET /api/trades/list HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/all HTTP/1.1" 200 OK
+INFO:     10.64.130.200:35686 - "POST /api/market/refresh HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/current HTTP/1.1" 200 OK
+INFO:     10.64.130.220:44668 - "GET /api/market/live-ticks HTTP/1.1" 200 OK) to find the error.
+- **Once the backend is fixed, you must complete the refactoring.** This involves moving all heavy processing from  to . The goal is to make  a fast, lightweight API server.
+- The user is technically savvy and has been instrumental in debugging the macOS build. Maintain clear, concise communication in German.
+- The user has approved the backend split and the full codebase cleanup. Do not ask for permission again, just complete the work.
+- After the refactoring is complete and tested in the dev environment, you will need to provide the user with a final, clean set of instructions to build the  on their Mac.
 
 **documents created in this job**
--   /app/electron-app/BUILD-MAC-LOKAL.sh
--   /app/electron-app/ANLEITUNG-MAC-BUILD.md
--   /app/electron-app/REBUILD-ANLEITUNG.md
--   /app/electron-app/prepare-resources-fixed.sh
+- /app/backend/worker.py
+- /app/backend/requirements-desktop-minimal.txt
+- /app/CLEANUP-ZUSAMMENFASSUNG.md
+- /app/DESKTOP-BUILD-ANLEITUNG.md
 
 **Last 5 User Messages and any pending user messages**
-1.  **User:** Reports the locally built app is damaged.
-    -   *Status: Resolved.* Agent correctly identified this as a macOS Gatekeeper issue and provided the  command.
-2.  **User:** Reports the app now starts but crashes after 1-2 seconds.
-    -   *Status: Addressed.* Agent requested logs.
-3.  **User:** Provides logs showing  and  (Error: No such file or directory) for the python executable.
-    -   *Status: Addressed.* Agent analyzed logs and requested a file listing to check for symlinks.
-4.  **User:** Provides a file listing that confirms  exists, but the  symlink points to an invalid Linux path ().
-    -   *Status: Addressed.* This confirmed the root cause was an incompatible Python environment.
-5.  **User:** Expresses frustration with the 3-day process and requests a completely new, simplified, and functional concept.
-    -   *Status: Addressed.* Agent acknowledged the frustration, explained the root cause (Linux vs. Mac), and implemented the latest fix in  along with new, clear instructions (). The agent is now waiting for the user to try again.
+1.  **User:** Requests to split the backend to improve performance and asks to fix the close trade bug.
+    - *Status: In Progress.* Agent agreed and started refactoring.
+2.  **User:** Approves the plan to split the backend, clean the repository, and create a new build guide.
+    - *Status: In Progress.*
+3.  **User:** Reports issues in the dev environment (weird chart data, missing balance) and suspects wrong MetaAPI IDs after the fork. Asks to test the fix (Option B) before proceeding with the major cleanup.
+    - *Status: Resolved.* Agent found and fixed incorrect  variables and verified connections.
+4.  **User:** Confirms the dev environment is working again and gives the green light to proceed with the major cleanup.
+    - *Status: In Progress.* Agent resumed the refactoring.
+5.  **User:** Reports the dev environment is broken again after the agent's cleanup/refactoring work. Saving settings times out, backend not responding, balance is zero.
+    - *Status: **CURRENT BLOCKER. Needs immediate attention.***
 
 **Project Health Check:**
--   **Broken:**
-    -   The macOS desktop application build process remains broken, despite producing a package. The app crashes on launch due to Python pathing issues.
--   **Mocked:**
-    -   None.
+- **Broken:**
+  - The backend service in the development environment is completely unresponsive.
+- **Mocked:**
+  - None.
 
 **Testing status**
--   Testing agent used after significant changes: NO (not applicable for this phase).
--   Troubleshoot agent used after agent stuck in loop: NO.
--   Test files created: [].
--   Known regressions: The auto-update feature was disabled in a previous session and is pending re-implementation.
+- Testing agent used after significant changes: NO
+- Troubleshoot agent used after agent stuck in loop: NO
+- Test files created: []
+- Known regressions:
+    - Backend service is down.
+    - Manual trade closing was reported as not working, likely a symptom of the instability.
 
 **Credentials to test flow:**
-None required.
+MetaAPI credentials are in . The backend service needs to be running to test any functionality.
 
 **What agent forgot to execute**
-The agent correctly prioritized the user's main goal (desktop app) and has not forgotten any critical steps. The lower-priority feature () remains on the backlog as planned.</analysis>
+The agent was in the middle of a large, complex refactoring task. It didn't forget to execute anything, but the process of refactoring has temporarily broken the application, which now needs to be fixed.</analysis>

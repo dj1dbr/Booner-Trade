@@ -53,7 +53,7 @@ http://localhost:3000
 
 ODER für Production:
 ```
-https://electron-trader-1.preview.emergentagent.com
+https://ai-trading-refactor.preview.emergentagent.com
 ```
 
 ---
