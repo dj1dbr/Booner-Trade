@@ -95,7 +95,7 @@ class BackendTester:
                                     f"Connected: {connected}, Balance: €{balance:,.2f}",
                                     "connected=true", f"connected={connected}")
                         
-                        if balance > 1000:  # Should be around €52,345
+                        if balance > 10000:  # Should be around €52,345
                             self.log_test("MT5_LIBERTEX Balance", True,
                                         f"Balance: €{balance:,.2f} (healthy)")
                         else:
