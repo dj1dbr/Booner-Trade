@@ -1520,14 +1520,19 @@ async def execute_trade(request: TradeExecuteRequest):
             
             # Berechne Position Size (max 20% des verfügbaren Kapitals) PRO PLATTFORM
             from commodity_processor import calculate_position_size
-            quantity = await calculate_position_size(
-                balance=balance, 
-                price=price, 
-                db=db, 
-                max_risk_percent=settings.get('max_portfolio_risk_percent', 20.0), 
-                free_margin=free_margin,
-                platform=default_platform
-            )
+            try:
+                quantity = await calculate_position_size(
+                    balance=balance, 
+                    price=price, 
+                    db=db, 
+                    max_risk_percent=settings.get('max_portfolio_risk_percent', 20.0), 
+                    free_margin=free_margin,
+                    platform=default_platform
+                )
+            except Exception as e:
+                logger.error(f"❌ Position Size Calculation Error: {e}")
+                # Fallback to minimum quantity
+                quantity = 0.01
             
             # Minimum 0.01 (Broker-Minimum), Maximum 0.1 für Sicherheit
             quantity = max(0.01, min(quantity, 0.1))
