@@ -436,7 +436,11 @@ app.on('ready', async () => {
     log('⚙️  Starting Backend...');
     await startBackend();
     
-    // 3. Warte kurz, dann öffne Window
+    // 3. Starte MetaApi Worker (im Hintergrund)
+    log('🔧 Starting MetaApi Worker...');
+    await startWorker();
+    
+    // 4. Warte kurz, dann öffne Window
     setTimeout(() => {
       log('🖥️  Opening Window...');
       createWindow();
