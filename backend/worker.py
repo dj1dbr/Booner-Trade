@@ -37,6 +37,14 @@ except ImportError:
 from trailing_stop import update_trailing_stops, check_stop_loss_triggers
 from ai_position_manager import manage_open_positions
 
+try:
+    from ai_trading_bot import AITradingBot
+    AI_TRADING_BOT_AVAILABLE = True
+    logger.info("✅ AI Trading Bot available")
+except ImportError:
+    AI_TRADING_BOT_AVAILABLE = False
+    logger.warning("⚠️  AI Trading Bot not available")
+
 
 class MetaApiWorker:
     """Worker for MetaApi connections and monitoring"""
