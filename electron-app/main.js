@@ -468,6 +468,11 @@ app.on('activate', () => {
 app.on('before-quit', (event) => {
   console.log('🛑 Shutting down...');
   
+  if (workerProcess) {
+    console.log('Stopping Worker...');
+    workerProcess.kill();
+  }
+  
   if (backendProcess) {
     console.log('Stopping Backend...');
     backendProcess.kill();
