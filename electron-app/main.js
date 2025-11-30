@@ -6,6 +6,7 @@ const os = require('os');
 
 let mainWindow;
 let backendProcess;
+let workerProcess;
 let mongoProcess;
 
 // Setup logging to file
