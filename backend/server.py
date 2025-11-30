@@ -2576,27 +2576,25 @@ async def start_bot():
 
 @api_router.post("/bot/stop")
 async def stop_bot():
-    """Stoppe AI Trading Bot"""
-    global ai_trading_bot_instance, bot_task
-    
+    """Stoppe AI Trading Bot - Bot läuft im Worker-Prozess"""
     try:
-        if not ai_trading_bot_instance or not ai_trading_bot_instance.running:
-            return {"success": False, "message": "Bot läuft nicht"}
+        # Deaktiviere auto_trading in Settings
+        # Der Worker-Prozess überwacht die Settings und stoppt den Bot automatisch
+        settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        if not settings:
+            raise HTTPException(status_code=404, detail="Settings nicht gefunden")
         
-        # Stoppe Bot
-        ai_trading_bot_instance.stop()
+        # Update auto_trading zu false
+        await db.trading_settings.update_one(
+            {"id": "trading_settings"},
+            {"$set": {"auto_trading": False}}
+        )
         
-        # Warte auf Task-Ende (max 5 Sekunden)
-        if bot_task:
-            try:
-                await asyncio.wait_for(bot_task, timeout=5.0)
-            except asyncio.TimeoutError:
-                logger.warning("Bot-Task konnte nicht rechtzeitig beendet werden")
-                bot_task.cancel()
+        logger.info("✅ Auto-Trading deaktiviert - Worker stoppt Bot")
+        return {"success": True, "message": "AI Trading Bot wird im Worker gestoppt"}
         
-        logger.info("✅ AI Trading Bot gestoppt")
-        return {"success": True, "message": "AI Trading Bot gestoppt"}
-        
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Fehler beim Bot-Stopp: {e}")
         raise HTTPException(status_code=500, detail=str(e))
