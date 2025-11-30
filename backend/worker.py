@@ -208,6 +208,14 @@ class MetaApiWorker:
         logger.info("🛑 Shutting down...")
         self.running = False
         
+        # Stop AI Bot
+        if self.bot_task and not self.bot_task.done():
+            self.bot_task.cancel()
+            try:
+                await self.bot_task
+            except asyncio.CancelledError:
+                pass
+        
         if self.scheduler.running:
             self.scheduler.shutdown()
         
