@@ -130,9 +130,29 @@ class MetaApiWorker:
                     await asyncio.sleep(5 * (attempt + 1))
         return False
     
+    async def start_ai_bot(self):
+        """Start AI Trading Bot if enabled"""
+        try:
+            settings = await db.trading_settings.find_one({"id": "trading_settings"})
+            if settings and settings.get('auto_trading', False) and AI_TRADING_BOT_AVAILABLE:
+                logger.info("🤖 Auto-Trading enabled - starting AI Trading Bot...")
+                self.ai_bot = AITradingBot()
+                if await self.ai_bot.initialize():
+                    self.bot_task = asyncio.create_task(self.ai_bot.run_forever())
+                    logger.info("✅ AI Trading Bot started")
+                else:
+                    logger.error("❌ AI Trading Bot failed to initialize")
+            else:
+                logger.info("ℹ️  Auto-Trading disabled or bot not available")
+        except Exception as e:
+            logger.error(f"⚠️ AI Bot start failed: {e}")
+    
     async def start_monitoring(self):
         """Start background tasks"""
         logger.info("🚀 Starting monitoring...")
+        
+        # Start AI Trading Bot
+        await self.start_ai_bot()
         
         self.scheduler.add_job(
             self.update_stops,
