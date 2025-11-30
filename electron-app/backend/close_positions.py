@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BACKEND_URL = "https://tradeomatic-app.preview.emergentagent.com"
+BACKEND_URL = "https://electron-trader-1.preview.emergentagent.com"
 
 async def list_positions():
     """Liste alle offenen Positionen auf"""

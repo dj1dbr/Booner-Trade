@@ -53,7 +53,7 @@ http://localhost:3000
 
 ODER für Production:
 ```
-https://tradeomatic-app.preview.emergentagent.com
+https://electron-trader-1.preview.emergentagent.com
 ```
 
 ---
