@@ -1558,7 +1558,7 @@ async def execute_trade(request: TradeExecuteRequest):
         default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
         
         # MT5 Mode (Libertex or ICMarkets)
-        if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5']:
+        if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5', 'MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']:
             try:
                 from multi_platform_connector import multi_platform
                 from commodity_processor import COMMODITIES
