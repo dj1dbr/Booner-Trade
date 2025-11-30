@@ -137,7 +137,7 @@ class BackendTester:
         # Test WTI_CRUDE trade
         trade_data = {
             "commodity": "WTI_CRUDE",
-            "type": "BUY",
+            "trade_type": "BUY",  # Fixed: API expects trade_type not type
             "quantity": 0.01,
             "price": 60.0
         }
