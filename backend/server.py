@@ -2534,24 +2534,19 @@ async def reset_settings_to_default():
 
 @api_router.get("/bot/status")
 async def get_bot_status():
-    """Hole Bot-Status"""
-    global ai_trading_bot_instance, bot_task
-    
-    if not ai_trading_bot_instance:
-        return {
-            "running": False,
-            "message": "Bot ist nicht initialisiert"
-        }
-    
-    is_running = ai_trading_bot_instance.running if ai_trading_bot_instance else False
-    task_alive = bot_task and not bot_task.done() if bot_task else False
+    """Hole Bot-Status - Bot läuft im Worker-Prozess"""
+    # Bot läuft jetzt im separaten Worker-Prozess
+    # Status wird aus den Settings ermittelt
+    settings = await db.trading_settings.find_one({"id": "trading_settings"})
+    auto_trading = settings.get('auto_trading', False) if settings else False
     
     return {
-        "running": is_running and task_alive,
-        "instance_running": is_running,
-        "task_alive": task_alive,
-        "trade_count": len(ai_trading_bot_instance.trade_history) if ai_trading_bot_instance else 0,
-        "last_trades": ai_trading_bot_instance.trade_history[-5:] if ai_trading_bot_instance else []
+        "running": auto_trading,
+        "instance_running": auto_trading,
+        "task_alive": auto_trading,
+        "message": "Bot läuft im Worker-Prozess" if auto_trading else "Auto-Trading deaktiviert",
+        "trade_count": 0,  # Trade history wird in DB gespeichert
+        "last_trades": []
     }
 
 @api_router.post("/bot/start")
