@@ -1579,6 +1579,7 @@ async def execute_trade(request: TradeExecuteRequest):
                 # Prüfen ob Rohstoff auf MT5 verfügbar
                 platforms = commodity_info.get('platforms', [])
                 mt5_available = any(p in platforms for p in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5'])
+                logger.info(f"🔍 MT5 Symbol: {mt5_symbol}, MT5 Available: {mt5_available}")
                 
                 if not mt5_available or not mt5_symbol:
                     logger.warning(f"⚠️ {commodity} ist auf MT5 nicht handelbar!")
