@@ -1564,6 +1564,8 @@ async def execute_trade(request: TradeExecuteRequest):
                 from commodity_processor import COMMODITIES
                 
                 commodity_info = COMMODITIES.get(commodity, {})
+                logger.info(f"🔍 Commodity Info: {commodity}, Default Platform: {default_platform}")
+                logger.info(f"🔍 Platforms: {commodity_info.get('platforms', [])}")
                 
                 # Select correct symbol based on default platform
                 if 'LIBERTEX' in default_platform:
