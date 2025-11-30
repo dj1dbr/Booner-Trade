@@ -1484,8 +1484,10 @@ async def execute_trade(request: TradeExecuteRequest):
         if not settings:
             settings = TradingSettings().model_dump()
         
-        # Get default platform
-        default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
+        # Get default platform (handle both dict and MongoDB document)
+        default_platform = settings.get('default_platform') or settings.get('default_platform', 'MT5_LIBERTEX_DEMO')
+        if not default_platform:
+            default_platform = 'MT5_LIBERTEX_DEMO'
         logger.info(f"🔍 Default Platform: {default_platform}")
         
         # Automatische Position Size Berechnung wenn nicht angegeben
