@@ -73,7 +73,7 @@ class MetaApiWorker:
             self.metaapi = MetaApi(token)
             logger.info("✅ MetaApi initialized")
             
-            settings = await db.settings.find_one({"id": "default"})
+            settings = await db.trading_settings.find_one({"id": "trading_settings"})
             if settings:
                 await self.connect_platforms(settings)
             else:
