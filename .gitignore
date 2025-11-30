@@ -98,3 +98,13 @@ electron/node_modules/electron/dist/electron
 electron-app/node_modules/electron/dist/electron
 electron-app/mongodb-mac/bin/mongod
 electron-app/mongodb-mac/bin/mongos
+electron-app/dist/Booner-Trade-1.0.0-mac-arm64.tar.gz
+electron-app/dist/Booner-Trade-1.0.0-mac-x64.zip
+electron-app/dist/Booner-Trade-1.0.0-mac-arm64.zip
+electron-app/dist/mac-arm64/Booner
+Trade.app/Contents/Resources/app/mongodb/bin/mongod
+Trade.app/Contents/Resources/app/mongodb/bin/mongos
+Trade.app/Contents/Frameworks/Electron
+Framework.framework/Versions/A/Electron
+Framework
+electron-app/dist/mac/Booner
