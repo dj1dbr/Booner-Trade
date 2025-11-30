@@ -137,17 +137,24 @@ mkdir -p "$PYTHON_PACKAGES_DIR"
 echo "Installiere Python Dependencies nach $PYTHON_PACKAGES_DIR..."
 
 # Installiere alle Packages in einen lokalen Ordner
+# WICHTIG: --no-cache-dir und --force-reinstall für native Module
 if [ -f "$PROJECT_ROOT/backend/requirements-desktop.txt" ]; then
-    $PYTHON_CMD -m pip install --target="$PYTHON_PACKAGES_DIR" -r "$PROJECT_ROOT/backend/requirements-desktop.txt" --upgrade
+    $PYTHON_CMD -m pip install \
+        --target="$PYTHON_PACKAGES_DIR" \
+        --no-cache-dir \
+        --force-reinstall \
+        -r "$PROJECT_ROOT/backend/requirements-desktop.txt"
 else
     echo -e "${YELLOW}⚠️  requirements-desktop.txt nicht gefunden, installiere Basis-Packages${NC}"
-    $PYTHON_CMD -m pip install --target="$PYTHON_PACKAGES_DIR" \
+    $PYTHON_CMD -m pip install \
+        --target="$PYTHON_PACKAGES_DIR" \
+        --no-cache-dir \
+        --force-reinstall \
         fastapi==0.110.1 \
         uvicorn==0.25.0 \
         motor==3.3.1 \
         python-dotenv==1.2.1 \
-        metaapi_cloud_sdk==29.1.0 \
-        --upgrade
+        metaapi_cloud_sdk==29.1.0
 fi
 
 # Prüfe kritische Packages

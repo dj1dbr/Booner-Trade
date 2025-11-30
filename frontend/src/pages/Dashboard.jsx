@@ -25,15 +25,29 @@ console.log('🔧 API URL:', API);
 // Configure axios defaults with timeout
 axios.defaults.timeout = 30000; // 30 second timeout for all requests (increased for large trade lists)
 
-// Test backend connectivity on load
-axios.get(`${API}/ping`)
+// Retry helper for failed requests
+const axiosRetry = async (fn, retries = 3, delay = 2000) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      console.log(`⚠️ Retry ${i + 1}/${retries} nach ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay *= 1.5; // Exponential backoff
+    }
+  }
+};
+
+// Test backend connectivity on load with retry
+axiosRetry(() => axios.get(`${API}/ping`), 5, 1000)
   .then(response => {
     console.log('✅ Backend Verbindung OK:', response.data);
   })
   .catch(error => {
-    console.error('❌ Backend Verbindung FEHLER:', error.message);
+    console.error('❌ Backend Verbindung FEHLER nach mehreren Versuchen:', error.message);
     console.error('   URL:', `${API}/ping`);
-    console.error('   Error Details:', error);
+    toast.error('Backend nicht erreichbar. Bitte App neu starten.');
   });
 
 const Dashboard = () => {

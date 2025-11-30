@@ -220,11 +220,42 @@ async function startBackend() {
         logError(`Backend process exited with code: ${code}`);
       });
 
-      // Timeout für Backend Start
-      setTimeout(() => {
-        log('Backend timeout reached, assuming it started');
-        resolve();
-      }, 8000);
+      // Warte auf Backend-Bereitschaft mit Healthcheck
+      let attempts = 0;
+      const maxAttempts = 60; // 60 Sekunden max
+      const checkBackend = setInterval(async () => {
+        attempts++;
+        try {
+          const http = require('http');
+          const options = {
+            hostname: 'localhost',
+            port: 8000,
+            path: '/api/ping',
+            timeout: 1000
+          };
+          
+          http.get(options, (res) => {
+            if (res.statusCode === 200) {
+              clearInterval(checkBackend);
+              log('✅ Backend is ready and responding!');
+              resolve();
+            }
+          }).on('error', () => {
+            // Backend noch nicht bereit
+            if (attempts >= maxAttempts) {
+              clearInterval(checkBackend);
+              log('⚠️  Backend timeout reached after 60s, continuing anyway...');
+              resolve();
+            }
+          });
+        } catch (err) {
+          if (attempts >= maxAttempts) {
+            clearInterval(checkBackend);
+            log('⚠️  Backend timeout reached after 60s, continuing anyway...');
+            resolve();
+          }
+        }
+      }, 1000); // Check jede Sekunde
     } catch (error) {
       logError('Backend startup error', error);
       reject(error);
