@@ -264,6 +264,70 @@ async function startBackend() {
   });
 }
 
+// MetaApi Worker starten
+function startWorker() {
+  return new Promise((resolve, reject) => {
+    try {
+      log('⚙️  Starting MetaApi Worker...');
+      
+      const appPath = app.getAppPath();
+      const workerPath = path.join(appPath, 'backend', 'worker.py');
+      const pythonPath = path.join(appPath, 'python', 'bin', 'python3');
+      
+      if (!fs.existsSync(workerPath)) {
+        log('⚠️  Worker not found, skipping...');
+        resolve();
+        return;
+      }
+      
+      if (!fs.existsSync(pythonPath)) {
+        log('⚠️  Python not found, skipping worker...');
+        resolve();
+        return;
+      }
+      
+      const env = {
+        ...process.env,
+        PYTHONPATH: path.join(appPath, 'python-packages'),
+        MONGO_URL: `mongodb://localhost:${mongoPort}`
+      };
+      
+      log(`Starting Worker from: ${workerPath}`);
+      
+      workerProcess = spawn(pythonPath, [workerPath], {
+        cwd: path.join(appPath, 'backend'),
+        env: env
+      });
+      
+      workerProcess.stdout.on('data', (data) => {
+        log(`Worker: ${data.toString().trim()}`);
+      });
+      
+      workerProcess.stderr.on('data', (data) => {
+        logError(`Worker stderr: ${data.toString().trim()}`);
+      });
+      
+      workerProcess.on('error', (error) => {
+        logError('Worker failed to start', error);
+      });
+      
+      workerProcess.on('exit', (code) => {
+        log(`Worker process exited with code: ${code}`);
+      });
+      
+      // Worker läuft im Hintergrund, warten nicht
+      log('✅ Worker started in background');
+      resolve();
+      
+    } catch (error) {
+      logError('Worker startup error', error);
+      // Worker ist optional, fortfahren
+      resolve();
+    }
+  });
+}
+
+
 // Main Window erstellen
 function createWindow() {
   mainWindow = new BrowserWindow({
