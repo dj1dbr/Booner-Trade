@@ -1562,12 +1562,10 @@ async def execute_trade(request: TradeExecuteRequest):
             take_profit = round(price * (1 - tp_percent / 100), 2)
         
         logger.info(f"💡 SL/TP calculated: Price={price}, SL={stop_loss}, TP={take_profit}")
+        logger.info(f"🔍 Using Platform: {default_platform}")
         
         # WICHTIG: Order an Trading-Plattform senden!
         platform_ticket = None
-        
-        # Get default platform (new multi-platform architecture)
-        default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
         
         # MT5 Mode (Libertex or ICMarkets)
         if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5', 'MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']:
