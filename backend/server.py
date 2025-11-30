@@ -164,7 +164,8 @@ logger = logging.getLogger(__name__)
 
 # Global variables
 latest_market_data = {}  # Dictionary to cache latest market data
-scheduler = BackgroundScheduler()
+# Scheduler moved to worker.py
+# scheduler = BackgroundScheduler()
 auto_trading_enabled = False
 trade_count_per_hour = 0
 ai_chat = None  # AI chat instance for market analysis
