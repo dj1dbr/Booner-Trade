@@ -182,7 +182,7 @@ class BackendTester:
         # Test GOLD trade
         gold_trade_data = {
             "commodity": "GOLD",
-            "type": "BUY", 
+            "trade_type": "BUY",  # Fixed: API expects trade_type not type
             "quantity": 0.01,
             "price": 4050.0
         }
