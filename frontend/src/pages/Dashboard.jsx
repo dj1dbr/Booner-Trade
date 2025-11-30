@@ -182,18 +182,23 @@ const Dashboard = () => {
     }, 20000);
     
     try {
-      // First fetch settings and wait for it
+      // Fetch data sequentially to avoid overloading backend
+      // 1. Settings first (needed for other calls)
       await fetchSettings().catch(err => console.error('Settings fetch error:', err));
       
-      // Run all fetches with individual error handling
+      // 2. Critical data (balance, trades)
+      await fetchAccountData().catch(err => console.error('Account data fetch error:', err));
+      await fetchTrades().catch(err => console.error('Trades fetch error:', err));
+      
+      // 3. Market data (can be slower)
+      await fetchCommodities().catch(err => console.error('Commodities fetch error:', err));
+      await fetchAllMarkets().catch(err => console.error('Markets fetch error:', err));
+      
+      // 4. Non-critical data (stats, historical) - can run in parallel
       await Promise.all([
-        fetchCommodities().catch(err => console.error('Commodities fetch error:', err)),
-        fetchAllMarkets().catch(err => console.error('Markets fetch error:', err)),
         refreshMarketData().catch(err => console.error('Market refresh error:', err)),
         fetchHistoricalData().catch(err => console.error('Historical data fetch error:', err)),
-        fetchTrades().catch(err => console.error('Trades fetch error:', err)),
-        fetchStats().catch(err => console.error('Stats fetch error:', err)),
-        fetchAccountData().catch(err => console.error('Account data fetch error:', err))
+        fetchStats().catch(err => console.error('Stats fetch error:', err))
       ]);
     } catch (error) {
       console.error('Error in fetchAllData:', error);
