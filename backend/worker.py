@@ -65,9 +65,9 @@ class MetaApiWorker:
             return False
             
         try:
-            token = os.getenv('META_API_TOKEN')
+            token = os.getenv('METAAPI_TOKEN')
             if not token:
-                logger.error("❌ META_API_TOKEN not found")
+                logger.error("❌ METAAPI_TOKEN not found")
                 return False
                 
             self.metaapi = MetaApi(token)
