@@ -1492,7 +1492,7 @@ async def execute_trade(request: TradeExecuteRequest):
             # Get balance from selected platform
             default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
             
-            if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS']:
+            if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']:
                 try:
                     from multi_platform_connector import multi_platform
                     await multi_platform.connect_platform(default_platform)
