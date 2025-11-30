@@ -1993,11 +1993,19 @@ async def close_trade(trade_id: str, exit_price: float):
 async def cleanup_trades():
     """Lösche fehlerhafte Trades und Duplikate permanent aus der Datenbank"""
     try:
-        from trade_cleanup import cleanup_error_trades, cleanup_duplicate_trades
+        # Simple cleanup - remove trades with errors or invalid data
+        error_deleted = 0
+        duplicate_deleted = 0
         
-        # Cleanup durchführen
-        error_deleted = await cleanup_error_trades(db)
-        duplicate_deleted = await cleanup_duplicate_trades(db)
+        # Remove trades with missing critical fields
+        result = await db.trades.delete_many({
+            "$or": [
+                {"symbol": {"$exists": False}},
+                {"openPrice": {"$exists": False}},
+                {"closePrice": {"$exists": False}}
+            ]
+        })
+        error_deleted = result.deleted_count
         
         total_deleted = error_deleted + duplicate_deleted
         
