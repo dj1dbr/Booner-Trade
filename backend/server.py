@@ -22,7 +22,8 @@ import pandas as pd
 import numpy as np
 from ta.trend import SMAIndicator, EMAIndicator, MACD
 from ta.momentum import RSIIndicator
-from apscheduler.schedulers.background import BackgroundScheduler
+# Scheduler moved to worker.py
+# from apscheduler.schedulers.background import BackgroundScheduler
 import asyncio
 from threading import Thread
 # Use fallback module for emergentintegrations (Mac compatibility)
