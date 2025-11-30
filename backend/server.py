@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 
-# Memory Profiling
-from memory_profiler import get_profiler
-import psutil
+# Memory Profiling - Disabled for production (use in debug mode only)
+# from memory_profiler import get_profiler
+# import psutil
 import os
 
 import os
