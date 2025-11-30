@@ -55,6 +55,8 @@ class MetaApiWorker:
         self.connections = {}
         self.scheduler = AsyncIOScheduler()
         self.running = False
+        self.ai_bot = None
+        self.bot_task = None
         
     async def initialize(self):
         """Initialize MetaApi connections"""
