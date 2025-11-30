@@ -1566,9 +1566,9 @@ async def execute_trade(request: TradeExecuteRequest):
                 commodity_info = COMMODITIES.get(commodity, {})
                 
                 # Select correct symbol based on default platform
-                if default_platform == 'MT5_LIBERTEX':
+                if 'LIBERTEX' in default_platform:
                     mt5_symbol = commodity_info.get('mt5_libertex_symbol')
-                elif default_platform == 'MT5_ICMARKETS':
+                elif 'ICMARKETS' in default_platform:
                     mt5_symbol = commodity_info.get('mt5_icmarkets_symbol')
                 else:
                     # Fallback
