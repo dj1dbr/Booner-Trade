@@ -3750,3 +3750,38 @@ agent_communication:
       - Professional UI/UX with German localization
       
       RECOMMENDATION: The Booner Trade app testing is COMPLETE and SUCCESSFUL. All requirements met.
+
+# Testing Update - Backend Refactoring Complete (Nov 30, 2025)
+
+## Recent Changes:
+1. **Backend Refactoring Completed:**
+   - AI Trading Bot moved from server.py to worker.py
+   - Server process is now lightweight (FastAPI API only)
+   - Worker process handles heavy tasks (AI Bot, MetaAPI, Scheduler)
+   
+2. **MetaAPI Configuration Fixed:**
+   - Correct Account IDs now configured in .env:
+     * MT5_LIBERTEX: 5cc9abd1-671a-447e-ab93-5abbfe0ed941
+     * MT5_ICMARKETS: d2605e89-7bc2-4144-9f7c-951edd596c39
+   - Platform connections verified working (connected=true, balances loaded)
+
+3. **Critical Blocker Resolved:**
+   - Backend service crash fixed (removed memory profiler and trade cleanup issues)
+   - Backend now starts successfully on port 8001
+
+## Test Plan Priority:
+1. ✅ Backend Service Health (DONE - verified working)
+2. ✅ Platform Connections (DONE - both platforms connected)
+3. 🔄 Manual Trade Execution (NEEDS TESTING - platforms now connected)
+4. 🔄 AI Trading Bot Status (NEEDS TESTING - now runs in worker)
+5. 🔄 Settings Persistence (NEEDS TESTING)
+6. 🔄 Trade Close Functionality (NEEDS TESTING - was reported broken)
+
+## Agent Communication:
+- Main Agent: Backend refactoring complete. All critical files updated.
+- Testing Agent: Please verify all functionality with focus on:
+  * Manual trade execution (platforms are now connected)
+  * Trade close functionality (user reported this was broken)
+  * AI Bot running in worker process (not server)
+  * Settings save/load working without timeout
+
