@@ -122,17 +122,7 @@ async def startup_cleanup():
     global ai_trading_bot_instance, bot_task
     
     try:
-        logger.info("🚀 Server startet - führe Trade-Cleanup durch...")
-        from trade_cleanup import cleanup_error_trades, cleanup_duplicate_trades
-        
-        error_deleted = await cleanup_error_trades(db)
-        duplicate_deleted = await cleanup_duplicate_trades(db)
-        total_deleted = error_deleted + duplicate_deleted
-        
-        if total_deleted > 0:
-            logger.info(f"✅ Startup-Cleanup: {total_deleted} fehlerhafte/doppelte Trades gelöscht")
-        else:
-            logger.info("✅ Startup-Cleanup: Datenbank ist sauber")
+        logger.info("🚀 Server startet...")
     except Exception as e:
         logger.error(f"⚠️ Startup-Cleanup fehlgeschlagen: {e}")
     
