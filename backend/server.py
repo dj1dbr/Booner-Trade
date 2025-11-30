@@ -1480,11 +1480,17 @@ async def execute_trade(request: TradeExecuteRequest):
         
         logger.info(f"🔥 Trade Execute Request: {trade_type} {commodity} @ {price}, Quantity: {quantity}")
         settings = await db.trading_settings.find_one({"id": "trading_settings"})
+        logger.info(f"🔍 Settings loaded: {settings is not None}")
         if not settings:
             settings = TradingSettings().model_dump()
         
+        # Get default platform
+        default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
+        logger.info(f"🔍 Default Platform: {default_platform}")
+        
         # Automatische Position Size Berechnung wenn nicht angegeben
         if quantity is None or quantity == 1.0:
+            logger.info(f"🔍 Auto Position Size: Starting calculation")
             # Hole aktuelle Balance und Free Margin
             balance = 50000.0  # Default
             free_margin = None
