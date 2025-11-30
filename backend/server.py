@@ -1495,8 +1495,7 @@ async def execute_trade(request: TradeExecuteRequest):
             balance = 50000.0  # Default
             free_margin = None
             
-            # Get balance from selected platform
-            default_platform = settings.get('default_platform', 'MT5_LIBERTEX')
+            logger.info(f"🔍 Platform Check: {default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']}")
             
             if default_platform in ['MT5_LIBERTEX', 'MT5_ICMARKETS', 'MT5_LIBERTEX_DEMO', 'MT5_ICMARKETS_DEMO', 'MT5_LIBERTEX_REAL']:
                 try:
