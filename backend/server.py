@@ -3277,7 +3277,8 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown"""
-    scheduler.shutdown()
+    # Scheduler moved to worker.py
+    # scheduler.shutdown()
     client.close()
     logger.info("Application shutdown complete")
 
